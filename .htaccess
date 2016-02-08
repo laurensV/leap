@@ -1,0 +1,5 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    RewriteRule    ^$    core/    [L]
+    RewriteRule    (.*) core/$1    [L]
+ </IfModule>

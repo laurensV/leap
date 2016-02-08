@@ -1,0 +1,5 @@
+Basis PHP framework made by Laurens Verspeek
+
+- Directory 'core' contains the core files for the framework
+- Directory 'site' will hold all files for your site (pages, javascript, stylesheets, images etc.)
+- Make sure the directory 'core/files' is writable!
