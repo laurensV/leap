@@ -1,7 +1,7 @@
 <?php
 define('ROOT', dirname(dirname(__FILE__)));
   
-$args = $_GET['url'];
+$args = isset($_GET['args']) ? $_GET['args'] : "";
 
 require_once(ROOT . '/site/config/config.php');
 require_once(ROOT . '/core/include/helpers.php');
