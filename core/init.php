@@ -3,7 +3,8 @@
 
 /* Check if environment is development and display errors */
 function setReporting() {
-    if (DEV_ENV == true) {
+	global $config;
+    if ($config['general']['dev_env'] == true) {
         error_reporting(E_ALL);
         ini_set('display_errors','On');
     } else {
@@ -52,9 +53,11 @@ function parse_arguments($args = "") {
 	    default:
 	    	$page = '404';
 	}
-	require_once ROOT . '/core/include/libraries/less.php/Less.php';
+	/* get all javascript and css files to be included */
+	require_once(ROOT . "/site/include.php");
 
-	global $styles, $scripts;
+	/* load the less to css compiler */
+	require_once ROOT . '/core/include/libraries/less.php/Less.php';
 	
 	foreach($styles as $less_file){
 		if(substr($less_file, -5) == ".less") {
@@ -62,18 +65,21 @@ function parse_arguments($args = "") {
 			$options = array('cache_dir' => ROOT . '/core/files/css', 'compress' => true);
 			$css_files[] = "/core/files/css/" . Less_Cache::Get( $less_file, $options );
 		} else {
+			/* file is not a less file, so no need to compile to css */
 			$css_files[] = $less_file;
 		}
 	}
 
 	/* include the header */
 	require_once(ROOT . "/core/include/header.php");
+	/* include the content */
 	$page_path = ROOT . "/site/pages/" . $page . ".php";
 	if(file_exists($page_path)){
 		require_once($page_path);
 	} else {
 		require_once(ROOT . "/site/pages/404.php");
 	}
+	/* include the footer */
 	require_once(ROOT . "/core/include/footer.php");
 }
 

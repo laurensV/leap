@@ -1,1 +1,2 @@
-core/files*
+core/files/*
+config.local.ini
