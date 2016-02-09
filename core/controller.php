@@ -47,8 +47,8 @@ class Controller
             foreach($styles as $less_file){
                 if(substr($less_file, -5) == ".less") {
                     $less_file = array($less_file => "/");
-                    $options = array('cache_dir' => ROOT . '/core/files/css', 'compress' => true);
-                    $css_files[] = "/core/files/css/" . Less_Cache::Get( $less_file, $options );
+                    $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
+                    $css_files[] = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
                 } else {
                     /* file is not a less file, so no need to compile to css */
                     $css_files[] = $less_file;
