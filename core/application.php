@@ -24,21 +24,34 @@ class Application
 
     }
 
-    private function callHook(){
+    private function check_route($page){
         require_once(ROOT . '/site/routes.php');
+        if(isset($route[$page])){
+            return $route[$page];
+        }
+        foreach ($route as $key => $value) {
+            if (fnmatch($key, $page)) {
+                return $value;
+            }
+        }
+        return array();
+    }
+
+    private function callHook(){
         $this->model = 'Model';
         $this->controller = 'Controller';
-        if(isset($route[$this->page])){
-            if (isset($route[$this->page]['model'])){
-                $this->model = $route[$this->page]['model'];
+        $route_options = $this->check_route($this->page);
+        if(!empty($route_options)){
+            if (isset($route_options['model'])){
+                $this->model = $route_options['model'];
             } 
 
-            if(isset($route[$this->page]['controller'])){
-                $this->controller = $route[$this->page]['controller'];
+            if(isset($route_options['controller'])){
+                $this->controller = $route_options['controller'];
             } 
 
-            if( isset($route[$this->page]['view'])){
-                $this->page = $route[$this->page]['view'];
+            if( isset($route_options['view'])){
+                $this->page = $route_options['view'];
             }
         }
 
