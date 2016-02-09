@@ -15,20 +15,35 @@ class Application
      * Analyze the URL elements and calls the according controller/method or the fallback
      */
     public function __construct() {
+        $this->setReporting();
+        $this->add_classes();
+        spl_autoload_register(array($this, 'my_autoload'));
         // get controller, action and other params from the url
         $this->parse_arguments();
+        $this->callHook();
 
-        if (file_exists(ROOT . '/site/model/' . $this->page . '.php')) {
-            require_once ROOT . '/site/model/' . $this->page . '.php';
+    }
+
+    private function callHook(){
+        require_once(ROOT . '/site/routes.php');
+        $this->model = 'Model';
+        $this->controller = 'Controller';
+        if(isset($route[$this->page])){
+            if (isset($route[$this->page]['model'])){
+                $this->model = $route[$this->page]['model'];
+            } 
+
+            if(isset($route[$this->page]['controller'])){
+                $this->controller = $route[$this->page]['controller'];
+            } 
+
+            if( isset($route[$this->page]['view'])){
+                $this->page = $route[$this->page]['view'];
+            }
         }
-        $this->model = class_exists($this->page . "Model") ? $page . "Model" : 'Model';
-          
-        // construct the controller class
-        if (file_exists(ROOT . '/site/controller/' . $this->page . '.php')) {
-            require_once ROOT . '/site/controller/' . $this->page . '.php';
-        }
-        $this->controller = class_exists($this->page . "Controller") ? $this->page . "Controller" : 'Controller';
+
         $this->controller = new $this->controller($this->model, $this->page);
+
         if (method_exists($this->controller, $this->action)) {
                 $this->controller->{$this->action}($this->params);
         } else if (empty($this->params)) {
@@ -40,6 +55,39 @@ class Application
         }
 
         $this->controller->render();
+    }
+
+    /* Check if environment is development and display errors */
+    private function setReporting() {
+        global $config;
+        if ($config['general']['dev_env'] == true) {
+            error_reporting(E_ALL);
+            ini_set('display_errors','On');
+        } else {
+            error_reporting(E_ALL);
+            ini_set('display_errors','Off');
+            ini_set('log_errors', 'On');
+            ini_set('error_log', ROOT . '/tmp/logs/error.log');
+        }
+    }
+    /* Autoload any classes that are required */
+    function my_autoload($className) {
+        if (file_exists(ROOT . '/core/include/classes/' . $className . '.class.php')) {
+            require_once(ROOT . '/core/include/classes/' . $className . '.class.php');
+        } else if (file_exists(ROOT . '/site/controller/' . $className . '.php')) {
+            require_once(ROOT . '/site/controller/' . $className . '.php');
+        } else if (file_exists(ROOT . '/site/model/' . $className . '.php')) {
+            require_once(ROOT . '/site/model/' . $className . '.php');
+        } else {
+            /* Error Generation Code Here */
+        }
+    }
+
+    private function add_classes(){
+        /* load the less to css compiler */
+        require_once ROOT . '/core/include/libraries/less.php/Less.php';
+        require_once(ROOT . '/core/controller.php');
+        require_once(ROOT . '/core/model.php');
     }
     
     private function parse_arguments() {

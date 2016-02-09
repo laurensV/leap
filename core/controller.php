@@ -4,6 +4,8 @@ class Controller
     protected $model = null;
     protected $page = null;
     protected $variables = array();
+    protected $styles;
+    protected $scripts;
 
     /**
      * Whenever controller is created, open a database connection too and load "the model".
@@ -18,14 +20,33 @@ class Controller
             header('location: ' . URL . '/404');
         }
         global $config;
-        $this->set('title', $this->page . " - " . $config['application']['site_name']);
+        $this->set('site_title', $this->page . " - " . $config['application']['site_name']);
 
+    }
+
+    function addStyles($styleArray){
+        foreach($styleArray as $style){
+            if(substr($style, -5) == ".less") {
+                $less_file = array($style => "/");
+                $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
+                $this->styles[] = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
+            } else {
+                /* file is not a less file, so no need to compile to css */
+                $this->styles[] = $style;
+            }
+        }
+    }
+
+    public function addScripts($scriptArray){
+        foreach($scriptArray as $script){
+            $this->scripts[] = $script;
+        }
     }
 
     /**
      * Set Variables 
      */
-    function set($name,$value) {
+    public function set($name,$value) {
         $this->variables[$name] = $value;
     }
 
@@ -41,19 +62,11 @@ class Controller
             require_once($include_view);
         }
 
-        /* load the less to css compiler */
-        require_once ROOT . '/core/include/libraries/less.php/Less.php';
         if(isset($styles)){
-            foreach($styles as $less_file){
-                if(substr($less_file, -5) == ".less") {
-                    $less_file = array($less_file => "/");
-                    $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
-                    $css_files[] = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
-                } else {
-                    /* file is not a less file, so no need to compile to css */
-                    $css_files[] = $less_file;
-                }
-            }
+            $this->addStyles($styles);
+        }
+        if(isset($scripts)){
+            $this->addStyles($styles);
         }
 
         /* include the start of the html page */
