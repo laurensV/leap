@@ -4,3 +4,8 @@
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteRule ^(.*)$ core/index.php?args=$1 [QSA,L,NC]
  </IfModule>
+
+<Files *.ini>
+	Order deny,allow
+	Deny from All 
+</Files>

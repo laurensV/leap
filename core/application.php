@@ -8,8 +8,9 @@ class Application
     private $action;
     /** @var array URL parameters */
     private $params;
-        /** @var null The controller */
     private $model;
+    private $template;
+
     /**
      * "Start" the application:
      * Analyze the URL elements and calls the according controller/method or the fallback
@@ -25,11 +26,14 @@ class Application
     }
 
     private function check_route($page){
-        require_once(ROOT . '/site/routes.php');
-        if(isset($route[$page])){
-            return $route[$page];
+        $routes = array();
+        if (file_exists(ROOT . '/config.local.ini')) {
+            $routes = parse_ini_file(ROOT . "/site/routes.ini", true);
         }
-        foreach ($route as $key => $value) {
+        if(isset($routes[$page])){
+            return $routes[$page];
+        }
+        foreach ($routes as $key => $value) {
             if (fnmatch($key, $page)) {
                 return $value;
             }
@@ -40,22 +44,24 @@ class Application
     private function callHook(){
         $this->model = 'Model';
         $this->controller = 'Controller';
+        $this->template = 'default_template';
         $route_options = $this->check_route($this->page);
         if(!empty($route_options)){
             if (isset($route_options['model'])){
                 $this->model = $route_options['model'];
             } 
-
             if(isset($route_options['controller'])){
                 $this->controller = $route_options['controller'];
             } 
-
-            if( isset($route_options['view'])){
-                $this->page = $route_options['view'];
+            if( isset($route_options['page'])){
+                $this->page = $route_options['page'];
+            }
+            if( isset($route_options['template'])){
+                $this->template = $route_options['template'];
             }
         }
 
-        $this->controller = new $this->controller($this->model, $this->page);
+        $this->controller = new $this->controller($this->model, $this->template, $this->page);
 
         if (method_exists($this->controller, $this->action)) {
                 $this->controller->{$this->action}($this->params);
@@ -99,8 +105,9 @@ class Application
     private function add_classes(){
         /* load the less to css compiler */
         require_once ROOT . '/core/include/libraries/less.php/Less.php';
-        require_once(ROOT . '/core/controller.php');
         require_once(ROOT . '/core/model.php');
+        require_once(ROOT . '/core/controller.php');
+        require_once(ROOT . '/core/template.php');
     }
     
     private function parse_arguments() {
