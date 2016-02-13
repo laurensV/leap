@@ -3,7 +3,7 @@ class Template {
      
     protected $template;
     protected $page;
-    protected $styles;
+    protected $stylesheets;
     protected $scripts;
      
     function __construct($template, $page) {
@@ -11,22 +11,55 @@ class Template {
         $this->page = $page;
     }
 
-    function addStyles($styleArray){
-        foreach($styleArray as $style){
-            if(substr($style, -5) == ".less") {
-                $less_file = array($style => "/");
-                $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
-                $this->styles[] = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
-            } else {
-                /* file is not a less file, so no need to compile to css */
-                $this->styles[] = $style;
+    function add_styles($styleArray){
+        if(is_array($styleArray)){
+            foreach($styleArray as $style){
+                $this->stylesheets[] = $this->parse_stylesheet($style);
             }
+        } else {
+            $this->stylesheets[] = $this->parse_stylesheet($styleArray);
         }
     }
 
-    function addScripts($scriptArray){
-        foreach($scriptArray as $script){
-            $this->scripts[] = $script;
+    function parse_stylesheet($style) {
+        if(substr($style, -5) == ".less") {
+            if($style[0] == "/"){
+                $style  = ROOT . $style;
+            }
+            chdir(ROOT . "/site/");
+            $less_file = array($style => "/");
+            $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
+            $style = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
+        } else {
+            /* file is not a less file, so no need to compile to css */
+            if(!filter_var($style, FILTER_VALIDATE_URL)){
+                if($style[0] != "/") {
+                    $style = "/site/" . $style;
+                }
+            }
+        }
+        return $style;
+    }
+
+    function parse_script($script) {
+        if(!filter_var($script, FILTER_VALIDATE_URL)){
+            if(substr($script, 0, 6) != "/site/"){
+                $script_withroot  = "/site/" . $script;
+                if(file_exists(ROOT . $script_withroot)){
+                    $script = $script_withroot;
+                }
+            }
+        }
+        return $script;
+    }
+
+    function add_scripts($scriptArray){
+        if(is_array($scriptArray)){
+            foreach($scriptArray as $script){
+                $this->scripts[] = $this->parse_script($script);
+            }
+        } else {
+            $this->scripts[] = $this->parse_script($scriptArray);
         }
     }
  
@@ -37,20 +70,17 @@ class Template {
 
     /* get all javascript and css files to be included */
     function include_scripts_css(){
-        $include_always = ROOT . "/site/always_include.php";
-        $include_view = ROOT . "/site/pages/".$this->page."_include.php";
-        if(file_exists($include_always)){
-            require_once($include_always);
+        if (file_exists(ROOT . "/site/stylesheets.ini")) {
+            extract(parse_ini_file(ROOT . "/site/stylesheets.ini"));
         }
-        if(file_exists($include_view)){
-            require_once($include_view);
+        if(isset($stylesheets)){
+            $this->add_styles($stylesheets);
         }
-
-        if(isset($styles)){
-            $this->addStyles($styles);
+        if (file_exists(ROOT . "/site/scripts.ini")) {
+            extract(parse_ini_file(ROOT . "/site/scripts.ini"));
         }
         if(isset($scripts)){
-            $this->addScripts($scripts);
+            $this->add_scripts($scripts);
         }
     }
  

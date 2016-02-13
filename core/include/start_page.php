@@ -2,8 +2,8 @@
 <head>
 <title><?php echo $site_title;?></title>
 <?php
-if (isset($this->styles)){
-	foreach ($this->styles as $css_file) {
+if (isset($this->stylesheets)){
+	foreach ($this->stylesheets as $css_file) {
 		echo '<link rel="stylesheet" type="text/css" href="' . $css_file .'">';
 	}
 }

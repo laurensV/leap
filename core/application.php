@@ -27,7 +27,7 @@ class Application
 
     private function check_route($page){
         $routes = array();
-        if (file_exists(ROOT . '/config.local.ini')) {
+        if (file_exists(ROOT . "/site/routes.ini")) {
             $routes = parse_ini_file(ROOT . "/site/routes.ini", true);
         }
         if(isset($routes[$page])){
@@ -44,7 +44,7 @@ class Application
     private function callHook(){
         $this->model = 'Model';
         $this->controller = 'Controller';
-        $this->template = 'default_template';
+        $this->template = 'default_page';
         $route_options = $this->check_route($this->page);
         if(!empty($route_options)){
             if (isset($route_options['model'])){
