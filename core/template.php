@@ -5,10 +5,12 @@ class Template {
     protected $page;
     protected $stylesheets;
     protected $scripts;
+    protected $hooks;
      
-    function __construct($template, $page) {
+    function __construct($template, $page, $hooks) {
         $this->template = $template;
         $this->page = $page;
+        $this->hooks = $hooks;
     }
 
     function add_styles($styleArray){
@@ -21,7 +23,7 @@ class Template {
         }
     }
 
-    function parse_stylesheet($style) {
+    function parse_less(&$style) {
         if(substr($style, -5) == ".less") {
             if($style[0] == "/"){
                 $style  = ROOT . $style;
@@ -30,14 +32,20 @@ class Template {
             $less_file = array($style => "/");
             $options = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
             $style = "/site/files/css/" . Less_Cache::Get( $less_file, $options );
-        } else {
-            /* file is not a less file, so no need to compile to css */
-            if(!filter_var($style, FILTER_VALIDATE_URL)){
-                if($style[0] != "/") {
-                    $style = "/site/" . $style;
-                }
+        }
+    }
+
+    function parse_stylesheet($style) {
+        $this->hooks->add('parse_stylesheet', "parse_less");
+        $this->hooks->fire("parse_stylesheet", array(&$style));
+
+        /* file is not a less file, so no need to compile to css */
+        if(!filter_var($style, FILTER_VALIDATE_URL)){
+            if($style[0] != "/") {
+                $style = "/site/" . $style;
             }
         }
+        
         return $style;
     }
 
@@ -122,5 +130,5 @@ class Template {
         /* include the end of the html page */
         require_once(ROOT . "/core/include/end_page.php");
     }
- 
+
 }

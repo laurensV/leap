@@ -105,6 +105,7 @@ class Application
     private function add_classes(){
         /* load the less to css compiler */
         require_once ROOT . '/core/include/libraries/less.php/Less.php';
+        require_once(ROOT . '/core/hook.php');
         require_once(ROOT . '/core/model.php');
         require_once(ROOT . '/core/controller.php');
         require_once(ROOT . '/core/template.php');

@@ -4,13 +4,14 @@ class Controller
     protected $model;
     protected $page;
     protected $template;
-
+    protected $hooks;
     /**
      * Whenever controller is created, load the model and the template.
      */
     function __construct($model, $template, $page) {
         $this->model = new $model();
-        $this->template = new Template($template, $page);
+        $this->hooks = new Hooks;
+        $this->template = new Template($template, $page, $this->hooks);
         $this->page = $page;
     }
 
