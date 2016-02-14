@@ -8,9 +8,9 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    function __construct($model, $template, $page) {
+    function __construct($model, $template, $page, $hooks) {
         $this->model = new $model();
-        $this->hooks = new Hooks;
+        $this->hooks = $hooks;
         $this->template = new Template($template, $page, $this->hooks);
         $this->page = $page;
     }

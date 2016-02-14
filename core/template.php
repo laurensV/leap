@@ -36,7 +36,6 @@ class Template {
     }
 
     function parse_stylesheet($style) {
-        $this->hooks->add('parse_stylesheet', "parse_less");
         $this->hooks->fire("parse_stylesheet", array(&$style));
 
         /* file is not a less file, so no need to compile to css */

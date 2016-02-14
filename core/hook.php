@@ -2,13 +2,22 @@
 class Hooks
 {
     private $hooks;
-    public function __construct()
+    public function __construct($hooks = array())
     {
         $this->hooks = array();
+        foreach($hooks as $hook){
+            $this->create($hook);
+        }
+    }
+    public function getHooks(){
+        return array_keys($this->hooks);
     }
     public function add($name, $callback) {
         // callback parameters must be at least syntactically
         // correct when added.
+        if (!isset($this->hooks[$name])){
+            return;
+        }
         if (!is_callable($callback, true))
         {
             throw new InvalidArgumentException(sprintf('Invalid callback: %s.', print_r($callback, true)));
@@ -18,6 +27,9 @@ class Hooks
     public function getCallbacks($name)
     {
         return isset($this->hooks[$name]) ? $this->hooks[$name] : array();
+    }
+    public function create($name) {
+        $this->hooks[$name]  = array();
     }
     public function fire($name, $args = array())
     {

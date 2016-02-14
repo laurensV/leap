@@ -22,7 +22,6 @@ class Application
         // get controller, action and other params from the url
         $this->parse_arguments();
         $this->callHook();
-
     }
 
     private function check_route($page){
@@ -39,6 +38,21 @@ class Application
             }
         }
         return array();
+    }
+
+
+    private function get_plugins($plugins) {
+        foreach($plugins as $plugin) {
+            include_once(ROOT . "/plugins/" . $plugin . "/main.php");
+        }
+        foreach($plugins as $plugin) {
+            foreach ($this->hooks->getHooks() as $hook) {
+                $function = $plugin . "_" . $hook;
+                if(function_exists($function)) {
+                    $this->hooks->add($hook, $function);
+                } 
+            }
+        }
     }
 
     private function callHook(){
@@ -60,8 +74,9 @@ class Application
                 $this->template = $route_options['template'];
             }
         }
-
-        $this->controller = new $this->controller($this->model, $this->template, $this->page);
+        $this->hooks = new Hooks(array("parse_stylesheet"));
+        $this->get_plugins(array("less"));
+        $this->controller = new $this->controller($this->model, $this->template, $this->page, $this->hooks);
 
         if (method_exists($this->controller, $this->action)) {
                 $this->controller->{$this->action}($this->params);
