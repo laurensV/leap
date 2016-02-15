@@ -40,8 +40,22 @@ class Application
         return array();
     }
 
+    private function get_plugins() {
+        $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
+        $all_files = new RecursiveIteratorIterator($directory);
+        $plugin_files = new RegexIterator($all_files, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+        
+        $plugin_filenames = array();
+        foreach($all_files as $file) {
+            
+            $plugin_filenames[] = $file->getFilename();
 
-    private function get_plugins($plugins) {
+        }
+        return $plugin_filenames;
+    }
+
+
+    private function load_plugins($plugins) {
         foreach($plugins as $plugin) {
             include_once(ROOT . "/plugins/" . $plugin . "/main.php");
         }
@@ -75,7 +89,8 @@ class Application
             }
         }
         $this->hooks = new Hooks(array("parse_stylesheet"));
-        $this->get_plugins(array("less"));
+        printr($this->get_plugins());
+        $this->load_plugins(array("less"));
         $this->controller = new $this->controller($this->model, $this->template, $this->page, $this->hooks);
 
         if (method_exists($this->controller, $this->action)) {
