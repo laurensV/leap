@@ -8,15 +8,17 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    function __construct($model, $template, $page, $hooks) {
-        $this->model = new $model();
-        $this->hooks = $hooks;
+    public function __construct($model, $template, $page, $hooks)
+    {
+        $this->model    = new $model();
+        $this->hooks    = $hooks;
         $this->template = new Template($template, $page, $this->hooks);
-        $this->page = $page;
+        $this->page     = $page;
     }
 
-    function default_action($params){
-        if(!empty($params)){
+    public function default_action($params)
+    {
+        if (!empty($params)) {
             header('location: ' . URL . '/404');
         }
         global $config;
@@ -24,21 +26,25 @@ class Controller
 
     }
 
-    public function include_header_hook(){
+    public function include_header_hook()
+    {
         return array();
     }
-    public function include_footer_hook(){
+    public function include_footer_hook()
+    {
         return array();
     }
 
     /**
-     * Set Variables 
+     * Set Variables
      */
-    public function set($name,$value) {
-        $this->template->set($name,$value);
+    public function set($name, $value)
+    {
+        $this->template->set($name, $value);
     }
 
-    public function render() {
+    public function render()
+    {
         $this->template->render();
     }
 }
