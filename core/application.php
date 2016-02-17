@@ -59,8 +59,7 @@ class Application
      */
     private function setReporting()
     {
-        global $config;
-        if ($config['general']['dev_env'] == true) {
+        if (get_config('general')['dev_env'] == true) {
             error_reporting(E_ALL);
             ini_set('display_errors', 'On');
         } else {

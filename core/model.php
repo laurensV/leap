@@ -6,8 +6,8 @@ class Model extends SQLHandler
         $this->init();
     }
     public function connect_with_config(){
-        global $config;
-        $this->connect($config['database']['db_host'], $config['database']['db_user'], $config['database']['db_pass'], $config['database']['db_name']);
+        $dbconf = get_conf('database');
+        $this->connect($dbconf['db_host'], $dbconf['db_user'], $dbconf['db_pass'], $dbconf['db_name']);
     }
     /* overwrite this function in extended models */
     protected function init(){

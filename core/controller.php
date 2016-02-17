@@ -17,8 +17,7 @@ class Controller
         $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins);
         $this->page     = $page;
         $this->access   = true;
-        global $config;
-        $this->set('site_title', $config['application']['site_name']);
+        $this->set('site_title', get_config('application')['site_name']);
         $this->init();
     }
 

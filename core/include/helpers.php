@@ -33,3 +33,10 @@ function arg($id = null)
         }
     }
 }
+
+function get_config($name, $default = null)
+{
+    global $config;
+
+    return isset($config[$name]) ? $config[$name] : $default;
+}
