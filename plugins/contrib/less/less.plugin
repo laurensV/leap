@@ -1,0 +1,4 @@
+name = Less Parser PHP
+description = Provides a parser to compile less to css files for PHP
+package = Views
+configure = admin/config/less
