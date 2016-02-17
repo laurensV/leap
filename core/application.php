@@ -6,6 +6,7 @@ class Application
     private $model;
     private $url;
     private $hooks;
+    private $plugin_manager;
 
     /**
      * "Start" the application:
@@ -16,42 +17,11 @@ class Application
         $this->setReporting();
         $this->add_classes();
         spl_autoload_register(array($this, 'autoload_classes'));
-        $this->url    = isset($_GET['args']) ? $_GET['args'] : "";
-        $this->router = new Router();
+        $this->url            = isset($_GET['args']) ? $_GET['args'] : "";
+        $this->router         = new Router();
+        $this->define_hooks();
+        $this->plugin_manager = new PluginManager($this->router, $this->hooks);
         $this->bootstrap();
-    }
-
-    private function get_plugins()
-    {
-        $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
-        $all_files = new RecursiveIteratorIterator($directory);
-
-        $plugin_filenames = array();
-        foreach ($all_files as $file) {
-            if ($file->getExtension() == "plugin") {
-                $plugin_filenames[$file->getBasename('.plugin')] = $file->getPath();
-            }
-        }
-        return $plugin_filenames;
-    }
-
-    private function load_plugins($plugins)
-    {
-        foreach ($plugins as $name => $path) {
-            if (file_exists($path . "/" . $name . ".hooks.php")) {
-                include_once $path . "/" . $name . ".hooks.php";
-            }
-
-            $this->router->add_route_file($path . "/" . "routes.ini");
-        }
-        foreach ($plugins as $name => $path) {
-            foreach ($this->hooks->getHooks() as $hook) {
-                $function = $name . "_" . $hook;
-                if (function_exists($function)) {
-                    $this->hooks->add($hook, $function);
-                }
-            }
-        }
     }
 
     private function define_hooks()
@@ -62,14 +32,14 @@ class Application
 
     private function bootstrap()
     {
-        $this->define_hooks();
-        $plugins = $this->get_plugins();
-        $this->load_plugins($plugins);
+        $this->plugin_manager->get_all_plugins();
+        $plugins = $this->plugin_manager->get_sublist_plugins(array("admin"));
+        $this->plugin_manager->load_plugins($plugins);
 
         $this->router->add_route_file(ROOT . "/site/routes.ini");
         $this->router->route_url($this->url);
 
-        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $plugins);
+        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager->enabled_plugins);
 
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);

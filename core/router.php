@@ -1,14 +1,14 @@
 <?php
 class Router
 {
-    private $routes;
+    public $routes;
     public $page;
     public $action;
     public $params;
     public $model;
-    private $modelPath;
+    private $modelFile;
     public $controller;
-    private $controllerPath;
+    private $controllerFile;
     public $template;
     private $base_path;
 
@@ -17,9 +17,10 @@ class Router
         $this->routes     = array();
         $this->model      = 'Model';
         $this->controller = 'Controller';
-        $this->template   = ROOT . '/site/templates/default_page.php';
-        $this->page       = "home";
-        $this->base_path  = ROOT . '/site';
+        $this->template['path']   = ROOT . '/site/templates';
+        $this->template['value'] = "default_page.php";
+        $this->page['path']   = ROOT . '/site/pages';
+        $this->page['value'] = "";
     }
 
     public function add_route_file($file)
@@ -27,10 +28,13 @@ class Router
         if (file_exists($file)) {
             $array = parse_ini_file($file, true);
             $path  = dirname($file);
-            foreach ($array as &$value) {
-                $value['path'] = $path;
+            foreach ($array as $key => $not_used) {
+                foreach ($array[$key] as $option => $value) {
+                    $array[$key][$option] = array("value" => $value, "path" => $path);
+                }
+                $array[$key]['last_path'] = $path;
             }
-            $this->routes = array_merge($this->routes, $array);
+            $this->routes = array_replace_recursive($this->routes, $array);
         }
     }
 
@@ -45,93 +49,101 @@ class Router
                 $this->parse_route($options, $url);
             }
         }
-        chdir($this->base_path);
-        if (isset($this->modelPath)) {
-            require_once $this->modelPath;
-        }
-        if (isset($this->controllerPath)) {
-            require_once $this->controllerPath;
-        }
         if ($no_route) {
             $this->parse_all_from_url($url);
-        } else if ($this->page == "home") {
-            /* parse only the page from the url */
-            $this->parse_page_from_url($url, $this->base_path);
+        } else {
+            if (isset($this->modelFile)) {
+                chdir($this->modelFile['path']);
+                if (file_exists($this->modelFile['value'])) {
+                    require_once $this->modelFile['value'];
+                }
+            }
+            if (isset($this->controllerFile)) {
+                chdir($this->controllerFile['path']);
+                if (file_exists($this->controllerFile['value'])) {
+                    require_once $this->controllerFile['value'];
+                }
+            }
+            if ($this->page['value'] == "") {
+                /* parse only the page from the url */
+                $this->parse_page_from_url($url);
+            }
         }
 
     }
 
     public function parse_route($route, $url)
     {
-        $this->base_path = $route['path'];
+        $this->base_path = $route['last_path'];
+
         if (isset($route['model'])) {
-            $this->model = $route['model'];
-            if (isset($route['modelPath'])) {
-                if ($route['modelPath'][0] == "/") {
-                    $this->modelPath = ROOT . $route['modelPath'];
-                } else {
-                    $this->modelPath = $route['modelPath'];
+            $this->model = $route['model']['value'];
+            if (isset($route['modelFile'])) {
+                $this->modelFile = $route['modelFile'];
+                if ($this->modelFile['value'][0] == "/") {
+                    $this->modelFile['value'] = ROOT . $this->modelFile['value'];
                 }
-            } else if (!isset($this->modelPath)) {
-                $this->modelPath = "models/" . $this->model . ".php";
+            } else {
+                $this->modelFile = array("value" => "models/" . $this->model . ".php", "path" => $route['model']['path']);
             }
         }
         if (isset($route['controller'])) {
-            $this->controller = $route['controller'];
-            if (isset($route['controllerPath'])) {
-                if ($route['controllerPath'][0] == "/") {
-                    $this->controllerPath = ROOT . $route['controllerPath'];
-                } else {
-                    $this->controllerPath = $route['controllerPath'];
+            $this->controller = $route['controller']['value'];
+            if (isset($route['controllerFile'])) {
+                $this->controllerFile = $route['controllerFile'];
+                if ($this->controllerFile['value'][0] == "/") {
+                    $this->controllerFile['value'] = ROOT . $this->controllerFile['value'];
                 }
-            } else if (!isset($this->controllerPath)) {
-                $this->controllerPath = "controllers/" . $this->controller . ".php";
+            } else {
+                $this->controllerFile = array("value" => "controllers/" . $this->controller . ".php", "path" => $route['controller']['path']);
             }
         }
         if (isset($route['page'])) {
-            if ($route['page'][0] == "/") {
-                $this->page = ROOT . $route['page'];
-            } else {
-                $this->page = $route['path'] . "/" . $route['page'];
+            $this->page = $route['page'];
+            if ($this->page['value'][0] == "/") {
+                $this->page = ROOT . $this->page['value'];
             }
         }
         if (isset($route['template'])) {
-            if ($route['template'][0] == "/") {
-                $this->template = ROOT . $route['template'];
-            } else {
-                $this->template = $route['path'] . "/" . $route['template'];
+            $this->template = $route['template'];
+            if ($this->template['value'][0] == "/") {
+                $this->template = ROOT . $this->template['value'];
             }
         }
     }
 
-    private function parse_page_from_url($url, $base_path)
+    private function parse_page_from_url($url)
     {
+        $this->page['value'] = "home.php";
         $args = explode("/", $url);
         $page = end($args);
         if ($page == "") {
-            $this->page = ROOT . '/site/pages/' . $this->page . '.php';
-        } else {
-            $this->page = $base_path . "/pages/" . $page . ".php";
+            $page = $this->page['value'];
         }
+        $this->page['path'] = $this->base_path;
+        if ($this->base_path == ROOT . '/site') {
+            $this->page['path'] .= "/pages";
+        }
+
+        $this->page['value'] = $page . ".php";
     }
 
     private function parse_all_from_url($url)
     {
+        $this->page['value'] = "home.php";
         $args = explode("/", $url);
         if (empty($args[0])) {
             $args = array();
         }
-
-        $page = array_shift($args);
+        $this->page['path'] = ROOT . '/site/pages/';
+        $page               = array_shift($args);
         if ($page) {
-            $this->page = ROOT . '/site/pages/' . $page . ".php";
-            $action     = array_shift($args);
+            $this->page['value'] = $page . ".php";
+            $action              = array_shift($args);
             if ($action) {
                 $this->action = $action;
                 $this->params = $args;
             }
-        } else {
-            $this->page = ROOT . '/site/pages/' . $this->page . '.php';
         }
 
         /* check if users didn't specify the default action in the url themselves */

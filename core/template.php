@@ -119,11 +119,12 @@ class Template
         /* include the start of the html page */
         require_once ROOT . "/core/include/start_page.php";
 
-        if (file_exists($this->page)) {
+        chdir($this->page['path']);
+        if (file_exists($this->page['value'])) {
             ob_start();
             call_user_func(function () {
                 extract($this->variables);
-                require_once ($this->page);
+                require_once ($this->page['value']);
             });
             $page = ob_get_contents();
             ob_end_clean();
@@ -131,11 +132,12 @@ class Template
         } else {
             header('location: ' . BASE_URL . '/404');
         }
-        if (file_exists($this->template)) {
+        chdir($this->template['path']);
+        if (file_exists($this->template['value'])) {
             /* call anonymous function to hide variables */
             call_user_func(function () {
                 extract($this->variables);
-                require_once ($this->template);
+                require_once ($this->template['value']);
             });
         } else {
             echo $page;

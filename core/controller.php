@@ -19,7 +19,7 @@ class Controller
     public function default_action($params)
     {
         global $config;
-        $this->set('site_title', $this->page . " - " . $config['application']['site_name']);
+        $this->set('site_title', $config['application']['site_name']);
 
     }
 
