@@ -11,16 +11,21 @@ class Router
     private $controllerFile;
     public $template;
     private $base_path;
+    private $plugin_manager;
 
     public function __construct()
     {
-        $this->routes     = array();
-        $this->model      = 'Model';
-        $this->controller = 'Controller';
-        $this->template['path']   = ROOT . '/site/templates';
+        $this->routes            = array();
+        $this->model             = 'Model';
+        $this->controller        = 'Controller';
+        $this->template['path']  = ROOT . '/site/templates';
         $this->template['value'] = "default_page.php";
-        $this->page['path']   = ROOT . '/site/pages';
-        $this->page['value'] = "";
+        $this->page['path']      = ROOT . '/site/pages';
+        $this->page['value']     = "";
+    }
+
+    public function set_plugin_manager($plugin_manager){
+        $this->plugin_manager = $plugin_manager;
     }
 
     public function add_route_file($file)
@@ -28,7 +33,19 @@ class Router
         if (file_exists($file)) {
             $array = parse_ini_file($file, true);
             $path  = dirname($file);
-            foreach ($array as $key => $not_used) {
+            foreach ($array as $key => $regex) {
+                if (isset($regex['dependencies'])) {
+                    $error = "";
+                    foreach ($regex['dependencies'] as $plugin) {
+                        if (!$this->plugin_manager->is_enabled($plugin)) {
+                            $error .= "need plugin " . $plugin . " for route " . $key . "\n";
+                        }
+                    }
+                    if ($error != "") {
+                        unset($array[$key]);
+                        continue;
+                    }
+                }
                 foreach ($array[$key] as $option => $value) {
                     $array[$key][$option] = array("value" => $value, "path" => $path);
                 }
@@ -115,8 +132,8 @@ class Router
     private function parse_page_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args = explode("/", $url);
-        $page = end($args);
+        $args                = explode("/", $url);
+        $page                = end($args);
         if ($page == "") {
             $page = $this->page['value'];
         }
@@ -131,7 +148,7 @@ class Router
     private function parse_all_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args = explode("/", $url);
+        $args                = explode("/", $url);
         if (empty($args[0])) {
             $args = array();
         }

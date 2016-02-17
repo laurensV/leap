@@ -25,6 +25,19 @@ class PluginManager
         $this->all_plugins = $plugin_filenames;
     }
 
+    public function is_enabled($name) {
+        return isset($this->enabled_plugins[$name]);
+    }
+
+    public function get_path($name)
+    {
+        if (is_enabled($name)) {
+            return $this->enabled_plugins[$name];
+        }
+        return;
+
+    }
+
     public function get_sublist_plugins($plugin_names)
     {
         $sublist_plugins = array();
@@ -64,8 +77,6 @@ class PluginManager
                 if (file_exists($path . "/" . $name . ".hooks.php")) {
                     include_once $path . "/" . $name . ".hooks.php";
                 }
-
-                $this->router->add_route_file($path . "/" . "routes.ini");
             }
         }
 
@@ -74,6 +85,7 @@ class PluginManager
          * the variable $path can't be reused as it gives weird results.. therefore $plugin_path is used */
         foreach ($this->enabled_plugins as $name => $plugin_path) {
             if (!empty($plugin_path)) {
+                $this->router->add_route_file($plugin_path . "/" . "routes.ini");
                 foreach ($this->hooks->getHooks() as $hook) {
                     $function = $name . "_" . $hook;
                     if (function_exists($function)) {

@@ -112,7 +112,9 @@ class Template
      */
     public function render()
     {
-        extract($this->variables);
+        if (!empty($this->variables)) {
+            extract($this->variables);
+        }
 
         /* get all javascript and css files to be included */
         $this->include_scripts_css();
@@ -123,7 +125,9 @@ class Template
         if (file_exists($this->page['value'])) {
             ob_start();
             call_user_func(function () {
-                extract($this->variables);
+                if (!empty($this->variables)) {
+                    extract($this->variables);
+                }
                 require_once ($this->page['value']);
             });
             $page = ob_get_contents();

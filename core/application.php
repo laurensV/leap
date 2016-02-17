@@ -21,8 +21,10 @@ class Application
         $this->router         = new Router();
         $this->define_hooks();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
+        $this->router->set_plugin_manager($this->plugin_manager);
         $this->bootstrap();
     }
+
 
     private function define_hooks()
     {
@@ -33,13 +35,13 @@ class Application
     private function bootstrap()
     {
         $this->plugin_manager->get_all_plugins();
-        $plugins = $this->plugin_manager->get_sublist_plugins(array("admin"));
+        $plugins = $this->plugin_manager->get_sublist_plugins(array("admin", "less"));
         $this->plugin_manager->load_plugins($plugins);
 
         $this->router->add_route_file(ROOT . "/site/routes.ini");
         $this->router->route_url($this->url);
-
-        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager->enabled_plugins);
+        //printr($this->router);
+        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager);
 
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);
