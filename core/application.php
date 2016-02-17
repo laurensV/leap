@@ -1,15 +1,11 @@
 <?php
 class Application
 {
-    private $page;
-    /** @var null The controller */
+    private $router;
     private $controller;
-    /** @var null The method (of the above controller), often also named "action" */
-    private $action;
-    /** @var array URL parameters */
-    private $params;
     private $model;
-    private $template;
+    private $url;
+    private $hooks;
 
     /**
      * "Start" the application:
@@ -19,52 +15,38 @@ class Application
     {
         $this->setReporting();
         $this->add_classes();
-        spl_autoload_register(array($this, 'my_autoload'));
-        // get controller, action and other params from the url
-        $this->parse_arguments();
-        $this->callHook();
-    }
-
-    private function check_route($page)
-    {
-        $routes = array();
-        if (file_exists(ROOT . "/site/routes.ini")) {
-            $routes = parse_ini_file(ROOT . "/site/routes.ini", true);
-        }
-        if (isset($routes[$page])) {
-            return $routes[$page];
-        }
-        foreach ($routes as $key => $value) {
-            if (fnmatch($key, $page)) {
-                return $value;
-            }
-        }
-        return array();
+        spl_autoload_register(array($this, 'autoload_classes'));
+        $this->url    = isset($_GET['args']) ? $_GET['args'] : "";
+        $this->router = new Router();
+        $this->bootstrap();
     }
 
     private function get_plugins()
     {
-        $directory    = new RecursiveDirectoryIterator(ROOT . '/plugins');
-        $all_files    = new RecursiveIteratorIterator($directory);
-        $plugin_files = new RegexIterator($all_files, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+        $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
+        $all_files = new RecursiveIteratorIterator($directory);
 
         $plugin_filenames = array();
         foreach ($all_files as $file) {
-
-            $plugin_filenames[] = $file->getFilename();
-
+            if ($file->getExtension() == "plugin") {
+                $plugin_filenames[$file->getBasename('.plugin')] = $file->getPath();
+            }
         }
         return $plugin_filenames;
     }
 
     private function load_plugins($plugins)
     {
-        foreach ($plugins as $plugin) {
-            include_once ROOT . "/plugins/" . $plugin . "/main.php";
+        foreach ($plugins as $name => $path) {
+            if (file_exists($path . "/" . $name . ".hooks.php")) {
+                include_once $path . "/" . $name . ".hooks.php";
+            }
+
+            $this->router->add_route_file($path . "/" . "routes.ini");
         }
-        foreach ($plugins as $plugin) {
+        foreach ($plugins as $name => $path) {
             foreach ($this->hooks->getHooks() as $hook) {
-                $function = $plugin . "_" . $hook;
+                $function = $name . "_" . $hook;
                 if (function_exists($function)) {
                     $this->hooks->add($hook, $function);
                 }
@@ -72,45 +54,37 @@ class Application
         }
     }
 
-    private function callHook()
+    private function define_hooks()
     {
-        $this->model      = 'Model';
-        $this->controller = 'Controller';
-        $this->template   = 'default_page';
-        $route_options    = $this->check_route($this->page);
-        if (!empty($route_options)) {
-            if (isset($route_options['model'])) {
-                $this->model = $route_options['model'];
-            }
-            if (isset($route_options['controller'])) {
-                $this->controller = $route_options['controller'];
-            }
-            if (isset($route_options['page'])) {
-                $this->page = $route_options['page'];
-            }
-            if (isset($route_options['template'])) {
-                $this->template = $route_options['template'];
-            }
-        }
-        $this->hooks = new Hooks(array("parse_stylesheet"));
-        printr($this->get_plugins());
-        $this->load_plugins(array("less"));
-        $this->controller = new $this->controller($this->model, $this->template, $this->page, $this->hooks);
+        $hook_names  = array("parse_stylesheet");
+        $this->hooks = new Hooks($hook_names);
+    }
 
-        if (method_exists($this->controller, $this->action)) {
-            $this->controller->{$this->action}($this->params);
-        } else if (empty($this->params)) {
-            /* when the second argument is not an action, it is probably a parameter */
-            $this->params = $this->action;
-            $this->controller->default_action($this->params);
+    private function bootstrap()
+    {
+        $this->define_hooks();
+        $plugins = $this->get_plugins();
+        $this->load_plugins($plugins);
+
+        $this->router->add_route_file(ROOT . "/site/routes.ini");
+        $this->router->route_url($this->url);
+
+        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $plugins);
+
+        if (method_exists($this->controller, $this->router->action)) {
+            $this->controller->{$this->router->action}($this->router->params);
         } else {
-            header('location: ' . URL . '/404');
+            /* when the second argument is not an action, it is probably a parameter */
+            $this->router->params = $this->router->action . "/" . $this->router->params;
+            $this->controller->default_action($this->router->params);
         }
 
         $this->controller->render();
     }
 
-    /* Check if environment is development and display errors */
+    /**
+     * Check if environment is development and display errors
+     */
     private function setReporting()
     {
         global $config;
@@ -124,17 +98,16 @@ class Application
             ini_set('error_log', ROOT . '/tmp/logs/error.log');
         }
     }
-    /* Autoload any classes that are required */
-    public function my_autoload($className)
+
+    /**
+     * Autoload any classes that are required
+     */
+    public function autoload_classes($className)
     {
-        if (file_exists(ROOT . '/core/include/classes/' . $className . '.class.php')) {
+        if (file_exists(ROOT . '/core/' . strtolower($className) . '.php')) {
+            require_once ROOT . '/core/' . strtolower($className) . '.php';
+        } else if (file_exists(ROOT . '/core/include/classes/' . $className . '.class.php')) {
             require_once ROOT . '/core/include/classes/' . $className . '.class.php';
-        } else if (file_exists(ROOT . '/site/controller/' . $className . '.php')) {
-            require_once ROOT . '/site/controller/' . $className . '.php';
-        } else if (file_exists(ROOT . '/site/model/' . $className . '.php')) {
-            require_once ROOT . '/site/model/' . $className . '.php';
-        } else {
-            /* Error Generation Code Here */
         }
     }
 
@@ -142,47 +115,5 @@ class Application
     {
         /* load the less to css compiler */
         require_once ROOT . '/core/include/libraries/less.php/Less.php';
-        require_once ROOT . '/core/hook.php';
-        require_once ROOT . '/core/model.php';
-        require_once ROOT . '/core/controller.php';
-        require_once ROOT . '/core/template.php';
     }
-
-    private function parse_arguments()
-    {
-        $args = isset($_GET['args']) ? $_GET['args'] : "";
-
-        $args_parts = explode("/", $args);
-        if (empty($args_parts[0])) {
-            $args_parts = array();
-        }
-
-        $this->page = 'home';
-
-        switch (sizeof($args_parts)) {
-            case 0:
-                break;
-            case 1:
-                $this->page = $args_parts[0];
-                break;
-            case 2:
-                $this->page   = $args_parts[0];
-                $this->action = $args_parts[1];
-                break;
-            case 3:
-                $this->page   = $args_parts[0];
-                $this->action = $args_parts[1];
-                $this->params = $args_parts[2];
-                break;
-            default:
-                header('location: ' . URL . '/404');
-        }
-        /* check if users didn't specify the default action in the url themselves */
-        if ($this->action == 'default_action') {
-            header('location: ' . URL . '/404');
-        } else if (empty($this->action)) {
-            $this->action = 'default_action';
-        }
-    }
-
 }

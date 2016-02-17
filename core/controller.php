@@ -8,19 +8,16 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    public function __construct($model, $template, $page, $hooks)
+    public function __construct($model, $template, $page, $hooks, $plugins)
     {
         $this->model    = new $model();
         $this->hooks    = $hooks;
-        $this->template = new Template($template, $page, $this->hooks);
+        $this->template = new Template($template, $page, $hooks, $plugins);
         $this->page     = $page;
     }
 
     public function default_action($params)
     {
-        if (!empty($params)) {
-            header('location: ' . URL . '/404');
-        }
         global $config;
         $this->set('site_title', $this->page . " - " . $config['application']['site_name']);
 

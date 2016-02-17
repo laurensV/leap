@@ -6,77 +6,64 @@ class Template
     protected $stylesheets;
     protected $scripts;
     protected $hooks;
+    protected $plugins;
 
-    public function __construct($template, $page, $hooks)
+    public function __construct($template, $page, $hooks, $plugins)
     {
         $this->template = $template;
         $this->page     = $page;
         $this->hooks    = $hooks;
+        $this->plugins  = $plugins;
     }
 
-    public function add_styles($styleArray)
+    public function add_styles($styleArray, $base_path)
     {
         if (is_array($styleArray)) {
             foreach ($styleArray as $style) {
-                $this->stylesheets[] = $this->parse_stylesheet($style);
+                $this->stylesheets[] = $this->parse_stylesheet($style, $base_path);
             }
         } else {
-            $this->stylesheets[] = $this->parse_stylesheet($styleArray);
+            $this->stylesheets[] = $this->parse_stylesheet($styleArray, $base_path);
         }
     }
 
-    public function parse_less(&$style)
+    public function parse_stylesheet($style, $base_path)
     {
-        if (substr($style, -5) == ".less") {
-            if ($style[0] == "/") {
-                $style = ROOT . $style;
-            }
-            chdir(ROOT . "/site/");
-            $less_file = array($style => "/");
-            $options   = array('cache_dir' => ROOT . '/site/files/css', 'compress' => true);
-            $style     = "/site/files/css/" . Less_Cache::Get($less_file, $options);
-        }
-    }
+        $this->hooks->fire("parse_stylesheet", array(&$style, $base_path));
 
-    public function parse_stylesheet($style)
-    {
-        $this->hooks->fire("parse_stylesheet", array(&$style));
-
-        /* file is not a less file, so no need to compile to css */
         if (!filter_var($style, FILTER_VALIDATE_URL)) {
             if ($style[0] != "/") {
-                $style = "/site/" . $style;
+                $style = str_replace_first(ROOT, BASE_URL, $base_path) . $style;
             }
         }
 
         return $style;
     }
 
-    public function parse_script($script)
+    public function parse_script($script, $base_path)
     {
         if (!filter_var($script, FILTER_VALIDATE_URL)) {
-            if (substr($script, 0, 6) != "/site/") {
-                $script_withroot = "/site/" . $script;
-                if (file_exists(ROOT . $script_withroot)) {
-                    $script = $script_withroot;
-                }
+            if ($script[0] != "/") {
+                $script = str_replace_first(ROOT, BASE_URL, $base_path) . $script;
             }
         }
         return $script;
     }
 
-    public function add_scripts($scriptArray)
+    public function add_scripts($scriptArray, $base_path)
     {
         if (is_array($scriptArray)) {
             foreach ($scriptArray as $script) {
-                $this->scripts[] = $this->parse_script($script);
+                $this->scripts[] = $this->parse_script($script, $base_path);
             }
         } else {
-            $this->scripts[] = $this->parse_script($scriptArray);
+            $this->scripts[] = $this->parse_script($scriptArray, $base_path);
         }
     }
 
-    /** Set Variables **/
+    /**
+     * Set Variables *
+     */
     public function set($name, $value)
     {
         $this->variables[$name] = $value;
@@ -87,50 +74,68 @@ class Template
     {
         if (file_exists(ROOT . "/site/stylesheets.ini")) {
             extract(parse_ini_file(ROOT . "/site/stylesheets.ini"));
+            if (isset($stylesheets)) {
+                $this->add_styles($stylesheets, ROOT . "/site/");
+                unset($stylesheets);
+            }
         }
-        if (isset($stylesheets)) {
-            $this->add_styles($stylesheets);
-        }
+
         if (file_exists(ROOT . "/site/scripts.ini")) {
             extract(parse_ini_file(ROOT . "/site/scripts.ini"));
+            if (isset($scripts)) {
+                $this->add_scripts($scripts, ROOT . "/site/");
+                unset($scripts);
+            }
         }
-        if (isset($scripts)) {
-            $this->add_scripts($scripts);
+
+        foreach ($this->plugins as $path) {
+            if (file_exists($path . "/stylesheets.ini")) {
+                extract(parse_ini_file($path . "/stylesheets.ini"));
+                if (isset($stylesheets)) {
+                    $this->add_styles($stylesheets, $path);
+                    unset($stylesheets);
+                }
+            }
+
+            if (file_exists($path . "/scripts.ini")) {
+                extract(parse_ini_file($path . "/scripts.ini"));
+                if (isset($scripts)) {
+                    $this->add_scripts($scripts, $path);
+                    unset($scripts);
+                }
+            }
         }
     }
 
-    /** Display Template **/
+    /**
+     * Display Template *
+     */
     public function render()
     {
         extract($this->variables);
 
         /* get all javascript and css files to be included */
         $this->include_scripts_css();
-
         /* include the start of the html page */
         require_once ROOT . "/core/include/start_page.php";
 
-        /* include the content */
-        $template_path = ROOT . "/site/templates/" . $this->template . ".php";
-        $page_path     = ROOT . "/site/pages/" . $this->page . ".php";
-
-        if (file_exists($page_path)) {
+        if (file_exists($this->page)) {
             ob_start();
             call_user_func(function () {
                 extract($this->variables);
-                require_once (ROOT . "/site/pages/" . $this->page . ".php");
+                require_once ($this->page);
             });
             $page = ob_get_contents();
             ob_end_clean();
             $this->set('page', $page);
         } else {
-            header('location: ' . URL . '/404');
+            header('location: ' . BASE_URL . '/404');
         }
-        if (file_exists($template_path)) {
+        if (file_exists($this->template)) {
             /* call anonymous function to hide variables */
             call_user_func(function () {
                 extract($this->variables);
-                require_once (ROOT . "/site/templates/" . $this->template . ".php");
+                require_once ($this->template);
             });
         } else {
             echo $page;

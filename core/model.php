@@ -1,16 +1,9 @@
 <?php
-class Model
+class Model extends SQLHandler
 {
     public function __construct()
     {
-        $this->connect();
-    }
-
-    /**
-     * Open the database connection with the credentials from application/config/config.php
-     */
-    private function connect()
-    {
-
+        global $config;
+        $this->connect($config['database']['db_host'], $config['database']['db_user'], $config['database']['db_pass'], $config['database']['db_name']);
     }
 }
