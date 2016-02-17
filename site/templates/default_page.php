@@ -1,3 +1,7 @@
 <div id="page-wrapper">
-	<?php echo $page; ?>
+    <div class="container">
+        <div class="starter-template">
+        <?php echo $page; ?>
+            </div>
+    </div>
 </div>
