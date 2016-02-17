@@ -25,16 +25,3 @@ define('BASE_URL', call_user_func(function () {
 }));
 
 $args_raw = isset($_GET['args']) ? $_GET['args'] : "";
-function arg($id = null)
-{
-    global $args_raw;
-    $args = explode("/", $args_raw);
-    if (!isset($id)) {
-        return $args;
-    } else {
-        $id--;
-        if (isset($args[$id])) {
-            return $args[$id];
-        }
-    }
-}

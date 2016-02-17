@@ -11,10 +11,25 @@ function printr($data, $exit = true)
     }
 }
 
-function str_replace_first($search, $replace, $subject) {
+function str_replace_first($search, $replace, $subject)
+{
     $pos = strpos($subject, $search);
     if ($pos !== false) {
         $subject = substr_replace($subject, $replace, $pos, strlen($search));
     }
     return $subject;
+}
+
+function arg($id = null)
+{
+    global $args_raw;
+    $args = explode("/", $args_raw);
+    if (!isset($id)) {
+        return $args;
+    } else {
+        $id--;
+        if (isset($args[$id])) {
+            return $args[$id];
+        }
+    }
 }
