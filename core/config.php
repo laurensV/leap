@@ -6,26 +6,35 @@ if (file_exists(ROOT . '/config.local.ini')) {
     $config = array_replace_recursive($config, parse_ini_file(ROOT . "/config.local.ini", true));
 }
 
-// if (isset($config['application']['base_url'])) {
-//     define('BASE_URL', $config['application']['base_url']);
-// } else {
-       define('BASE_URL', base_url());
-// }
-
-function base_url() {
+define('BASE_URL', call_user_func(function () {
     $port = ":" . $_SERVER['SERVER_PORT'];
     $http = "http";
-    
-    if($port == ":80"){
-      $port = "";  
+
+    if ($port == ":80") {
+        $port = "";
     }
-    
-    if(!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on"){
-       $http = "https";
+
+    if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
+        $http = "https";
     }
     $sub_dir = dirname(dirname($_SERVER['PHP_SELF']));
-    if($sub_dir == "/" || $sub_dir == "\\") {
-      $sub_dir = "";
+    if ($sub_dir == "/" || $sub_dir == "\\") {
+        $sub_dir = "";
     }
-    $http."://".$_SERVER['SERVER_NAME']. $port . $sub_dir;      
+    return $http . "://" . $_SERVER['SERVER_NAME'] . $port . $sub_dir;
+}));
+
+$args_raw = isset($_GET['args']) ? $_GET['args'] : "";
+function arg($id = null)
+{
+    global $args_raw;
+    $args = explode("/", $args_raw);
+    if (!isset($id)) {
+        return $args;
+    } else {
+        $id--;
+        if (isset($args[$id])) {
+            return $args[$id];
+        }
+    }
 }

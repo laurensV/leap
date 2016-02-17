@@ -24,7 +24,8 @@ class Router
         $this->page['value']     = "";
     }
 
-    public function set_plugin_manager($plugin_manager){
+    public function set_plugin_manager($plugin_manager)
+    {
         $this->plugin_manager = $plugin_manager;
     }
 
@@ -32,7 +33,7 @@ class Router
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
-            $path  = dirname($file);
+            $path   = dirname($file);
             foreach ($routes as $regex => $route) {
                 if (isset($route['dependencies'])) {
                     $error = "";
@@ -132,7 +133,7 @@ class Router
     private function parse_page_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args                = explode("/", $url);
+        $args                = arg();
         $page                = end($args);
         if ($page == "") {
             $page = $this->page['value'];
@@ -148,7 +149,7 @@ class Router
     private function parse_all_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args                = explode("/", $url);
+        $args                = arg();
         if (empty($args[0])) {
             $args = array();
         }
