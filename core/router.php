@@ -31,27 +31,27 @@ class Router
     public function add_route_file($file)
     {
         if (file_exists($file)) {
-            $array = parse_ini_file($file, true);
+            $routes = parse_ini_file($file, true);
             $path  = dirname($file);
-            foreach ($array as $key => $regex) {
-                if (isset($regex['dependencies'])) {
+            foreach ($routes as $regex => $route) {
+                if (isset($route['dependencies'])) {
                     $error = "";
-                    foreach ($regex['dependencies'] as $plugin) {
+                    foreach ($route['dependencies'] as $plugin) {
                         if (!$this->plugin_manager->is_enabled($plugin)) {
-                            $error .= "need plugin " . $plugin . " for route " . $key . "\n";
+                            $error .= "need plugin " . $plugin . " for route " . $regex . "\n";
                         }
                     }
                     if ($error != "") {
-                        unset($array[$key]);
+                        unset($routes[$regex]);
                         continue;
                     }
                 }
-                foreach ($array[$key] as $option => $value) {
-                    $array[$key][$option] = array("value" => $value, "path" => $path);
+                foreach ($routes[$regex] as $option => $value) {
+                    $routes[$regex][$option] = array("value" => $value, "path" => $path);
                 }
-                $array[$key]['last_path'] = $path;
+                $routes[$regex]['last_path'] = $path;
             }
-            $this->routes = array_replace_recursive($this->routes, $array);
+            $this->routes = array_replace_recursive($this->routes, $routes);
         }
     }
 
