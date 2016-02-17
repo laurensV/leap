@@ -1,11 +1,13 @@
+Options +FollowSymLinks
 <IfModule mod_rewrite.c>
+    # Tell PHP that the mod_rewrite module is ENABLED.
+    SetEnv HTTP_MOD_REWRITE On
     RewriteEngine on
-    RewriteBase /
-	RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteRule ^(.*)$ core/index.php?args=$1 [QSA,L,NC]
  </IfModule>
 
-<Files *.ini>
-	Order deny,allow
-	Deny from All 
-</Files>
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
