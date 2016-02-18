@@ -87,7 +87,6 @@ class Router
                 $this->parse_page_from_url($url);
             }
         }
-
     }
 
     public function parse_route($route, $url)
@@ -133,7 +132,7 @@ class Router
     private function parse_page_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args                = arg();
+        $args                = arg(NULL, $url);
         $page                = end($args);
         if ($page == "") {
             $page = $this->page['value'];
@@ -149,7 +148,7 @@ class Router
     private function parse_all_from_url($url)
     {
         $this->page['value'] = "home.php";
-        $args                = arg();
+        $args                = arg(NULL, $url);
         if (empty($args[0])) {
             $args = array();
         }

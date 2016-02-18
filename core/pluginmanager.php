@@ -74,8 +74,10 @@ class PluginManager
                         }
                     }
                 }
-                if (file_exists($path . "/" . $name . ".hooks.php")) {
-                    include_once $path . "/" . $name . ".hooks.php";
+                chdir($path);
+                if (file_exists($name . ".hooks.php")) {
+                    
+                    include_once $name . ".hooks.php";
                 }
             }
         }

@@ -20,9 +20,12 @@ function str_replace_first($search, $replace, $subject)
     return $subject;
 }
 
-function arg($id = null)
+function arg($id = null, $args_raw = null)
 {
-    global $args_raw;
+    if(!isset($args_raw)){
+        global $args_raw;
+    }
+    
     $args = explode("/", $args_raw);
     if (!isset($id)) {
         return $args;

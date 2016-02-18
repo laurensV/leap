@@ -28,19 +28,19 @@ class Application
 
     private function define_hooks()
     {
-        $hook_names  = array("parse_stylesheet");
+        $hook_names  = array("parse_stylesheet", "preroute_url");
         $this->hooks = new Hooks($hook_names);
     }
 
     private function bootstrap()
     {
         $this->plugin_manager->get_all_plugins();
-        $plugins = $this->plugin_manager->get_sublist_plugins(array("admin", "less"));
+        $plugins = $this->plugin_manager->get_sublist_plugins(array("admin", "less", "alias"));
         $this->plugin_manager->load_plugins($plugins);
 
         $this->router->add_route_file(ROOT . "/site/routes.ini");
+        $this->hooks->fire("preroute_url", array(&$this->url));
         $this->router->route_url($this->url);
-        //printr($this->router);
         $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager);
 
         if (method_exists($this->controller, $this->router->action)) {
