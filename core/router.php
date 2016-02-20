@@ -127,6 +127,9 @@ class Router
                 $this->template = ROOT . $this->template['value'];
             }
         }
+        if (isset($route['action'])) {
+            $this->action = $route['action']['value'];
+        }
     }
 
     private function parse_page_from_url($url)
@@ -159,7 +162,7 @@ class Router
             $action              = array_shift($args);
             if ($action) {
                 $this->action = $action;
-                $this->params = $args;
+                $this->params = implode("/", $args);
             }
         }
 

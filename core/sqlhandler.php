@@ -6,15 +6,9 @@ class SQLHandler
 
     /** Connects to database **/
 
-    public function connect($host, $user, $pwd, $db_name)
+    public function set_db($db)
     {
-        $this->db = @mysql_connect($address, $account, $pwd);
-        if ($this->db != 0) {
-            if (mysql_select_db($db_name, $this->db)) {
-                return 1;
-            }
-        }
-        return 0;
+        $this->db = $db;
     }
 
     /** Disconnects from database **/
@@ -69,6 +63,8 @@ class SQLHandler
             }
             mysql_free_result($this->result);
             return ($result);
+        } else {
+            return $this->result;
         }
 
     }

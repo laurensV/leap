@@ -9,9 +9,9 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    public function __construct($model, $template, $page, $hooks, $plugin_manager)
+    public function __construct($model, $template, $page, $hooks, $plugin_manager, $db)
     {
-        $this->model    = new $model();
+        $this->model    = new $model($db);
         $this->hooks    = $hooks;
         $this->plugin_manager = $plugin_manager;
         $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins);

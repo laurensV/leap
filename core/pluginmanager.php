@@ -11,7 +11,7 @@ class PluginManager
         $this->hooks  = $hooks;
     }
 
-    public function get_all_plugins()
+    public function get_all_plugins($db)
     {
         $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
         $all_files = new RecursiveIteratorIterator($directory);
@@ -20,6 +20,9 @@ class PluginManager
         foreach ($all_files as $file) {
             if ($file->getExtension() == "plugin") {
                 $plugin_filenames[$file->getBasename('.plugin')] = $file->getPath();
+                /* TODO: rewrite to PDO */
+                $query = "INSERT INTO plugins (name, enabled) VALUES ('".$file->getBasename('.plugin')."', 0)";
+                mysql_query($query, $db);
             }
         }
         $this->all_plugins = $plugin_filenames;
@@ -35,7 +38,20 @@ class PluginManager
             return $this->enabled_plugins[$name];
         }
         return;
+    }
 
+    public function plugins_to_load($db) {
+        /* TODO: rewrite to PDO */
+        $query = "SELECT name FROM plugins WHERE enabled=1";
+
+        // Perform Query
+        $result = mysql_query($query, $db);
+
+        $plugins = array();
+        while ($row = mysql_fetch_assoc($result)) {
+            $plugins[] = $row['name'];
+        }
+        return $plugins;
     }
 
     public function get_sublist_plugins($plugin_names)
@@ -65,11 +81,11 @@ class PluginManager
                                      * we need to inform php that he might not be executing the last element of the array */
                                     $plugins[] = "";
                                 } else {
-                                    return "Error: plugin " . $dependency . " needed for plugin " . $name . " not found";
+                                    die("Error: plugin " . $dependency . " needed for plugin " . $name . " not found");
                                 }
                             } else {
                                 /* TODO: proper error handling */
-                                return "Error: plugin " . $name . " needs plugin " . $dependency . " enabled";
+                                die("Error: plugin " . $name . " needs plugin " . $dependency . " enabled");
                             }
                         }
                     }

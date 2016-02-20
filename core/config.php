@@ -5,6 +5,12 @@ $config = parse_ini_file(ROOT . "/config.ini", true);
 if (file_exists(ROOT . '/config.local.ini')) {
     $config = array_replace_recursive($config, parse_ini_file(ROOT . "/config.local.ini", true));
 }
+if(!isset($config['database']['db_type'])){
+    $config['general']['db_type'] = "none";
+}
+if(!isset($config['database']['plugins_from_db'])){
+    $config['general']['plugins_from_db'] = true;
+}
 
 define('BASE_URL', call_user_func(function () {
     $port = ":" . $_SERVER['SERVER_PORT'];

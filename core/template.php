@@ -87,6 +87,7 @@ class Template
                 unset($scripts);
             }
         }
+        //printr($this);
 
         foreach ($this->plugins as $path) {
             if (file_exists($path . "/stylesheets.ini")) {

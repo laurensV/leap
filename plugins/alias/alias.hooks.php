@@ -1,6 +1,7 @@
 <?php
 function alias_preroute_url(&$url)
 {
+
     $alias = get_aliases();
 
     if (isset($alias[$url])) {
