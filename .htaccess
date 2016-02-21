@@ -10,7 +10,7 @@ DirectoryIndex disabled
  </IfModule>
 
 <IfModule !mod_rewrite.c>
-	ErrorDocument 403 /framework/core/error_pages/enable_modrewrite.php
+	ErrorDocument 403 /framework/core/pages/enable_modrewrite.php
 </IfModule>
 
 <FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project)$">

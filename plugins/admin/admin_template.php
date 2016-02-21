@@ -17,19 +17,19 @@
                 <ul class="nav" id="side-menu">
                 	<?php
     	            	if(isset($links)){
-    						foreach($links as $name => $link){
-    							switch (strtolower($name)) {
-    								case 'dashboard':
-    									$name = '<span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span> '.$name;
+    						foreach($links as $link){
+    							switch (strtolower($link['link'])) {
+    								case 'admin/dashboard':
+    									$link['name'] = '<span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span> '.$link['name'];
     									break;
-    								case 'plugins':
-    									$name = '<span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> '.$name;
+    								case 'admin/plugins':
+    									$link['name'] = '<span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> '.$link['name'];
     									break;
     								default:
-    									$name = '<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> '.$name;
+    									$link['name'] = '<span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span> '.$link['name'];
     									break;
     							}
-    							echo "<li>" . l($name, $link) . "</li>";
+    							echo "<li>" . l($link['name'], $link['link'], array("title"=>$link['description'])) . "</li>";
     						}
     					}
                 	?>

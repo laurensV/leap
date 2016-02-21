@@ -18,7 +18,7 @@ class Application
         $this->setReporting();
         $this->add_classes();
         spl_autoload_register(array($this, 'autoload_classes'));
-        $this->url            = isset($_GET['args']) ? $_GET['args'] : "";
+        $this->url            = $this->get_url();
         $this->router         = new Router();
         $this->define_hooks();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
@@ -26,6 +26,9 @@ class Application
         $this->bootstrap();
     }
 
+    private function get_url(){
+        return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
+    }
 
     private function define_hooks()
     {
@@ -82,11 +85,11 @@ class Application
 
         $this->plugin_manager->load_plugins($plugins, $auto_enable_dependencies);
         /* Plugins are loaded, so from now on we can fire hooks */
-        $this->router->add_route_file(ROOT . "/site/routes.ini");
         $this->router->add_route_file(ROOT . "/core/routes.ini");
+        $this->router->add_route_file(ROOT . "/site/routes.ini");
         $this->hooks->fire("preroute_url", array(&$this->url));
         $this->router->route_url($this->url);
-        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->db);
+        $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->db, $this->router->stylesheets_route, $this->router->scripts_route);
 
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);

@@ -1,22 +1,26 @@
 <?php
 class Template
 {
-    protected $template;
-    protected $page;
-    protected $stylesheets;
-    protected $scripts;
-    protected $hooks;
-    protected $plugins;
+    private $template;
+    private $page;
+    private $stylesheets;
+    private $scripts;
+    private $stylesheets_route;
+    private $scripts_route;
+    private $hooks;
+    private $plugins;
 
-    public function __construct($template, $page, $hooks, $plugins)
+    public function __construct($template, $page, $hooks, $plugins, $stylesheets_route, $scripts_route)
     {
         $this->template = $template;
         $this->page     = $page;
         $this->hooks    = $hooks;
         $this->plugins  = $plugins;
+        $this->stylesheets_route = $stylesheets_route;
+        $this->scripts_route = $scripts_route;
     }
 
-    public function add_styles($styleArray, $base_path)
+    public function add_stylesheet($styleArray, $base_path)
     {
         if (is_array($styleArray)) {
             foreach ($styleArray as $style) {
@@ -33,7 +37,7 @@ class Template
 
         if (!filter_var($style, FILTER_VALIDATE_URL)) {
             if ($style[0] != "/") {
-                $style = str_replace_first(ROOT, BASE_URL, $base_path) . $style;
+                $style = str_replace_first(ROOT, BASE_URL, $base_path) . "/" . $style;
             }
         }
 
@@ -44,13 +48,13 @@ class Template
     {
         if (!filter_var($script, FILTER_VALIDATE_URL)) {
             if ($script[0] != "/") {
-                $script = str_replace_first(ROOT, BASE_URL, $base_path) . $script;
+                $script = str_replace_first(ROOT, BASE_URL, $base_path) . "/" . $script;
             }
         }
         return $script;
     }
 
-    public function add_scripts($scriptArray, $base_path)
+    public function add_script($scriptArray, $base_path)
     {
         if (is_array($scriptArray)) {
             foreach ($scriptArray as $script) {
@@ -72,40 +76,15 @@ class Template
     /* get all javascript and css files to be included */
     public function include_scripts_css()
     {
-        if (file_exists(ROOT . "/site/stylesheets.ini")) {
-            extract(parse_ini_file(ROOT . "/site/stylesheets.ini"));
-            if (isset($stylesheets)) {
-                $this->add_styles($stylesheets, ROOT . "/site/");
-                unset($stylesheets);
-            }
+        foreach ($this->stylesheets_route as $styleArray) {
+            $this->add_stylesheet($styleArray['value'], $styleArray['path']);
         }
-
-        if (file_exists(ROOT . "/site/scripts.ini")) {
-            extract(parse_ini_file(ROOT . "/site/scripts.ini"));
-            if (isset($scripts)) {
-                $this->add_scripts($scripts, ROOT . "/site/");
-                unset($scripts);
-            }
+        foreach ($this->scripts_route as $scriptArray) {
+            $this->add_script($scriptArray['value'], $scriptArray['path']);
         }
-        //printr($this);
-
-        foreach ($this->plugins as $path) {
-            if (file_exists($path . "/stylesheets.ini")) {
-                extract(parse_ini_file($path . "/stylesheets.ini"));
-                if (isset($stylesheets)) {
-                    $this->add_styles($stylesheets, $path);
-                    unset($stylesheets);
-                }
-            }
-
-            if (file_exists($path . "/scripts.ini")) {
-                extract(parse_ini_file($path . "/scripts.ini"));
-                if (isset($scripts)) {
-                    $this->add_scripts($scripts, $path);
-                    unset($scripts);
-                }
-            }
-        }
+        /* remove duplicates */
+        $this->stylesheets = array_unique($this->stylesheets);
+        $this->scripts = array_unique($this->scripts);
     }
 
     /**
@@ -119,6 +98,7 @@ class Template
 
         /* get all javascript and css files to be included */
         $this->include_scripts_css();
+
         /* include the start of the html page */
         require_once ROOT . "/core/include/start_page.php";
 

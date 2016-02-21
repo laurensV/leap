@@ -12,8 +12,8 @@ class Router
     public $template;
     private $base_path;
     private $plugin_manager;
-    public $stylesheets;
-    public $scripts;
+    public $stylesheets_route;
+    public $scripts_route;
 
     public function __construct()
     {
@@ -24,6 +24,8 @@ class Router
         $this->template['value'] = "default_page.php";
         $this->page['path']      = ROOT . '/site/pages';
         $this->page['value']     = "";
+        $this->stylesheets_route       = array();
+        $this->scripts_route           = array();
     }
 
     public function set_plugin_manager($plugin_manager)
@@ -64,13 +66,20 @@ class Router
         uksort($this->routes, function ($a, $b) {return strlen($a) - strlen($b);});
         $no_route = true;
         foreach ($this->routes as $regex => $options) {
-            if (fnmatch($regex, $url)) {
-                $no_route = false;
-                $this->parse_route($options, $url);
+            $multi_regex = explode(",", $regex);
+            foreach ($multi_regex as $pattern) {
+                if (fnmatch($pattern, $url, FNM_CASEFOLD)) {
+                    $no_route = false;
+                    $this->parse_route($options, $url);
+                    break;
+                }
             }
         }
         if ($no_route) {
-            $this->parse_all_from_url($url);
+            /* no route found, either parse from url or goto 404 */
+            /* TODO, make decision! */
+            //$this->parse_all_from_url($url);
+            header('location: ' . BASE_URL . '/404');
         } else {
             if (isset($this->modelFile)) {
                 chdir($this->modelFile['path']);
@@ -94,6 +103,40 @@ class Router
     public function parse_route($route, $url)
     {
         $this->base_path = $route['last_path'];
+
+        if(isset($route['clear'])) {
+            $route['clear'] = $route['clear']['value'];
+            $all = in_array('all', $route['clear']);
+            if ($all || in_array('scripts', $route['clear'])) {
+                $this->scripts_route = array();
+            }
+            if ($all || in_array('stylesheets', $route['clear'])) {
+                $this->stylesheets_route = array();
+            }
+            if ($all || in_array('model', $route['clear'])) {
+                $this->model = 'Model';
+            }
+            if ($all || in_array('modelFile', $route['clear'])) {
+                $this->modelFile = null;
+            }
+            if ($all || in_array('controller', $route['clear'])) {
+                $this->controller = 'Controller';
+            }
+            if ($all || in_array('controllerFile', $route['clear'])) {
+                $this->controllerFile = null;
+            }
+            if ($all || in_array('template', $route['clear'])) {
+                $this->template['path']  = ROOT . '/site/templates';
+                $this->template['value'] = "default_page.php";
+            }
+            if ($all || in_array('page', $route['clear'])) {
+                $this->page['path']      = ROOT . '/site/pages';
+                $this->page['value']     = "";
+            }
+            if ($all || in_array('action', $route['clear'])) {
+                $this->action = null;
+            }
+        }
 
         if (isset($route['model'])) {
             $this->model = $route['model']['value'];
@@ -132,21 +175,23 @@ class Router
         if (isset($route['action'])) {
             $this->action = $route['action']['value'];
         }
+        if (isset($route['stylesheets'])) {
+            $this->stylesheets_route[] = $route['stylesheets'];
+        }
+        if (isset($route['scripts'])) {
+            $this->scripts_route[] = $route['scripts'];
+        }
     }
 
     private function parse_page_from_url($url)
     {
-        $this->page['value'] = "home.php";
+        $this->page['value'] = "home";
         $args                = arg(NULL, $url);
         $page                = end($args);
         if ($page == "") {
             $page = $this->page['value'];
         }
-        $this->page['path'] = $this->base_path;
-        if ($this->base_path == ROOT . '/site') {
-            $this->page['path'] .= "/pages";
-        }
-
+        $this->page['path'] = $this->base_path . "/pages";
         $this->page['value'] = $page . ".php";
     }
 
