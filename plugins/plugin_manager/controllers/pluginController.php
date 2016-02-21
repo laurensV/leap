@@ -1,5 +1,6 @@
 <?php
-class pluginController extends Controller
+require $this->plugin_manager->get_path("admin") . "/controllers/AdminController.php";
+class pluginController extends AdminController
 {
 	public function get_plugins() {
 		$plugins = array();
@@ -12,7 +13,7 @@ class pluginController extends Controller
 
 	public function enable_plugin() {
 		$plugin = arg(4);
-        $query = "UPDATE plugins SET enabled=1 WHERE name='$plugin'";
+        $query = "UPDATE plugins SET status=1 WHERE pid='$plugin'";
         // Perform Query
         $result = $this->model->query($query);
 		if($result) {
@@ -26,7 +27,7 @@ class pluginController extends Controller
 
 	public function disable_plugin() {
 		$plugin = arg(4);
-        $query = "UPDATE plugins SET enabled=0 WHERE name='$plugin'";
+        $query = "UPDATE plugins SET status=0 WHERE pid='$plugin'";
         // Perform Query
         $result = $this->model->query($query);
   

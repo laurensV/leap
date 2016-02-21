@@ -37,6 +37,18 @@ function arg($id = null, $args_raw = null)
     }
 }
 
+function l($name, $link, $attributes = array(), $intern = true)
+{
+    if($intern){
+        $link = BASE_URL . "/" . $link;
+    }
+    $attributes_string = " ";
+    foreach($attributes as $attribute => $value){
+        $attributes_string .= $attribute."='".$value. "' ";
+    }
+    return "<a".$attributes_string."href='" . $link . "'>". $name . "</a>";
+}
+
 function config($name, $default = null)
 {
     global $config;

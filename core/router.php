@@ -12,6 +12,8 @@ class Router
     public $template;
     private $base_path;
     private $plugin_manager;
+    public $stylesheets;
+    public $scripts;
 
     public function __construct()
     {

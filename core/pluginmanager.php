@@ -19,13 +19,29 @@ class PluginManager
         $plugin_filenames = array();
         foreach ($all_files as $file) {
             if ($file->getExtension() == "plugin") {
-                $plugin_filenames[$file->getBasename('.plugin')] = $file->getPath();
+                $path = $file->getPath();
+                $pid = $file->getBasename('.plugin');
+                $plugin_filenames[$pid] = $path;
+                $plugin_info = $this->parse_plugin_file($file);
                 /* TODO: rewrite to PDO */
-                $query = "INSERT INTO plugins (name, enabled) VALUES ('".$file->getBasename('.plugin')."', 0)";
+                $path = mysql_real_escape_string($path);
+                $query = "INSERT IGNORE INTO plugins (pid, path, status, name, description, package, configure, source, dependencies) VALUES ('".$pid."','". $path ."', 0,'". $plugin_info['name'] ."','". $plugin_info['description'] ."','". $plugin_info['package'] ."','". $plugin_info['configure'] ."','". $plugin_info['source'] ."','". $plugin_info['dependencies'] ."') ON DUPLICATE KEY UPDATE path='" . $path . "', name='" . $plugin_info['name'] . "', description='" . $plugin_info['description'] . "', package='" . $plugin_info['package'] . "', configure='" . $plugin_info['configure'] . "',source='" . $plugin_info['source'] . "', dependencies='" . $plugin_info['dependencies'] . "'";
                 mysql_query($query, $db);
             }
         }
         $this->all_plugins = $plugin_filenames;
+    }
+
+    public function parse_plugin_file($file){
+        $plugin_info = parse_ini_file($file, true);
+                if(!isset($plugin_info['name'])) $plugin_info['name'] = "";
+                if(!isset($plugin_info['description'])) $plugin_info['description'] = "";
+                if(!isset($plugin_info['package'])) $plugin_info['package'] = "";
+                if(!isset($plugin_info['configure'])) $plugin_info['configure'] = "";
+                if(!isset($plugin_info['source'])) $plugin_info['source'] = "";
+                if(!isset($plugin_info['dependencies'])) $plugin_info['dependencies'] = "";
+                else $plugin_info['dependencies'] = implode(",", $plugin_info['dependencies']);
+                return $plugin_info;
     }
 
     public function is_enabled($name) {
@@ -34,7 +50,7 @@ class PluginManager
 
     public function get_path($name)
     {
-        if (is_enabled($name)) {
+        if ($this->is_enabled($name)) {
             return $this->enabled_plugins[$name];
         }
         return;
@@ -42,14 +58,14 @@ class PluginManager
 
     public function plugins_to_load($db) {
         /* TODO: rewrite to PDO */
-        $query = "SELECT name FROM plugins WHERE enabled=1";
+        $query = "SELECT pid FROM plugins WHERE status=1";
 
         // Perform Query
         $result = mysql_query($query, $db);
 
         $plugins = array();
         while ($row = mysql_fetch_assoc($result)) {
-            $plugins[] = $row['name'];
+            $plugins[] = $row['pid'];
         }
         return $plugins;
     }
