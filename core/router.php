@@ -45,7 +45,7 @@ class Router
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
-            $path   = dirname($file);
+            $path   = str_replace("\\", "/", dirname($file));
             foreach ($routes as $regex => $route) {
                 if (isset($route['dependencies'])) {
                     $error = "";

@@ -4,6 +4,7 @@ class pluginController extends AdminController
 {
 	public function get_plugins() {
 		$plugins = array();
+
 		foreach (array_keys($this->plugin_manager->all_plugins) as $plugin) {
 			$enabled = $this->plugin_manager->is_enabled($plugin);
 			$plugins[$plugin] = $enabled;

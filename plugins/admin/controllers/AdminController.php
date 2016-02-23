@@ -7,18 +7,15 @@ class AdminController extends Controller
     }
     public function init() {
         $links = array();
-        $links[] = array("link" => "/admin/dashboard", "name" => "Dashboard", "description" => "Here comes the description");
-        if($this->plugin_manager->is_enabled("plugin_manager")){
-            $links[] = array("link" => "/admin/plugins", "name" => "Plugins", "description" => "Here comes the description");
+        $links['admin'] = array("link" => "/admin/dashboard", "name" => "Dashboard", "description" => "Here comes the description");
+        $links['test1'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
+        $links['test2'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
+        $links['test3'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
+        $links['test4'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
+        $links['test5'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
 
-        }
-        $links[] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
-        $links[] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
-        $links[] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
-        $links[] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
-        $links[] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
-
-
+        $this->hooks->fire("admin_links", array(&$links));
+        ksort($links);
         $this->set('links', $links);
     }
 }

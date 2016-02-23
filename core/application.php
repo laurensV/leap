@@ -33,7 +33,8 @@ class Application
 
     private function define_hooks()
     {
-        $hook_names  = array("parse_stylesheet", "preroute_url");
+        /* TODO: automatically find hooks */
+        $hook_names  = array("parse_stylesheet", "preroute_url", "admin_links");
         $this->hooks = new Hooks($hook_names);
     }
 

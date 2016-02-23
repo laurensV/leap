@@ -8,7 +8,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <?php echo l("Admin Section", "admin", array("class" => "navbar-brand")); ?>
+            <?php echo l("Admin Section", "/admin", array("class" => "navbar-brand")); ?>
         </div>
         <!-- /.navbar-header -->
 
