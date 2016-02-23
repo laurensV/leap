@@ -11,7 +11,14 @@ if(!isset($config['database']['db_type'])){
 if(!isset($config['database']['plugins_from_db'])){
     $config['general']['plugins_from_db'] = true;
 }
-define('BASE_URL', dirname(dirname($_SERVER['PHP_SELF'])));
+define('BASE_URL', call_user_func(function () {
+    $sub_dir = dirname(dirname($_SERVER['PHP_SELF']));
+    if ($sub_dir == "/" || $sub_dir == "\\") {
+        $sub_dir = "";
+    }
+    return $sub_dir;
+}));
+
 define('URL', call_user_func(function () {
     $port = ":" . $_SERVER['SERVER_PORT'];
     $http = "http";
@@ -23,11 +30,7 @@ define('URL', call_user_func(function () {
     if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
         $http = "https";
     }
-    $sub_dir = BASE_URL;
-    if ($sub_dir == "/" || $sub_dir == "\\") {
-        $sub_dir = "";
-    }
-    return $http . "://" . $_SERVER['SERVER_NAME'] . $port . $sub_dir;
+    return $http . "://" . $_SERVER['SERVER_NAME'] . $port . BASE_URL;
 }));
 
 $args_raw = isset($_GET['args']) ? $_GET['args'] : "";

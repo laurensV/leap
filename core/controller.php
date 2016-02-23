@@ -6,19 +6,24 @@ class Controller
     protected $template;
     protected $hooks;
     protected $plugin_manager;
+    public $result;
     /**
      * Whenever controller is created, load the model and the template.
      */
     public function __construct($model, $template, $page, $hooks, $plugin_manager, $db, $stylesheets_route, $scripts_route)
     {
-        $this->model    = new $model($db);
-        $this->hooks    = $hooks;
-        $this->plugin_manager = $plugin_manager;
-        $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
-        $this->page     = $page;
-        $this->access   = true;
-        $this->set('site_title', config('application')['site_name']);
-        $this->init();
+        if ($this->grant_access()) {
+            $this->model    = new $model($db);
+            $this->hooks    = $hooks;
+            $this->plugin_manager = $plugin_manager;
+            $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
+            $this->page     = $page;
+            $this->set('site_title', config('application')['site_name']);
+            $this->init();
+            $this->result = 1;
+        } else {
+            $this->result = -1;
+        }
     }
 
     public function init() {}
@@ -48,10 +53,6 @@ class Controller
 
     public function render()
     {
-        if ($this->grant_access()) {
-            $this->template->render();
-        } else {
-            header("Location: " . BASE_URL . "/permission_denied");
-        }
+        $this->template->render();
     }
 }

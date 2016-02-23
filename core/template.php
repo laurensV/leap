@@ -103,20 +103,18 @@ class Template
         require_once ROOT . "/core/include/start_page.php";
 
         chdir($this->page['path']);
-        if (file_exists($this->page['value'])) {
-            ob_start();
-            call_user_func(function () {
-                if (!empty($this->variables)) {
-                    extract($this->variables);
-                }
-                require_once ($this->page['value']);
-            });
-            $page = ob_get_contents();
-            ob_end_clean();
-            $this->set('page', $page);
-        } else {
-            header('location: ' . BASE_URL . '/404');
-        }
+        ob_start();
+        call_user_func(function () {
+            if (!empty($this->variables)) {
+                extract($this->variables);
+            }
+            /* no need to check if file exists, as we already did that in the router */
+            require_once ($this->page['value']);
+        });
+        $page = ob_get_contents();
+        ob_end_clean();
+        $this->set('page', $page);
+
         chdir($this->template['path']);
         if (file_exists($this->template['value'])) {
             /* call anonymous function to hide variables */

@@ -24,9 +24,12 @@ class PluginManager
                 $plugin_filenames[$pid] = $path;
                 $plugin_info = $this->parse_plugin_file($file);
                 /* TODO: rewrite to PDO */
-                $path = mysql_real_escape_string($path);
-                $query = "INSERT IGNORE INTO plugins (pid, path, status, name, description, package, configure, source, dependencies) VALUES ('".$pid."','". $path ."', 0,'". $plugin_info['name'] ."','". $plugin_info['description'] ."','". $plugin_info['package'] ."','". $plugin_info['configure'] ."','". $plugin_info['source'] ."','". $plugin_info['dependencies'] ."') ON DUPLICATE KEY UPDATE path='" . $path . "', name='" . $plugin_info['name'] . "', description='" . $plugin_info['description'] . "', package='" . $plugin_info['package'] . "', configure='" . $plugin_info['configure'] . "',source='" . $plugin_info['source'] . "', dependencies='" . $plugin_info['dependencies'] . "'";
-                mysql_query($query, $db);
+                if($db){
+                    $path = @mysql_real_escape_string($path);
+                    $query = "INSERT IGNORE INTO plugins (pid, path, status, name, description, package, configure, source, dependencies) VALUES ('".$pid."','". $path ."', 0,'". $plugin_info['name'] ."','". $plugin_info['description'] ."','". $plugin_info['package'] ."','". $plugin_info['configure'] ."','". $plugin_info['source'] ."','". $plugin_info['dependencies'] ."') ON DUPLICATE KEY UPDATE path='" . $path . "', name='" . $plugin_info['name'] . "', description='" . $plugin_info['description'] . "', package='" . $plugin_info['package'] . "', configure='" . $plugin_info['configure'] . "',source='" . $plugin_info['source'] . "', dependencies='" . $plugin_info['dependencies'] . "'";
+                    
+                    mysql_query($query, $db);
+                }
             }
         }
         $this->all_plugins = $plugin_filenames;

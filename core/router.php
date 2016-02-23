@@ -18,8 +18,16 @@ class Router
     public function __construct()
     {
         $this->routes            = array();
+        $this->default_values();
+    }
+
+    public function default_values() {
         $this->model             = 'Model';
+        $this->modelFile = null;
+        $this->base_path = null;
+        $this->action = null;
         $this->controller        = 'Controller';
+        $this->controllerFile = null;
         $this->template['path']  = ROOT . '/site/templates';
         $this->template['value'] = "default_page.php";
         $this->page['path']      = ROOT . '/site/pages';
@@ -76,10 +84,10 @@ class Router
             }
         }
         if ($no_route) {
-            /* no route found, either parse from url or goto 404 */
-            /* TODO, make decision! */
-            //$this->parse_all_from_url($url);
-            header('location: ' . BASE_URL . '/404');
+            /* no route found, goto 404 */
+            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+            $this->route_url('404');
+            return;
         } else {
             if (isset($this->modelFile)) {
                 chdir($this->modelFile['path']);
@@ -97,6 +105,13 @@ class Router
                 /* parse only the page from the url */
                 $this->parse_page_from_url($url);
             }
+        }
+        chdir($this->page['path']);
+        if (!file_exists($this->page['value'])) {
+            $this->default_values();
+            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+            $this->route_url('404');
+            return;            
         }
     }
 
