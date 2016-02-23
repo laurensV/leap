@@ -20,8 +20,9 @@ class pluginController extends AdminController
 		if($result) {
 			$message = "PLugin " . $plugin . " successfully enabled.";
 		} else {
-			print $this->model->getError();
-			$message = "Could not enable plugin ". $plugin .".";
+			$message = "Could not enable plugin ". $plugin .".<br>";
+			$message .= $this->model->getError();
+
 		}
 		$this->set('result_message', $message);
 	}
@@ -35,7 +36,8 @@ class pluginController extends AdminController
 		if($result) {
 			$message = "PLugin " . $plugin . " successfully disabled.";
 		} else {
-			$message = "Could not disable plugin ". $plugin . ".";
+			$message = "Could not disable plugin ". $plugin . ".<br>";
+			$message .= $this->model->getError();
 		}
 		$this->set('result_message', $message);
 	}

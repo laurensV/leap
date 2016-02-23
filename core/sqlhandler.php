@@ -36,35 +36,38 @@ class SQLHandler
 
     public function query($query, $singleResult = 0)
     {
+        if($this->db){
+            $this->result = mysql_query($query, $this->db);
 
-        $this->result = mysql_query($query, $this->db);
-
-        if (preg_match("/select/i", $query)) {
-            $result      = array();
-            $table       = array();
-            $field       = array();
-            $tempResults = array();
-            $numOfFields = mysql_num_fields($this->result);
-            for ($i = 0; $i < $numOfFields; ++$i) {
-                array_push($table, mysql_field_table($this->result, $i));
-                array_push($field, mysql_field_name($this->result, $i));
-            }
-
-            while ($row = mysql_fetch_row($this->result)) {
+            if (preg_match("/select/i", $query)) {
+                $result      = array();
+                $table       = array();
+                $field       = array();
+                $tempResults = array();
+                $numOfFields = mysql_num_fields($this->result);
                 for ($i = 0; $i < $numOfFields; ++$i) {
-                    $table[$i]                           = trim(ucfirst($table[$i]), "s");
-                    $tempResults[$table[$i]][$field[$i]] = $row[$i];
+                    array_push($table, mysql_field_table($this->result, $i));
+                    array_push($field, mysql_field_name($this->result, $i));
                 }
-                if ($singleResult == 1) {
-                    mysql_free_result($this->result);
-                    return $tempResults;
+
+                while ($row = mysql_fetch_row($this->result)) {
+                    for ($i = 0; $i < $numOfFields; ++$i) {
+                        $table[$i]                           = trim(ucfirst($table[$i]), "s");
+                        $tempResults[$table[$i]][$field[$i]] = $row[$i];
+                    }
+                    if ($singleResult == 1) {
+                        mysql_free_result($this->result);
+                        return $tempResults;
+                    }
+                    array_push($result, $tempResults);
                 }
-                array_push($result, $tempResults);
+                mysql_free_result($this->result);
+                return ($result);
+            } else {
+                return $this->result;
             }
-            mysql_free_result($this->result);
-            return ($result);
         } else {
-            return $this->result;
+            $this->result = 0;
         }
 
     }
@@ -86,6 +89,10 @@ class SQLHandler
 
     public function getError()
     {
-        return mysql_error($this->db);
+        if($this->db){
+            return mysql_error($this->db);
+        } else {
+            return "Error: No database connection";
+        }
     }
 }
