@@ -2,13 +2,12 @@
 #dashboard {
     .block {
         height: 200px;
-        text-align: center;
         margin: 0 auto;
         background: @gray-lightest;
         margin-bottom:20px;
-        padding-top: 1px;
+        padding: 1px 15px;
         position:relative;
-        .glyphicon{
+        >.glyphicon{
             font-size: 100px;
             position: absolute;
             width:100px;
@@ -16,9 +15,18 @@
             opacity: 0.1;
             top:0;
             bottom:0;
-            left:0;
-            right:0;
-            margin:auto;
+            right:20px;
+            margin:auto 0;
+        }
+        .description{
+            position:relative;
+            padding-left:20px;
+            .glyphicon{
+                font-size: 12px;
+                top: 3px;
+                left:0;
+                position: absolute;
+            }
         }
     }
 }
@@ -62,16 +70,14 @@
     }
 }
 
-.sidebar .arrow {
+.sidebar .dynamic {
     float: right;
+    padding-top: 3px;
+    font-size:10px;
 }
 
-.sidebar .fa.arrow:before {
-    content: "\f104";
-}
-
-.sidebar .active > a > .fa.arrow:before {
-    content: "\f107";
+.sidebar .active > a > .glyphicon-menu-left.dynamic:before {
+    content: "\e259";
 }
 
 .sidebar .nav-second-level li,

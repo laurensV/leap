@@ -19,10 +19,10 @@
     	            	if(isset($links)){
     						foreach($links as $link){
     							switch (strtolower($link['link'])) {
-    								case 'admin/dashboard':
+    								case '/admin/dashboard':
     									$link['name'] = '<span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span> '.$link['name'];
     									break;
-    								case 'admin/plugins':
+    								case '/admin/plugins':
     									$link['name'] = '<span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> '.$link['name'];
     									break;
     								default:
@@ -34,7 +34,7 @@
     					}
                 	?>
                     <li>
-                        <a href="#"><span class="glyphicon glyphicon-th" aria-hidden="true"></span> Test<span class="fa arrow"></span></a>
+                        <a href="#"><span class="glyphicon glyphicon-th" aria-hidden="true"></span> Test<span class="glyphicon glyphicon-menu-left dynamic"></span></a>
                         <ul class="nav nav-second-level">
                             <li>
                                 <a href="#">Test</a>

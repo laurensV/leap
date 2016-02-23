@@ -37,10 +37,10 @@ function arg($id = null, $args_raw = null)
     }
 }
 
-function l($name, $link, $attributes = array(), $intern = true)
+function l($name, $link, $attributes = array())
 {
-    if($intern){
-        $link = BASE_URL . "/" . $link;
+    if($link[0] == "/"){
+        $link = BASE_URL . $link;
     }
     $attributes_string = " ";
     foreach($attributes as $attribute => $value){
