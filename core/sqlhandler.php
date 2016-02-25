@@ -20,6 +20,10 @@ class SQLHandler
         return 0;
     }
 
+    public function has_connection(){
+        return $this->db;
+    }
+
     public function selectAll()
     {
         $query = 'select * from `' . $this->_table . '`';

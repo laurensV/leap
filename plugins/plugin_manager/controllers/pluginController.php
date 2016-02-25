@@ -8,8 +8,16 @@ class pluginController extends AdminController
 
         foreach (array_keys($this->plugin_manager->all_plugins) as $plugin) {
             $enabled          = $this->plugin_manager->is_enabled($plugin);
-            $plugins[$plugin] = $enabled;
+            $plugins[$plugin]['status'] = $enabled;
+            if ($this->model->has_connection()) {
+                $query   = "SELECT * FROM plugins WHERE pid='$plugin'";
+                $results = $this->model->query($query);
+                if($result){
+                	printr($result);
+                }
+            }
         }
+
         $this->set('plugins', $plugins);
     }
 
