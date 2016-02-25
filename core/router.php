@@ -17,23 +17,24 @@ class Router
 
     public function __construct()
     {
-        $this->routes            = array();
+        $this->routes = array();
         $this->default_values();
     }
 
-    public function default_values() {
+    public function default_values()
+    {
         $this->model             = 'Model';
-        $this->modelFile = null;
-        $this->base_path = null;
-        $this->action = null;
+        $this->modelFile         = null;
+        $this->base_path         = null;
+        $this->action            = null;
         $this->controller        = 'Controller';
-        $this->controllerFile = null;
+        $this->controllerFile    = null;
         $this->template['path']  = ROOT . '/site/templates';
         $this->template['value'] = "default_page.php";
         $this->page['path']      = ROOT . '/site/pages';
         $this->page['value']     = "";
-        $this->stylesheets_route       = array();
-        $this->scripts_route           = array();
+        $this->stylesheets_route = array();
+        $this->scripts_route     = array();
     }
 
     public function set_plugin_manager($plugin_manager)
@@ -76,16 +77,28 @@ class Router
         foreach ($this->routes as $regex => $options) {
             $multi_regex = explode(",", $regex);
             foreach ($multi_regex as $pattern) {
+                $wildcard_args = array();
+                if (strpos($pattern, ":")) {
+                    if (preg_match_all("/:(\w+):/", $pattern, $matches)) {
+                        //printr($matches);
+                        $wildcard_args['pattern'] = $pattern;
+                        foreach ($matches[0] as $key => $whole_match) {
+                            $pattern                  = str_replace($whole_match, "*", $pattern);
+                            $wildcard_args['pattern'] = str_replace($whole_match, "(.*)", $wildcard_args['pattern']);
+                            $wildcard_args['args'][]  = $matches[1][$key];
+                        }
+                    }
+                }
                 if (fnmatch($pattern, $url, FNM_CASEFOLD)) {
                     $no_route = false;
-                    $this->parse_route($options, $url);
+                    $this->parse_route($options, $url, $wildcard_args);
                     break;
                 }
             }
         }
         if ($no_route) {
             /* no route found, goto 404 */
-            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             $this->route_url('404');
             return;
         } else {
@@ -109,19 +122,19 @@ class Router
         chdir($this->page['path']);
         if (!file_exists($this->page['value'])) {
             $this->default_values();
-            header($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
+            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             $this->route_url('404');
-            return;            
+            return;
         }
     }
 
-    public function parse_route($route, $url)
+    public function parse_route($route, $url, $wildcard_args)
     {
         $this->base_path = $route['last_path'];
 
-        if(isset($route['clear'])) {
+        if (isset($route['clear'])) {
             $route['clear'] = $route['clear']['value'];
-            $all = in_array('all', $route['clear']);
+            $all            = in_array('all', $route['clear']);
             if ($all || in_array('scripts', $route['clear'])) {
                 $this->scripts_route = array();
             }
@@ -145,8 +158,8 @@ class Router
                 $this->template['value'] = "default_page.php";
             }
             if ($all || in_array('page', $route['clear'])) {
-                $this->page['path']      = ROOT . '/site/pages';
-                $this->page['value']     = "";
+                $this->page['path']  = ROOT . '/site/pages';
+                $this->page['value'] = "";
             }
             if ($all || in_array('action', $route['clear'])) {
                 $this->action = null;
@@ -196,43 +209,32 @@ class Router
         if (isset($route['scripts'])) {
             $this->scripts_route[] = $route['scripts'];
         }
+        if (!empty($wildcard_args)) {
+            if (preg_match_all("'" . $wildcard_args['pattern'] . "'", $url, $matches)) {
+                $this->params = array();
+                global $wildcards_from_url;
+                foreach ($matches as $key => $arg) {
+                    if (!$key) {
+                        continue;
+                    }
+
+                    /* TODO: choose if wildcard gets available through params or through arg() function */
+                    $this->params[$wildcard_args['args'][$key - 1]]       = $arg[0];
+                    $wildcards_from_url[$wildcard_args['args'][$key - 1]] = $arg[0];
+                }
+            }
+        }
     }
 
     private function parse_page_from_url($url)
     {
         $this->page['value'] = "home";
-        $args                = arg(NULL, $url);
+        $args                = arg(null, $url);
         $page                = end($args);
         if ($page == "") {
             $page = $this->page['value'];
         }
-        $this->page['path'] = $this->base_path . "/pages";
+        $this->page['path']  = $this->base_path . "/pages";
         $this->page['value'] = $page . ".php";
-    }
-
-    private function parse_all_from_url($url)
-    {
-        $this->page['value'] = "home.php";
-        $args                = arg(NULL, $url);
-        if (empty($args[0])) {
-            $args = array();
-        }
-        $this->page['path'] = ROOT . '/site/pages/';
-        $page               = array_shift($args);
-        if ($page) {
-            $this->page['value'] = $page . ".php";
-            $action              = array_shift($args);
-            if ($action) {
-                $this->action = $action;
-                $this->params = implode("/", $args);
-            }
-        }
-
-        /* check if users didn't specify the default action in the url themselves */
-        if ($this->action == 'default_action') {
-            header('location: ' . URL . '/404');
-        } else if (empty($this->action)) {
-            $this->action = 'default_action';
-        }
     }
 }
