@@ -97,7 +97,7 @@ class Application
         for ($i = 0; $i < 2; $i++) {
             if ($i == 1) {
                 if ($this->controller->result == -1) {
-                    header($_SERVER["SERVER_PROTOCOL"]." 403 Forbidden");
+                    header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
                     $this->router->default_values();
                     $this->url = "permission_denied";
                 } else if (!$this->controller->result) {

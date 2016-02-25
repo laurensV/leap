@@ -20,12 +20,18 @@ function str_replace_first($search, $replace, $subject)
     return $subject;
 }
 
+$wildcards_from_url = array();
 function arg($id = null, $args_raw = null)
 {
-    if(!isset($args_raw)){
+    global $wildcards_from_url;
+    if (isset($wildcards_from_url[$id])) {
+        return $wildcards_from_url[$id];
+    }
+
+    if (!isset($args_raw)) {
         global $args_raw;
     }
-    
+
     $args = explode("/", $args_raw);
     if (!isset($id)) {
         return $args;
@@ -39,14 +45,14 @@ function arg($id = null, $args_raw = null)
 
 function l($name, $link, $attributes = array())
 {
-    if($link[0] == "/"){
+    if ($link[0] == "/") {
         $link = BASE_URL . $link;
     }
     $attributes_string = " ";
-    foreach($attributes as $attribute => $value){
-        $attributes_string .= $attribute."='".$value. "' ";
+    foreach ($attributes as $attribute => $value) {
+        $attributes_string .= $attribute . "='" . $value . "' ";
     }
-    return "<a".$attributes_string."href='" . $link . "'>". $name . "</a>";
+    return "<a" . $attributes_string . "href='" . $link . "'>" . $name . "</a>";
 }
 
 function config($name, $default = null)
