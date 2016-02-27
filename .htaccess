@@ -13,7 +13,7 @@ DirectoryIndex disabled
 	ErrorDocument 403 /framework/core/pages/enable_modrewrite.php
 </IfModule>
 
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project)$">
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project|plugin)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>
