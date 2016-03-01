@@ -17,33 +17,60 @@ class PluginManager
         $all_files = new RecursiveIteratorIterator($directory);
 
         $plugin_filenames = array();
+        if (is_object($pdo)) {
+            $stmt = $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
+        }
+
         foreach ($all_files as $file) {
             if ($file->getExtension() == "plugin") {
-                $path = $file->getPath();
-                $pid = $file->getBasename('.plugin');
+                $path                   = $file->getPath();
+                $pid                    = $file->getBasename('.plugin');
                 $plugin_filenames[$pid] = $path;
-                $plugin_info = $this->parse_plugin_file($file);
-                $data = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'],'source' => $plugin_info['source'],'dependencies' => $plugin_info['dependencies']);
-                    
-                $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies")->execute($data);
+                $plugin_info            = $this->parse_plugin_file($file);
+                $data                   = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $plugin_info['dependencies']);
+                if (isset($stmt)) {
+                    $stmt->execute($data);
+                }
+
             }
         }
         $this->all_plugins = $plugin_filenames;
     }
 
-    public function parse_plugin_file($file){
+    public function parse_plugin_file($file)
+    {
         $plugin_info = parse_ini_file($file, true);
-                if(!isset($plugin_info['name'])) $plugin_info['name'] = "";
-                if(!isset($plugin_info['description'])) $plugin_info['description'] = "";
-                if(!isset($plugin_info['package'])) $plugin_info['package'] = "";
-                if(!isset($plugin_info['configure'])) $plugin_info['configure'] = "";
-                if(!isset($plugin_info['source'])) $plugin_info['source'] = "";
-                if(!isset($plugin_info['dependencies'])) $plugin_info['dependencies'] = "";
-                else $plugin_info['dependencies'] = implode(",", $plugin_info['dependencies']);
-                return $plugin_info;
+        if (!isset($plugin_info['name'])) {
+            $plugin_info['name'] = "";
+        }
+
+        if (!isset($plugin_info['description'])) {
+            $plugin_info['description'] = "";
+        }
+
+        if (!isset($plugin_info['package'])) {
+            $plugin_info['package'] = "";
+        }
+
+        if (!isset($plugin_info['configure'])) {
+            $plugin_info['configure'] = "";
+        }
+
+        if (!isset($plugin_info['source'])) {
+            $plugin_info['source'] = "";
+        }
+
+        if (!isset($plugin_info['dependencies'])) {
+            $plugin_info['dependencies'] = "";
+        } else {
+            $plugin_info['dependencies'] = implode(",", $plugin_info['dependencies']);
+        }
+
+        return $plugin_info;
     }
 
-    public function is_enabled($name) {
+    public function is_enabled($name)
+    {
         return isset($this->enabled_plugins[$name]);
     }
 
@@ -55,7 +82,8 @@ class PluginManager
         return;
     }
 
-    public function plugins_to_load($pdo) {
+    public function plugins_to_load($pdo)
+    {
         return $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
     }
 
@@ -97,7 +125,6 @@ class PluginManager
                 }
                 chdir($path);
                 if (file_exists($name . ".hooks.php")) {
-                    
                     include_once $name . ".hooks.php";
                 }
             }
