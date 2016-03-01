@@ -18,9 +18,9 @@ class Application
         $this->setReporting();
         $this->add_classes();
         spl_autoload_register(array($this, 'autoload_classes'));
-        $this->url    = $this->get_url();
-        $this->router = new Router();
         $this->define_hooks();
+        $this->url            = $this->get_url();
+        $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
         $this->router->set_plugin_manager($this->plugin_manager);
         $this->bootstrap();
@@ -77,13 +77,13 @@ class Application
         if (is_object($this->pdo)) {
             $plugins_to_enable = $this->plugin_manager->plugins_to_load($this->pdo);
         } else {
-        	if ($this->pdo == -1) {
+            if ($this->pdo == -1) {
                 /* site is run without database, so use custom function to load plugins */
                 $plugins_to_enable        = $this->custom_plugins_to_load();
                 $auto_enable_dependencies = true;
             } else {
-            	printr("database error");
-        	}
+                printr("database error");
+            }
         }
         $this->plugin_manager->get_all_plugins($this->pdo);
         $plugins = $this->plugin_manager->get_sublist_plugins($plugins_to_enable);
@@ -128,15 +128,14 @@ class Application
      */
     private function setReporting()
     {
+        error_reporting(E_ALL);
         if (config('general')['dev_env'] == true) {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 'On');
+            ini_set('display_errors', 1);
         } else {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 'Off');
-            ini_set('log_errors', 'On');
-            ini_set('error_log', ROOT . '/tmp/logs/error.log');
+            ini_set('display_errors', 0);
         }
+        ini_set('log_errors', 1);
+        ini_set('error_log', ROOT . '/core/logs/error.log');
     }
 
     /**

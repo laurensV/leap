@@ -7,6 +7,7 @@ class Controller
     protected $hooks;
     protected $plugin_manager;
     public $result;
+
     /**
      * Whenever controller is created, load the model and the template.
      */
