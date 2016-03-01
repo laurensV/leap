@@ -10,6 +10,7 @@
                 <tr>
                     <th>Name</th>
                     <th>Description</th>
+                    <th>Info</th>
                     <th colspan="3">Operations</th>
                 </tr>
             </thead>
@@ -21,7 +22,13 @@
                     } else {
                         $link = "<a href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . "'>disable</a>";
                     }
-                    echo '<tr><td class="searchable">' . $plugin['name'] . '</td><td>'.$plugin['description'].'</td><td>' . $link . '</td></tr>';
+                    if(!empty($plugin['dependencies'])){
+                        $plugin['dependencies'] = "dependencies: " . $plugin['dependencies'];
+                    }
+                    if(!empty($plugin['source'])){
+                        $plugin['source'] = "<br>source: " . $plugin['source'];
+                    }
+                    echo '<tr><td class="searchable">' . $plugin['name'] . ' <span class="small text-muted">(' . $plugin['pid'] . ')</span></td><td class="searchable">' . $plugin['description'] . '</td><td>' . $plugin['dependencies'] . $plugin['source'] . '</td><td>' . $link . '</td></tr>';
                 }
                 ?>
                 <tr class="no-results" style="display: none">
