@@ -79,7 +79,7 @@ class Router
             foreach ($multi_regex as $pattern) {
                 $wildcard_args = array();
                 if (strpos($pattern, ":")) {
-                    if (preg_match_all("/:(\w+):/", $pattern, $matches)) {
+                    if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
                         //printr($matches);
                         $wildcard_args['pattern'] = $pattern;
                         foreach ($matches[0] as $key => $whole_match) {
@@ -89,7 +89,11 @@ class Router
                         }
                     }
                 }
-                if (fnmatch($pattern, $url, FNM_CASEFOLD)) {
+                $exclude_slash = FNM_PATHNAME;
+                if(isset($options['include_slash']) && $options['include_slash']){
+                    $exclude_slash = 0;
+                }
+                if (fnmatch($pattern, $url, FNM_CASEFOLD|$exclude_slash)) {
                     $no_route = false;
                     $this->parse_route($options, $url, $wildcard_args);
                     break;
