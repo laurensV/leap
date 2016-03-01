@@ -33,4 +33,6 @@ define('URL', call_user_func(function () {
     return $http . "://" . $_SERVER['SERVER_NAME'] . $port . BASE_URL;
 }));
 
+define('LIBRARIES', ROOT . "/libraries");
+
 $args_raw = isset($_GET['args']) ? $_GET['args'] : "";

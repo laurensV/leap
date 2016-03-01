@@ -155,6 +155,5 @@ class Application
     private function add_classes()
     {
         /* load the less to css compiler */
-        require_once ROOT . '/core/include/libraries/less.php/Less.php';
     }
 }

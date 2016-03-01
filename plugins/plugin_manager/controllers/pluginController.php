@@ -12,8 +12,8 @@ class pluginController extends AdminController
             if ($this->model->has_connection()) {
                 $query   = "SELECT * FROM plugins WHERE pid='$plugin'";
                 $results = $this->model->query($query);
-                if($result){
-                	printr($result);
+                if($results){
+                	printr($results);
                 }
             }
         }
