@@ -5,34 +5,27 @@ class pluginController extends AdminController
     public function get_plugins()
     {
         $plugins = array();
-
-        foreach (array_keys($this->plugin_manager->all_plugins) as $plugin) {
-            $enabled          = $this->plugin_manager->is_enabled($plugin);
-            $plugins[$plugin]['status'] = $enabled;
-            if ($this->model->has_connection()) {
-                $query   = "SELECT * FROM plugins WHERE pid='$plugin'";
-                $results = $this->model->query($query);
-                if($results){
-                	printr($results);
-                }
-            }
+        if($this->model->has_connection()){
+            $stmt = $this->model->query("SELECT * FROM plugins");
+            $plugins = $stmt->fetchAll();
         }
-
         $this->set('plugins', $plugins);
     }
 
     public function enable_plugin()
     {
-        $plugin = arg(4);
-        $query  = "UPDATE plugins SET status=1 WHERE pid='$plugin'";
-        // Perform Query
-        $result = $this->model->query($query);
-        if ($result) {
-            $message = "PLugin " . $plugin . " successfully enabled.";
+        $pid = arg('plugin_pid');
+        if ($pid) {
+            $sql  = "UPDATE plugins SET status=1 WHERE pid= ? ";
+            // Perform Query
+            $stmt = $this->model->run($sql, [$pid]);
+            if ($stmt->rowCount()) {
+                $message = "Plugin " . $pid . " successfully enabled.";
+            } else {
+                $message = "Could not enable plugin " . $pid . ".<br>";
+            }
         } else {
-            $message = "Could not enable plugin " . $plugin . ".<br>";
-            $message .= $this->model->getError();
-
+            $message = "No plugin specified";
         }
         $this->set('result_message', $message);
     }
@@ -41,15 +34,13 @@ class pluginController extends AdminController
     {
         $plugin = arg('plugin_pid');
         if ($plugin) {
-            $query = "UPDATE plugins SET status=0 WHERE pid='$plugin'";
+            $sql  = "UPDATE plugins SET status=0 WHERE pid= ? ";
             // Perform Query
-            $result = $this->model->query($query);
-
-            if ($result) {
-                $message = "PLugin " . $plugin . " successfully disabled.";
+            $stmt = $this->model->run($sql, [$plugin]);
+            if ($stmt->rowCount()) {
+                $message = "Plugin " . $plugin . " successfully disabled.";
             } else {
                 $message = "Could not disable plugin " . $plugin . ".<br>";
-                $message .= $this->model->getError();
             }
         } else {
             $message = "No plugin specified";

@@ -11,7 +11,7 @@ class PluginManager
         $this->hooks  = $hooks;
     }
 
-    public function get_all_plugins($db)
+    public function get_all_plugins($pdo)
     {
         $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
         $all_files = new RecursiveIteratorIterator($directory);
@@ -23,13 +23,9 @@ class PluginManager
                 $pid = $file->getBasename('.plugin');
                 $plugin_filenames[$pid] = $path;
                 $plugin_info = $this->parse_plugin_file($file);
-                /* TODO: rewrite to PDO */
-                if($db){
-                    $path = @mysql_real_escape_string($path);
-                    $query = "INSERT IGNORE INTO plugins (pid, path, status, name, description, package, configure, source, dependencies) VALUES ('".$pid."','". $path ."', 0,'". $plugin_info['name'] ."','". $plugin_info['description'] ."','". $plugin_info['package'] ."','". $plugin_info['configure'] ."','". $plugin_info['source'] ."','". $plugin_info['dependencies'] ."') ON DUPLICATE KEY UPDATE path='" . $path . "', name='" . $plugin_info['name'] . "', description='" . $plugin_info['description'] . "', package='" . $plugin_info['package'] . "', configure='" . $plugin_info['configure'] . "',source='" . $plugin_info['source'] . "', dependencies='" . $plugin_info['dependencies'] . "'";
+                $data = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'],'source' => $plugin_info['source'],'dependencies' => $plugin_info['dependencies']);
                     
-                    mysql_query($query, $db);
-                }
+                $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies")->execute($data);
             }
         }
         $this->all_plugins = $plugin_filenames;
@@ -59,18 +55,8 @@ class PluginManager
         return;
     }
 
-    public function plugins_to_load($db) {
-        /* TODO: rewrite to PDO */
-        $query = "SELECT pid FROM plugins WHERE status=1";
-
-        // Perform Query
-        $result = mysql_query($query, $db);
-
-        $plugins = array();
-        while ($row = mysql_fetch_assoc($result)) {
-            $plugins[] = $row['pid'];
-        }
-        return $plugins;
+    public function plugins_to_load($pdo) {
+        return $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
     }
 
     public function get_sublist_plugins($plugin_names)

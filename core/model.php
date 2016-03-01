@@ -1,9 +1,9 @@
 <?php
 class Model extends SQLHandler
 {
-    public function __construct($db)
+    public function __construct($pdo)
     {
-        $this->set_db($db);
+        $this->set_db($pdo);
         $this->init();
     }
     /* overwrite this function in extended models */

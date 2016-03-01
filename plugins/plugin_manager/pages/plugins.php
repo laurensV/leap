@@ -15,13 +15,13 @@
             </thead>
             <tbody>
                 <?php
-                foreach ($plugins as $name => $enabled) {
-                    if (!$enabled) {
-                        $link = "<a href='" . BASE_URL . "/admin/plugins/enable/" . $name . "'>enable</a>";
+                foreach ($plugins as $plugin) {
+                    if (!$plugin['status']) {
+                        $link = "<a href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . "'>enable</a>";
                     } else {
-                        $link = "<a href='" . BASE_URL . "/admin/plugins/disable/" . $name . "'>disable</a>";
+                        $link = "<a href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . "'>disable</a>";
                     }
-                    echo "<tr><td class='searchable'>" . $name . "</td><td>TODO: get plugin info</td><td>" . $link . "</td></tr>";
+                    echo '<tr><td class="searchable">' . $plugin['name'] . '</td><td>'.$plugin['description'].'</td><td>' . $link . '</td></tr>';
                 }
                 ?>
                 <tr class="no-results" style="display: none">

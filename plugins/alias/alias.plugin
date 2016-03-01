@@ -1,5 +1,4 @@
-name = Less Parser PHP
-description = Provides a parser to compile less to css files for PHP
-package = stylesheets
-configure = admin/config/less
-dependencies[] = admin
+name = Aliases
+description = Create path aliases
+package = routing
+configure = admin/config/alias

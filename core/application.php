@@ -7,7 +7,7 @@ class Application
     private $url;
     private $hooks;
     private $plugin_manager;
-    private $db;
+    private $pdo;
 
     /**
      * "Start" the application:
@@ -72,21 +72,20 @@ class Application
 
     private function bootstrap()
     {
-        $db_result                = $this->connect_with_config();
+        $this->pdo                = SQLHandler::connect();
         $auto_enable_dependencies = false;
-        if ($db_result) {
-            if ($db_result == -1) {
+        if (is_object($this->pdo)) {
+            $plugins_to_enable = $this->plugin_manager->plugins_to_load($this->pdo);
+        } else {
+        	if ($this->pdo == -1) {
                 /* site is run without database, so use custom function to load plugins */
                 $plugins_to_enable        = $this->custom_plugins_to_load();
                 $auto_enable_dependencies = true;
             } else {
-                /* we have a database connection */
-                $plugins_to_enable = $this->plugin_manager->plugins_to_load($this->db);
-            }
-        } else {
-            printr("database error");
+            	printr("database error");
+        	}
         }
-        $this->plugin_manager->get_all_plugins($this->db);
+        $this->plugin_manager->get_all_plugins($this->pdo);
         $plugins = $this->plugin_manager->get_sublist_plugins($plugins_to_enable);
 
         $this->plugin_manager->load_plugins($plugins, $auto_enable_dependencies);
@@ -111,7 +110,7 @@ class Application
             }
 
             $this->router->route_url($this->url);
-            $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->db, $this->router->stylesheets_route, $this->router->scripts_route);
+            $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route);
         }
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);

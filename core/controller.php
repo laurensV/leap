@@ -10,10 +10,10 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    public function __construct($model, $template, $page, $hooks, $plugin_manager, $db, $stylesheets_route, $scripts_route)
+    public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route)
     {
         if ($this->grant_access()) {
-            $this->model    = new $model($db);
+            $this->model    = new $model($pdo);
             $this->hooks    = $hooks;
             $this->plugin_manager = $plugin_manager;
             $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
