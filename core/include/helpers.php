@@ -11,7 +11,7 @@ function printr($data, $exit = true)
     }
 }
 
-function str_replace_first($search, $replace, $subject)
+function strReplaceFirst($search, $replace, $subject)
 {
     $pos = strpos($subject, $search);
     if ($pos !== false) {

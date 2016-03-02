@@ -13,12 +13,12 @@ class Controller
      */
     public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route)
     {
-        if ($this->grant_access()) {
-            $this->model    = new $model($pdo);
-            $this->hooks    = $hooks;
+        if ($this->grantAccess()) {
+            $this->model          = new $model($pdo);
+            $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;
-            $this->template = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
-            $this->page     = $page;
+            $this->template       = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
+            $this->page           = $page;
             $this->set('site_title', config('application')['site_name']);
             $this->init();
             $this->result = 1;
@@ -28,13 +28,13 @@ class Controller
     }
 
     public function init() {}
-    public function default_action($params) {}
-    public function include_header_hook()
+    public function defaultAction($params) {}
+    public function includeHeaderHook()
     {
         return array();
     }
 
-    public function include_footer_hook()
+    public function includeFooterHook()
     {
         return array();
     }
@@ -47,7 +47,7 @@ class Controller
         $this->template->set($name, $value);
     }
 
-    public function grant_access()
+    public function grantAccess()
     {
         return true;
     }

@@ -18,10 +18,10 @@ class Router
     public function __construct()
     {
         $this->routes = array();
-        $this->default_values();
+        $this->defaultValues();
     }
 
-    public function default_values()
+    public function defaultValues()
     {
         $this->model             = 'Model';
         $this->modelFile         = null;
@@ -37,12 +37,12 @@ class Router
         $this->scripts_route     = array();
     }
 
-    public function set_plugin_manager($plugin_manager)
+    public function setPluginManager($plugin_manager)
     {
         $this->plugin_manager = $plugin_manager;
     }
 
-    public function add_route_file($file)
+    public function addRouteFile($file)
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
@@ -51,7 +51,7 @@ class Router
                 if (isset($route['dependencies'])) {
                     $error = "";
                     foreach ($route['dependencies'] as $plugin) {
-                        if (!$this->plugin_manager->is_enabled($plugin)) {
+                        if (!$this->plugin_manager->isEnabled($plugin)) {
                             $error .= "need plugin " . $plugin . " for route " . $regex . "\n";
                         }
                     }
@@ -69,7 +69,7 @@ class Router
         }
     }
 
-    public function route_url($url)
+    public function routeUrl($url)
     {
         // sort route array by length of keys
         uksort($this->routes, function ($a, $b) {return strlen($a) - strlen($b);});
@@ -90,12 +90,12 @@ class Router
                     }
                 }
                 $exclude_slash = FNM_PATHNAME;
-                if(isset($options['include_slash']) && $options['include_slash']){
+                if (isset($options['include_slash']) && $options['include_slash']) {
                     $exclude_slash = 0;
                 }
-                if (fnmatch($pattern, $url, FNM_CASEFOLD|$exclude_slash)) {
+                if (fnmatch($pattern, $url, FNM_CASEFOLD | $exclude_slash)) {
                     $no_route = false;
-                    $this->parse_route($options, $url, $wildcard_args);
+                    $this->parseRoute($options, $url, $wildcard_args);
                     break;
                 }
             }
@@ -103,7 +103,7 @@ class Router
         if ($no_route) {
             /* no route found, goto 404 */
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            $this->route_url('404');
+            $this->routeUrl('404');
             return;
         } else {
             if (isset($this->modelFile)) {
@@ -120,19 +120,19 @@ class Router
             }
             if ($this->page['value'] == "") {
                 /* parse only the page from the url */
-                $this->parse_page_from_url($url);
+                $this->parsePageFromUrl($url);
             }
         }
         chdir($this->page['path']);
         if (!file_exists($this->page['value'])) {
-            $this->default_values();
+            $this->defaultValues();
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            $this->route_url('404');
+            $this->routeUrl('404');
             return;
         }
     }
 
-    public function parse_route($route, $url, $wildcard_args)
+    public function parseRoute($route, $url, $wildcard_args)
     {
         $this->base_path = $route['last_path'];
 
@@ -230,7 +230,7 @@ class Router
         }
     }
 
-    private function parse_page_from_url($url)
+    private function parsePageFromUrl($url)
     {
         $this->page['value'] = "home";
         $args                = arg(null, $url);

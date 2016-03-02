@@ -9,10 +9,12 @@ class Hooks
             $this->create($hook);
         }
     }
+
     public function getHooks()
     {
         return array_keys($this->hooks);
     }
+
     public function add($name, $callback)
     {
         // callback parameters must be at least syntactically
@@ -25,14 +27,17 @@ class Hooks
         }
         $this->hooks[$name][] = $callback;
     }
+
     public function getCallbacks($name)
     {
         return isset($this->hooks[$name]) ? $this->hooks[$name] : array();
     }
+
     public function create($name)
     {
         $this->hooks[$name] = array();
     }
+
     public function fire($name, $args = array())
     {
         foreach ($this->getCallbacks($name) as $callback) {

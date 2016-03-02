@@ -1,12 +1,12 @@
 <?php
 class BasicController extends Controller
 {
-    public function default_action($params)
+    public function defaultAction($params)
     {
         $this->set('site_title', "BasicController");
     }
 
-    public function include_header_hook()
+    public function includeHeaderHook()
     {
         return array(ROOT . "/site/pages/include/menu.php");
     }

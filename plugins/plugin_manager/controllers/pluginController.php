@@ -1,17 +1,17 @@
 <?php
-require $this->plugin_manager->get_path("admin") . "/controllers/AdminController.php";
+require $this->plugin_manager->getPath("admin") . "/controllers/AdminController.php";
 class pluginController extends AdminController
 {
-    public function get_plugins()
+    public function getPlugins()
     {
         $plugins = array();
-        if ($this->model->has_connection()) {
+        if ($this->model->hasConnection()) {
             $stmt    = $this->model->query("SELECT * FROM plugins");
             $plugins = $stmt->fetchAll();
         } else {
             foreach ($this->plugin_manager->all_plugins as $plugin => $path) {
-                $plugin_info           = $this->plugin_manager->parse_plugin_file($path . "/" . $plugin . ".plugin");
-                $enabled               = $this->plugin_manager->is_enabled($plugin);
+                $plugin_info           = $this->plugin_manager->parsePluginFile($path . "/" . $plugin . ".plugin");
+                $enabled               = $this->plugin_manager->isEnabled($plugin);
                 $plugin_info['pid']    = $plugin;
                 $plugin_info['status'] = $enabled;
                 $plugins[]             = $plugin_info;
@@ -20,10 +20,10 @@ class pluginController extends AdminController
         $this->set('plugins', $plugins);
     }
 
-    public function enable_plugin()
+    public function enablePlugin()
     {
         $pid = arg('plugin_pid');
-        if ($this->model->has_connection()) {
+        if ($this->model->hasConnection()) {
             if ($pid) {
                 $sql = "UPDATE plugins SET status=1 WHERE pid= ? ";
                 // Perform Query
@@ -44,10 +44,10 @@ class pluginController extends AdminController
         $this->set('result_message', $message);
     }
 
-    public function disable_plugin()
+    public function disablePlugin()
     {
         $plugin = arg('plugin_pid');
-        if ($this->model->has_connection()) {
+        if ($this->model->hasConnection()) {
             if ($plugin) {
                 $sql = "UPDATE plugins SET status=0 WHERE pid= ? ";
                 // Perform Query

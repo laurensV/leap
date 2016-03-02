@@ -11,7 +11,7 @@ class PluginManager
         $this->hooks  = $hooks;
     }
 
-    public function get_all_plugins($pdo)
+    public function getAllPlugins($pdo)
     {
         $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
         $all_files = new RecursiveIteratorIterator($directory);
@@ -26,7 +26,7 @@ class PluginManager
                 $path                   = $file->getPath();
                 $pid                    = $file->getBasename('.plugin');
                 $plugin_filenames[$pid] = $path;
-                $plugin_info            = $this->parse_plugin_file($file);
+                $plugin_info            = $this->parsePluginFile($file);
                 $data                   = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $plugin_info['dependencies']);
                 if (isset($stmt)) {
                     $stmt->execute($data);
@@ -37,7 +37,7 @@ class PluginManager
         $this->all_plugins = $plugin_filenames;
     }
 
-    public function parse_plugin_file($file)
+    public function parsePluginFile($file)
     {
         $plugin_info = parse_ini_file($file, true);
         if (!isset($plugin_info['name'])) {
@@ -69,25 +69,25 @@ class PluginManager
         return $plugin_info;
     }
 
-    public function is_enabled($name)
+    public function isEnabled($name)
     {
         return isset($this->enabled_plugins[$name]);
     }
 
-    public function get_path($name)
+    public function getPath($name)
     {
-        if ($this->is_enabled($name)) {
+        if ($this->isEnabled($name)) {
             return $this->enabled_plugins[$name];
         }
         return;
     }
 
-    public function plugins_to_load($pdo)
+    public function pluginsToLoad($pdo)
     {
         return $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function get_sublist_plugins($plugin_names)
+    public function getSublistPlugins($plugin_names)
     {
         $sublist_plugins = array();
         foreach ($plugin_names as $name) {
@@ -96,7 +96,7 @@ class PluginManager
         return $sublist_plugins;
     }
 
-    public function load_plugins($plugins, $auto_enable_dependencies = true)
+    public function loadPlugins($plugins, $auto_enable_dependencies = true)
     {
         /* As dependencies are getting dynamically added to the plugins array in this foreach loop,
          * we need to inform php that he might not be executing the last element of the array */
@@ -135,7 +135,7 @@ class PluginManager
          * the variable $path can't be reused as it gives weird results.. therefore $plugin_path is used */
         foreach ($this->enabled_plugins as $name => $plugin_path) {
             if (!empty($plugin_path)) {
-                $this->router->add_route_file($plugin_path . "/" . "routes.ini");
+                $this->router->addRouteFile($plugin_path . "/" . "routes.ini");
                 foreach ($this->hooks->getHooks() as $hook) {
                     $function = $name . "_" . $hook;
                     if (function_exists($function)) {

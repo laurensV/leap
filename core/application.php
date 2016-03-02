@@ -16,25 +16,25 @@ class Application
     public function __construct()
     {
         $this->setReporting();
-        $this->add_classes();
-        spl_autoload_register(array($this, 'autoload_classes'));
-        $this->define_hooks();
-        $this->url            = $this->get_url();
+        $this->addClasses();
+        spl_autoload_register(array($this, 'autoloadClasses'));
+        $this->defineHooks();
+        $this->url            = $this->getUrl();
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
-        $this->router->set_plugin_manager($this->plugin_manager);
+        $this->router->setPluginManager($this->plugin_manager);
         $this->bootstrap();
     }
 
-    private function get_url()
+    private function getUrl()
     {
         return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
     }
 
-    private function define_hooks()
+    private function defineHooks()
     {
         /* TODO: automatically find hooks */
-        $hook_names  = array("parse_stylesheet", "preroute_url", "admin_links");
+        $hook_names  = array("parseStylesheet", "prerouteUrl", "adminLinks");
         $this->hooks = new Hooks($hook_names);
     }
 
@@ -52,7 +52,7 @@ class Application
         return 0;
     }
 
-    public function connect_with_config()
+    public function connectWithConfig()
     {
         $db_conf = config('database');
         if ($db_conf['db_type'] == "mysql") {
@@ -65,7 +65,7 @@ class Application
         }
     }
 
-    private function custom_plugins_to_load()
+    private function customPluginsToLoad()
     {
         return array("admin", "less", "alias", "plugin_manager");
     }
@@ -79,20 +79,20 @@ class Application
         } else {
             if ($this->pdo == -1) {
                 /* site is run without database, so use custom function to load plugins */
-                $plugins_to_enable        = $this->custom_plugins_to_load();
+                $plugins_to_enable        = $this->customPluginsToLoad();
                 $auto_enable_dependencies = true;
             } else {
                 printr("database error");
             }
         }
-        $this->plugin_manager->get_all_plugins($this->pdo);
-        $plugins = $this->plugin_manager->get_sublist_plugins($plugins_to_enable);
+        $this->plugin_manager->getAllPlugins($this->pdo);
+        $plugins = $this->plugin_manager->getSublistPlugins($plugins_to_enable);
 
-        $this->plugin_manager->load_plugins($plugins, $auto_enable_dependencies);
+        $this->plugin_manager->loadPlugins($plugins, $auto_enable_dependencies);
         /* Plugins are loaded, so from now on we can fire hooks */
-        $this->router->add_route_file(ROOT . "/core/routes.ini");
-        $this->router->add_route_file(ROOT . "/site/routes.ini");
-        $this->hooks->fire("preroute_url", array(&$this->url));
+        $this->router->addRouteFile(ROOT . "/core/routes.ini");
+        $this->router->addRouteFile(ROOT . "/site/routes.ini");
+        $this->hooks->fire("prerouteUrl", array(&$this->url));
         for ($i = 0; $i < 2; $i++) {
             if ($i == 1) {
                 if ($this->controller->result == -1) {
@@ -109,7 +109,7 @@ class Application
                 }
             }
 
-            $this->router->route_url($this->url);
+            $this->router->routeUrl($this->url);
             $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route);
         }
         if (method_exists($this->controller, $this->router->action)) {
@@ -117,7 +117,7 @@ class Application
         } else {
             /* when the second argument is not an action, it is probably a parameter */
             $this->router->params = $this->router->action . "/" . $this->router->params;
-            $this->controller->default_action($this->router->params);
+            $this->controller->defaultAction($this->router->params);
         }
 
         $this->controller->render();
@@ -141,7 +141,7 @@ class Application
     /**
      * Autoload any classes that are required
      */
-    public function autoload_classes($className)
+    public function autoloadClasses($className)
     {
         if (file_exists(ROOT . '/core/' . strtolower($className) . '.php')) {
             require_once ROOT . '/core/' . strtolower($className) . '.php';
@@ -150,7 +150,7 @@ class Application
         }
     }
 
-    private function add_classes()
+    private function addClasses()
     {
         /* load the less to css compiler */
     }

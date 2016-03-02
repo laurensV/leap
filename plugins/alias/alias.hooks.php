@@ -1,15 +1,14 @@
 <?php
-function alias_preroute_url(&$url)
+function alias_prerouteUrl(&$url)
 {
-
-    $alias = get_aliases();
+    $alias = getAliases();
 
     if (isset($alias[$url])) {
         $url = $alias[$url];
     }
 }
 
-function get_aliases()
+function getAliases()
 {
     if (file_exists("aliases.ini")) {
         return parse_ini_file("aliases.ini");

@@ -1,6 +1,6 @@
 <?php
 require LIBRARIES . '/less.php/Less.php';
-function less_parse_stylesheet(&$style, $base_path)
+function less_parseStylesheet(&$style, $base_path)
 {
     if (substr($style, -5) == ".less") {
         if ($style[0] == "/" || $style[0] == "\\") {
