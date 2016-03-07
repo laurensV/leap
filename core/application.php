@@ -38,33 +38,6 @@ class Application
         $this->hooks = new Hooks($hook_names);
     }
 
-    /**
-     * Connects to database *
-     */
-    public function connect($host, $user, $pwd, $db_name)
-    {
-        $this->db = @mysql_connect($host, $user, $pwd);
-        if ($this->db != 0) {
-            if (mysql_select_db($db_name, $this->db)) {
-                return 1;
-            }
-        }
-        return 0;
-    }
-
-    public function connectWithConfig()
-    {
-        $db_conf = config('database');
-        if ($db_conf['db_type'] == "mysql") {
-            if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-                return 0;
-            }
-            return $this->connect($db_conf['db_host'], $db_conf['db_user'], $db_conf['db_pass'], $db_conf['db_name']);
-        } else {
-            return -1;
-        }
-    }
-
     private function customPluginsToLoad()
     {
         return array("admin", "less", "alias", "plugin_manager");
@@ -75,7 +48,7 @@ class Application
         $this->pdo                = SQLHandler::connect();
         $auto_enable_dependencies = false;
         if (is_object($this->pdo)) {
-            $plugins_to_enable = $this->plugin_manager->plugins_to_load($this->pdo);
+            $plugins_to_enable = $this->plugin_manager->pluginsToLoad($this->pdo);
         } else {
             if ($this->pdo == -1) {
                 /* site is run without database, so use custom function to load plugins */
