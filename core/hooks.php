@@ -15,7 +15,7 @@ class Hooks
         return array_keys($this->hooks);
     }
 
-    public function add($name, $callback)
+    public function add($name, $callback, $namespace)
     {
         // callback parameters must be at least syntactically
         // correct when added.
@@ -25,7 +25,7 @@ class Hooks
         if (!is_callable($callback, true)) {
             throw new InvalidArgumentException(sprintf('Invalid callback: %s.', print_r($callback, true)));
         }
-        $this->hooks[$name][] = $callback;
+        $this->hooks[$name][] = array('callback' => $callback, 'class' => $class);
     }
 
     public function getCallbacks($name)
@@ -40,13 +40,9 @@ class Hooks
 
     public function fire($name, $args = array())
     {
-        foreach ($this->getCallbacks($name) as $callback) {
-            // prevent fatal errors, do your own warning or
-            // exception here as you need it.
-            if (!is_callable($callback)) {
-                continue;
-            }
-
+        foreach ($this->getCallbacks($name) as $function) {
+            $plugin_object = new $function['class'];
+            $plugin_object->$function
             call_user_func_array($callback, $args);
         }
     }

@@ -10,10 +10,13 @@ class pluginController extends AdminController
             $plugins = $stmt->fetchAll();
         } else {
             foreach ($this->plugin_manager->all_plugins as $plugin => $path) {
-                $plugin_info           = $this->plugin_manager->parsePluginFile($path . "/" . $plugin . ".plugin");
+                $plugin_info           = $this->plugin_manager->all_plugins[$plugin];
                 $enabled               = $this->plugin_manager->isEnabled($plugin);
                 $plugin_info['pid']    = $plugin;
                 $plugin_info['status'] = $enabled;
+                if(!empty($plugin_info['dependencies'])) {
+                    $plugin_info['dependencies'] = implode(",", $plugin_info['dependencies']);
+                }
                 $plugins[]             = $plugin_info;
             }
         }

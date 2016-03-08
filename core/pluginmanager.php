@@ -15,8 +15,7 @@ class PluginManager
     {
         $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
         $all_files = new RecursiveIteratorIterator($directory);
-
-        $plugin_filenames = array();
+        
         if (is_object($pdo)) {
             $stmt = $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
         }
@@ -25,16 +24,17 @@ class PluginManager
             if ($file->getExtension() == "plugin") {
                 $path                   = $file->getPath();
                 $pid                    = $file->getBasename('.plugin');
-                $plugin_filenames[$pid] = $path;
                 $plugin_info            = $this->parsePluginFile($file);
-                $data                   = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $plugin_info['dependencies']);
+                $plugin_info['path']    = $path;
+                $this->all_plugins[$pid] = $plugin_info;
+                
                 if (isset($stmt)) {
+                    $dependencies = implode(",", $plugin_info['dependencies']);
+                    $data                   = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies);
                     $stmt->execute($data);
                 }
-
             }
         }
-        $this->all_plugins = $plugin_filenames;
     }
 
     public function parsePluginFile($file)
@@ -62,24 +62,19 @@ class PluginManager
 
         if (!isset($plugin_info['dependencies'])) {
             $plugin_info['dependencies'] = "";
-        } else {
-            $plugin_info['dependencies'] = implode(",", $plugin_info['dependencies']);
         }
 
         return $plugin_info;
     }
 
-    public function isEnabled($name)
+    public function isEnabled($pid)
     {
-        return isset($this->enabled_plugins[$name]);
+        return in_array($pid, $this->enabled_plugins);
     }
 
-    public function getPath($name)
+    public function getPath($pid)
     {
-        if ($this->isEnabled($name)) {
-            return $this->enabled_plugins[$name];
-        }
-        return;
+        return $this->all_plugins[$pid]['path'];
     }
 
     public function pluginsToLoad($pdo)
@@ -87,19 +82,60 @@ class PluginManager
         return $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
     }
 
-    public function getSublistPlugins($plugin_names)
-    {
-        $sublist_plugins = array();
-        foreach ($plugin_names as $name) {
-            $sublist_plugins[$name] = $this->all_plugins[$name];
-        }
-        return $sublist_plugins;
-    }
-
-    public function loadPlugins($plugins, $auto_enable_dependencies = true)
+    /* function that loads a list of plugins without a database connection */
+    public function loadPluginsNoDB($plugins, $auto_enable_dependencies = true)
     {
         /* As dependencies are getting dynamically added to the plugins array in this foreach loop,
-         * we need to inform php that he might not be executing the last element of the array */
+         * we need to inform php that he might not be executing the last element of the array, 
+         * therefore we add an empty entry to the plugins array */
+        $plugins[] = "";
+        foreach ($plugins as &$pid) {
+            if (!empty($this->all_plugins[$pid]['path'])) {
+                if(!empty($this->all_plugins[$pid]['dependencies'])){
+                    foreach ($this->all_plugins[$pid]['dependencies'] as $dependency) {
+                        if (!in_array($dependency, $plugins)) {
+                            if ($auto_enable_dependencies) {
+                                if (isset($this->all_plugins[$dependency])) {
+                                    $plugins[] = $dependency;
+                                    /* new element added to plugins array, so we yet need to add empty element to let php know this might not be the last element */
+                                    $plugins[] = "";
+                                } else {
+                                    die("Error: plugin " . $dependency . " needed for plugin " . $pid . " not found");
+                                }
+                            } else {
+                                /* TODO: proper error handling */
+                                die("Error: plugin " . $pid . " needs plugin " . $dependency . " enabled (set auto_enable_dependencies to true)");
+                            }
+                        }
+                    }
+                }
+                
+                chdir($this->all_plugins[$pid]['path']);
+                if (file_exists($pid . ".hooks.php")) {
+                    include $pid . ".hooks.php";
+                }
+            }
+        }
+        $this->enabled_plugins = $plugins;
+        /* We loop again through all the enabled plugins, as we now have all the hook files included */
+        foreach ($plugins as $plugin_pid) {
+            if (!empty($this->all_plugins[$plugin_pid]['path'])) {
+                $this->router->addRouteFile($this->all_plugins[$plugin_pid]['path'] . "/" . "routes.ini");
+                foreach ($this->hooks->getHooks() as $hook) {
+                    $function = $plugin_pid . "_" . $hook;
+                    if (function_exists($function)) {
+                        $this->hooks->add($hook, $function, $plugin_pid);
+                    }
+                }
+            }
+        }
+    }
+        /* function that loads a list of plugins without a database connection */
+    public function loadPlugins($plugins, $pdo, $auto_enable_dependencies = true)
+    {
+        /* As dependencies are getting dynamically added to the plugins array in this foreach loop,
+         * we need to inform php that he might not be executing the last element of the array, 
+         * therefore we add an empty entry to the plugins array */
         $plugins[] = "";
         foreach ($plugins as $name => &$path) {
             if (!empty($path)) {

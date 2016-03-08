@@ -47,6 +47,7 @@ class Application
     {
         $this->pdo                = SQLHandler::connect();
         $auto_enable_dependencies = false;
+        $this->plugin_manager->getAllPlugins($this->pdo);
         if (is_object($this->pdo)) {
             $plugins_to_enable = $this->plugin_manager->pluginsToLoad($this->pdo);
         } else {
@@ -58,10 +59,8 @@ class Application
                 printr("database error");
             }
         }
-        $this->plugin_manager->getAllPlugins($this->pdo);
-        $plugins = $this->plugin_manager->getSublistPlugins($plugins_to_enable);
 
-        $this->plugin_manager->loadPlugins($plugins, $auto_enable_dependencies);
+        $this->plugin_manager->loadPluginsNoDB($plugins_to_enable, $auto_enable_dependencies);
         /* Plugins are loaded, so from now on we can fire hooks */
         $this->router->addRouteFile(ROOT . "/core/routes.ini");
         $this->router->addRouteFile(ROOT . "/site/routes.ini");
