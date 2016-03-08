@@ -15,17 +15,15 @@ class Hooks
         return array_keys($this->hooks);
     }
 
-    public function add($name, $callback, $namespace)
+    public function add($name, $namespace)
     {
         // callback parameters must be at least syntactically
         // correct when added.
         if (!isset($this->hooks[$name])) {
-            return;
+            $this->create($name);
         }
-        if (!is_callable($callback, true)) {
-            throw new InvalidArgumentException(sprintf('Invalid callback: %s.', print_r($callback, true)));
-        }
-        $this->hooks[$name][] = array('callback' => $callback, 'class' => $class);
+        $callback             = "hooks\\" . $namespace . "\\" . $name;
+        $this->hooks[$name][] = $callback;
     }
 
     public function getCallbacks($name)
@@ -35,14 +33,12 @@ class Hooks
 
     public function create($name)
     {
-        $this->hooks[$name] = array();
+        $this->hooks[strtolower($name)] = array();
     }
 
     public function fire($name, $args = array())
     {
-        foreach ($this->getCallbacks($name) as $function) {
-            $plugin_object = new $function['class'];
-            $plugin_object->$function
+        foreach ($this->getCallbacks(strtolower($name)) as $callback) {
             call_user_func_array($callback, $args);
         }
     }
