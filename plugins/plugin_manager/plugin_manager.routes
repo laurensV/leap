@@ -1,0 +1,15 @@
+[admin/plugins*]
+controller = pluginController
+include_slash = true
+
+['admin/plugins']
+action = getPlugins
+scripts[] = scripts/searchable_table.js
+
+[admin/plugins/enable/:plugin_pid]
+action = enablePlugin
+page = pages/result.php
+
+[admin/plugins/disable/:plugin_pid]
+action = disablePlugin
+page = pages/result.php

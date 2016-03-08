@@ -1,0 +1,8 @@
+[admin,'admin/*']
+include_slash = true
+template = admin_template.php
+controller = AdminController
+stylesheets[] = http://cdnjs.cloudflare.com/ajax/libs/metisMenu/2.4.0/metisMenu.min.css
+stylesheets[] = stylesheets/admin.less
+scripts[] = //cdnjs.cloudflare.com/ajax/libs/metisMenu/2.4.0/metisMenu.min.js
+scripts[] = scripts/menu.js
