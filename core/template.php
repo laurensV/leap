@@ -33,7 +33,7 @@ class Template
 
     public function parseStylesheet($style, $base_path)
     {
-        $this->hooks->fire("parseStylesheet", array(&$style, $base_path));
+        $this->hooks->fire("hook_parseStylesheet", array(&$style, $base_path));
 
         if (!filter_var($style, FILTER_VALIDATE_URL)) {
             if ($style[0] != "/") {

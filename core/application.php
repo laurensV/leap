@@ -38,11 +38,6 @@ class Application
         $this->hooks = new Hooks($hook_names);
     }
 
-    private function customPluginsToLoad()
-    {
-        return array("admin", "less", "alias", "plugin_manager");
-    }
-
     private function bootstrap()
     {
         $this->pdo                = SQLHandler::connect();
@@ -53,18 +48,18 @@ class Application
         } else {
             if ($this->pdo == -1) {
                 /* site is run without database, so use custom function to load plugins */
-                $plugins_to_enable        = $this->customPluginsToLoad();
+                $plugins_to_enable        = $this->plugin_manager->PluginsToLoadNoDB();
                 $auto_enable_dependencies = true;
             } else {
                 printr("database error");
             }
         }
 
-        $this->plugin_manager->loadPluginsNoDB($plugins_to_enable, $auto_enable_dependencies);
+        $this->plugin_manager->loadPlugins($plugins_to_enable);
         /* Plugins are loaded, so from now on we can fire hooks */
         $this->router->addRouteFile(ROOT . "/core/routes.ini");
         $this->router->addRouteFile(ROOT . "/site/routes.ini");
-        $this->hooks->fire("prerouteUrl", array(&$this->url));
+        $this->hooks->fire("hook_prerouteUrl", array(&$this->url));
         for ($i = 0; $i < 2; $i++) {
             if ($i == 1) {
                 if ($this->controller->result == -1) {

@@ -1,6 +1,6 @@
 <?php
 namespace hooks\alias{
-    function prerouteUrl(&$url)
+    function hook_prerouteUrl(&$url)
     {
         $alias = getAliases();
 

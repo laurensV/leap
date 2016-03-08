@@ -16,7 +16,7 @@ class AdminController extends Controller
         $links['test4'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
         $links['test5'] = array("link" => "#", "name" => "Test", "description" => "Here comes the description");
 
-        $this->hooks->fire("adminLinks", array(&$links));
+        $this->hooks->fire("hook_adminLinks", array(&$links));
         ksort($links);
         $this->set('links', $links);
     }

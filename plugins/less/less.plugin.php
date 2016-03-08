@@ -2,7 +2,7 @@
 namespace hooks\less {
     require LIBRARIES . '/less.php/Less.php';
 
-    function parseStylesheet(&$style, $base_path)
+    function hook_parseStylesheet(&$style, $base_path)
     {
         if (substr($style, -5) == ".less") {
             if ($style[0] == "/" || $style[0] == "\\") {
