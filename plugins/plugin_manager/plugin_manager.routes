@@ -13,3 +13,7 @@ page = pages/result.php
 [admin/plugins/disable/:plugin_pid]
 action = disablePlugin
 page = pages/result.php
+
+[admin/plugins/disable,admin/plugins/enable]
+action = multiplePlugins
+page = pages/result.php

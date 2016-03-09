@@ -223,7 +223,7 @@ class Router
                     }
 
                     /* TODO: choose if wildcard gets available through params or through arg() function */
-                    $this->params[$wildcard_args['args'][$key - 1]]       = $arg[0];
+                   // $this->params[$wildcard_args['args'][$key - 1]]       = $arg[0];
                     $wildcards_from_url[$wildcard_args['args'][$key - 1]] = $arg[0];
                 }
             }
