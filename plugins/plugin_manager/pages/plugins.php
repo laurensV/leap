@@ -1,5 +1,16 @@
 <h3>Plugins</h3>
 <!-- TODO: add https://github.com/drvic10k/bootstrap-sortable -->
+<div class="modal fade bs-example-modal-lg in" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                <h4 class="modal-title" id="myLargeModalLabel">Large modal</h4>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+</div>
 <div class="table-searchable">
     <div class="input-group"> <span class="input-group-addon">Search</span>
         <input type="text" class="form-control search-table" placeholder="search for plugins..">
@@ -18,9 +29,9 @@
                 <?php
                 foreach ($plugins as $plugin) {
                     if (!$plugin['status']) {
-                        $link = "<a href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . "'>enable</a>";
+                        $link = "<button data-toggle='modal' data-target='.bs-example-modal-lg'  href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . " .alert'>enable</button>";
                     } else {
-                        $link = "<a href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . "'>disable</a>";
+                        $link = "<button data-toggle='modal' data-target='.bs-example-modal-lg' href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . " .alert'>disable</button>";
                     }
                     if(!empty($plugin['dependencies'])){
                         $plugin['dependencies'] = "dependencies: " . $plugin['dependencies'];

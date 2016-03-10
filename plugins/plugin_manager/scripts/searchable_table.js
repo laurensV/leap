@@ -25,4 +25,8 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('.bs-example-modal-lg').on('hidden.bs.modal', function () {
+     location.reload();
+    })
 });

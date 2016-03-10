@@ -37,34 +37,45 @@ class pluginController extends AdminController
                     return;
                 }
             }
-            if ($this->model->hasConnection()) {
-                $sql = "UPDATE plugins SET status=1 WHERE pid= ? ";
-                // Perform Query
-                $stmt = $this->model->run($sql, [$plugin]);
-                if ($stmt->rowCount()) {
-                    $message = "Plugin " . $plugin . " successfully enabled.";
+            if (isset($this->plugin_manager->all_plugins[$plugin])) {
+                if ($this->model->hasConnection()) {
+                    $sql = "UPDATE plugins SET status=1 WHERE pid= ? ";
+                    // Perform Query
+                    $stmt = $this->model->run($sql, [$plugin]);
+                    if ($stmt->rowCount()) {
+                        $message = "Plugin " . $plugin . " successfully enabled.";
+                    } else {
+                        $error = "Could not enable plugin " . $plugin . ".<br>";
+                    }
                 } else {
-                    $message = "Could not enable plugin " . $plugin . ".<br>";
-                }
-
-            } else {
-                /* TODO: disable plugins by adding a file .disabled to the plugin folder */
-                if (isset($this->plugin_manager->all_plugins[$plugin])) {
                     $path = $this->plugin_manager->all_plugins[$plugin]['path'];
                     if (rename($path . "/" . $plugin . ".disabled", $path . "/" . $plugin . ".info")) {
                         $message = "Plugin " . $plugin . " successfully enabled.";
                     } else {
-                        $message = "No database connection and plugin folder isn't writable, please enable plugin manually by changing the .disabled file to .info";
+                        $error = "Could not enable plugin " . $plugin . ".<br>";
+                        $info  = "As you have no database connection, you can also try to enable plugin manually by changing the .disabled file to .info";
                     }
-                } else {
-                    $message = "Plugin " . $plugin . " not found.";
                 }
+            } else {
+                $error = "Plugin " . $plugin . " not found.";
             }
         } else {
-            $message = "No plugin specified";
+            $error = "No plugin specified";
+        }
+        if (isset($message)) {
+            $this->set('success_message', $message);
         }
 
-        $this->set('result_message', $message);
+        if (isset($error)) {
+            $this->set('error_message', $error);
+        }
+        if (isset($info)) {
+            $this->set('info_message', $info);
+        }
+        if ($checkDependencies) {
+            /* if checkDependencies is true, than there aren't multiple plugins that needs to be enabled and we can call getPlugins */
+            $this->getPlugins();
+        }
     }
 
     public function disablePlugin($plugin = null, $checkDependents = true)
@@ -88,7 +99,7 @@ class pluginController extends AdminController
                 if ($stmt->rowCount()) {
                     $message = "Plugin " . $plugin . " successfully disabled.";
                 } else {
-                    $message = "Could not disable plugin " . $plugin . ".<br>";
+                    $error = "Could not disable plugin " . $plugin . ".<br>";
                 }
 
             } else {
@@ -97,17 +108,30 @@ class pluginController extends AdminController
                     if (rename($path . "/" . $plugin . ".info", $path . "/" . $plugin . ".disabled")) {
                         $message = "Plugin " . $plugin . " successfully disabled.";
                     } else {
-                        $message = "No database connection and plugin folder isn't writable, please disable plugin manually by changing the .info file to .disabled";
+                        $error = "No database connection and plugin folder isn't writable, please disable plugin manually by changing the .info file to .disabled";
                     }
                 } else {
-                    $message = "Plugin " . $plugin . " not found.";
+                    $error = "Plugin " . $plugin . " not found.";
                 }
             }
         } else {
-            $message = "No plugin specified";
+            $error = "No plugin specified";
         }
 
-        $this->set('result_message', $message);
+        if (isset($message)) {
+            $this->set('success_message', $message);
+        }
+
+        if (isset($error)) {
+            $this->set('error_message', $error);
+        }
+        if (isset($info)) {
+            $this->set('info_message', $info);
+        }
+        if ($checkDependents) {
+            /* if checkDependents is true, then there aren't multiple plugins that needs to be disabled and we can call getPlugins */
+            $this->getPlugins();
+        }
     }
 
     public function multiplePlugins()
@@ -117,11 +141,13 @@ class pluginController extends AdminController
             foreach ($plugins as $plugin) {
                 $this->disablePlugin($plugin, false);
             }
+            $this->getPlugins();
         } else if (isset($_POST['action']) && $_POST['action'] == "Enable") {
             $plugins = unserialize($_POST['plugins']);
             foreach ($plugins as $plugin) {
                 $this->enablePlugin($plugin, false);
             }
+            $this->getPlugins();
         } else {
             header("Location: " . BASE_URL . "/admin/plugins");
         }
