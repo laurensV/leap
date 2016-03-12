@@ -26,7 +26,13 @@ $(document).ready(function () {
         });
     });
 
-    $('.bs-example-modal-lg').on('hidden.bs.modal', function () {
-     location.reload();
+    // Fill modal with content from link href
+    $(".bs-example-modal-lg").on("show.bs.modal", function(e) {
+        var link = $(e.relatedTarget);
+        $(this).find(".modal-body").load(link.attr("href"));
+    });
+    $('.bs-example-modal-lg').on('hide.bs.modal', function (e) {
+        e.preventDefault();
+        location.reload();
     })
 });

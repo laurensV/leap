@@ -1,15 +1,13 @@
 <?php 
 if(isset($success_message)){
     ?>
-    <div class="alert alert-success alert-dismissible" role="alert">
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div class="alert alert-success" role="alert">
       <?php echo $success_message; ?>
     </div>
 <?php
 } else if(isset($error_message)){
     ?>
-    <div class="alert alert-danger alert-dismissible" role="alert">
-      <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+    <div class="alert alert-danger" role="alert">
       <?php echo $error_message; ?>
     </div>
 <?php 
@@ -33,6 +31,13 @@ if(isset($success_message)){
 <?php 
 } else {
     header("Location: " . BASE_URL . "/admin/plugins");
+}
+if(isset($info_message)){
+    ?>
+    <div class="alert alert-info" role="alert">
+      <?php echo $info_message; ?>
+    </div>
+<?php
 }
 if(isset($success_message) || isset($error_message)) {
     echo "<a href='" . BASE_URL . "/admin/plugins'><i class='glyphicon glyphicon-chevron-left'></i> Back to plugin list</a>";

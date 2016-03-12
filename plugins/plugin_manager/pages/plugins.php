@@ -29,9 +29,9 @@
                 <?php
                 foreach ($plugins as $plugin) {
                     if (!$plugin['status']) {
-                        $link = "<button data-toggle='modal' data-target='.bs-example-modal-lg'  href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . " .alert'>enable</button>";
+                        $link = "<button data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg'  href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . " .alert'>enable</button>";
                     } else {
-                        $link = "<button data-toggle='modal' data-target='.bs-example-modal-lg' href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . " .alert'>disable</button>";
+                        $link = "<button data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg' href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . " .alert'>disable</button>";
                     }
                     if(!empty($plugin['dependencies'])){
                         $plugin['dependencies'] = "dependencies: " . $plugin['dependencies'];

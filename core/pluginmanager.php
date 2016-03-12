@@ -27,12 +27,9 @@ class PluginManager
                 $pid                 = $file->getBasename('.' . $ext);
                 $plugin_info         = $this->parsePluginFile($file);
                 $plugin_info['path'] = $path;
+            
                 if ($ext == "disabled") {
                     $plugin_info['status'] = 0;
-                    if (isset($stmt)) {
-                        $stmt = $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, status=0, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
-                    }
-
                 } else {
                     $plugin_info['status'] = 1;
                 }
@@ -40,7 +37,11 @@ class PluginManager
                 $this->all_plugins[$pid] = $plugin_info;
 
                 if (isset($stmt)) {
+                    if(is_array($plugin_info['dependencies'])){
                     $dependencies = implode(",", $plugin_info['dependencies']);
+                } else {
+                    $dependencies = $plugin_info['dependencies'];
+                }
                     $data         = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies);
                     $stmt->execute($data);
                 }
@@ -90,7 +91,14 @@ class PluginManager
 
     public function pluginsToLoad($pdo)
     {
-        return $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
+        $plugins = [];
+        $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($plugins_query as $pid) {
+            if($this->all_plugins[$pid]['status'] != 0){
+                $plugins[] = $pid;
+            }
+        }
+        return $plugins;
     }
 
     public function PluginsToLoadNoDB()
@@ -117,7 +125,6 @@ class PluginManager
                             die("Error: plugin " . $pid . " needs plugin " . $dependency . " enabled");
                         }
                     }
-
                 }
 
                 chdir($this->all_plugins[$pid]['path']);
