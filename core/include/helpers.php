@@ -80,6 +80,7 @@ function set_message($message = null, $type = 'default')
 function get_messages($type = null, $clear_queue = true)
 {
     if ($messages = set_message()) {
+
         if ($type) {
             if ($clear_queue) {
                 unset($_SESSION['messages'][$type]);

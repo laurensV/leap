@@ -40,6 +40,7 @@ class Application
 
     private function bootstrap()
     {
+        session_start();
         $this->pdo                = SQLHandler::connect();
         $auto_enable_dependencies = false;
         $this->plugin_manager->getAllPlugins($this->pdo);

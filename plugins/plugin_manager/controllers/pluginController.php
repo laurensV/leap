@@ -62,19 +62,18 @@ class pluginController extends AdminController
         } else {
             $error = "No plugin specified";
         }
-        if (isset($message)) {
-            $this->set('success_message', $message);
-        }
 
+        if (isset($message)) {
+            set_message($message, "success");
+        }
         if (isset($error)) {
-            $this->set('error_message', $error);
+            set_message($error, "error");
         }
         if (isset($info)) {
-            $this->set('info_message', $info);
+            set_message($info, "info");
         }
         if ($checkDependencies) {
-            /* if checkDependencies is true, than there aren't multiple plugins that needs to be enabled and we can call getPlugins */
-            $this->getPlugins();
+            header("Location: " . BASE_URL . "/admin/plugins");
         }
     }
 
@@ -119,18 +118,16 @@ class pluginController extends AdminController
         }
 
         if (isset($message)) {
-            $this->set('success_message', $message);
+            set_message($message, "success");
         }
-
         if (isset($error)) {
-            $this->set('error_message', $error);
+            set_message($error, "error");
         }
         if (isset($info)) {
-            $this->set('info_message', $info);
+            set_message($info, "info");
         }
         if ($checkDependents) {
-            /* if checkDependents is true, then there aren't multiple plugins that needs to be disabled and we can call getPlugins */
-            $this->getPlugins();
+            header("Location: " . BASE_URL . "/admin/plugins");
         }
     }
 
@@ -141,16 +138,13 @@ class pluginController extends AdminController
             foreach ($plugins as $plugin) {
                 $this->disablePlugin($plugin, false);
             }
-            $this->getPlugins();
         } else if (isset($_POST['action']) && $_POST['action'] == "Enable") {
             $plugins = unserialize($_POST['plugins']);
             foreach ($plugins as $plugin) {
                 $this->enablePlugin($plugin, false);
             }
-            $this->getPlugins();
-        } else {
-            header("Location: " . BASE_URL . "/admin/plugins");
         }
+        header("Location: " . BASE_URL . "/admin/plugins");
     }
 
     /* recursive dependent plugins checker */
