@@ -26,7 +26,7 @@ class pluginController extends AdminController
     public function enablePlugin($plugin = null, $checkDependencies = true)
     {
         if (empty($plugin)) {
-            $plugin = arg('plugin_pid');
+            $plugin = $_POST['pid'];
         }
         if ($plugin) {
             if ($checkDependencies) {
@@ -81,7 +81,7 @@ class pluginController extends AdminController
     public function disablePlugin($plugin = null, $checkDependents = true)
     {
         if (empty($plugin)) {
-            $plugin = arg('plugin_pid');
+            $plugin = $_POST['pid'];
         }
         if ($plugin) {
             if ($checkDependents) {

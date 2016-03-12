@@ -3,11 +3,7 @@
 <div class="modal fade bs-example-modal-lg in" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
-                <h4 class="modal-title" id="myLargeModalLabel">Large modal</h4>
-            </div>
-            <div class="modal-body"></div>
+        <div class="modal-body">Loading..</div>
         </div>
     </div>
 </div>
@@ -29,9 +25,9 @@
                 <?php
                 foreach ($plugins as $plugin) {
                     if (!$plugin['status']) {
-                        $link = "<button data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg'  href='" . BASE_URL . "/admin/plugins/enable/" . $plugin['pid'] . " .alert'>enable</button>";
+                        $link = "<button class='btn btn-success btn-outline btn-sm' data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg' pid='" . $plugin['pid'] . "'  href='" . BASE_URL . "/admin/plugins/enable .result'>enable</button>";
                     } else {
-                        $link = "<button data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg' href='" . BASE_URL . "/admin/plugins/disable/" . $plugin['pid'] . " .alert'>disable</button>";
+                        $link = "<button class='btn btn-danger btn-outline btn-sm' data-toggle='modal' data-remote='false' data-target='.bs-example-modal-lg' pid='" . $plugin['pid'] . "'  href='" . BASE_URL . "/admin/plugins/disable .result'>disable</button>";
                     }
                     if(!empty($plugin['dependencies'])){
                         $plugin['dependencies'] = "dependencies: " . $plugin['dependencies'];

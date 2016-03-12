@@ -61,3 +61,38 @@ function config($name, $default = null)
 
     return isset($config[$name]) ? $config[$name] : $default;
 }
+
+function set_message($message = null, $type = 'default')
+{
+    if ($message) {
+        if (!isset($_SESSION['messages'])) {
+            $_SESSION['messages'] = array();
+        }
+        if (!isset($_SESSION['messages'][$type])) {
+            $_SESSION['messages'][$type] = array();
+        }
+
+        $_SESSION['messages'][$type][] = $message;
+    }
+    return isset($_SESSION['messages']) ? $_SESSION['messages'] : null;
+}
+
+function get_messages($type = null, $clear_queue = true)
+{
+    if ($messages = set_message()) {
+        if ($type) {
+            if ($clear_queue) {
+                unset($_SESSION['messages'][$type]);
+            }
+            if (isset($messages[$type])) {
+                return array($type => $messages[$type]);
+            }
+        } else {
+            if ($clear_queue) {
+                unset($_SESSION['messages']);
+            }
+            return $messages;
+        }
+    }
+    return array();
+}

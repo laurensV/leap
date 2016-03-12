@@ -28,11 +28,18 @@ $(document).ready(function () {
 
     // Fill modal with content from link href
     $(".bs-example-modal-lg").on("show.bs.modal", function(e) {
-        var link = $(e.relatedTarget);
-        $(this).find(".modal-body").load(link.attr("href"));
+        var button = $(e.relatedTarget);
+        $(this).find(".modal-content").load(button.attr("href"), { "pid": button.attr("pid") });
     });
     $('.bs-example-modal-lg').on('hide.bs.modal', function (e) {
-        e.preventDefault();
-        location.reload();
+        if($(this).find('.alert-success').length){
+            e.preventDefault();
+            var modalContent = $(this).find(".modal-dialog");
+            if(modalContent.length) {
+                modalContent.remove();
+                $(this).append("<span class='glyphicon glyphicon-refresh glyphicon-animate page-loading'></span>");
+                location.reload();
+            }
+        }
     })
 });
