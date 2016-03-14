@@ -58,8 +58,8 @@ class Application
 
         $this->plugin_manager->loadPlugins($plugins_to_enable);
         /* Plugins are loaded, so from now on we can fire hooks */
-        $this->router->addRouteFile(ROOT . "/core/routes.ini");
-        $this->router->addRouteFile(ROOT . "/site/routes.ini");
+        $this->router->addRouteFile(ROOT . "core/routes.ini");
+        $this->router->addRouteFile(ROOT . "site/routes.ini");
         $this->hooks->fire("hook_prerouteUrl", array(&$this->url));
         for ($i = 0; $i < 2; $i++) {
             if ($i == 1) {
@@ -103,7 +103,7 @@ class Application
             ini_set('display_errors', 0);
         }
         ini_set('log_errors', 1);
-        ini_set('error_log', ROOT . '/core/logs/error.log');
+        ini_set('error_log', ROOT . 'core/logs/error.log');
     }
 
     /**
@@ -111,10 +111,10 @@ class Application
      */
     public function autoloadClasses($className)
     {
-        if (file_exists(ROOT . '/core/' . strtolower($className) . '.php')) {
-            require_once ROOT . '/core/' . strtolower($className) . '.php';
-        } else if (file_exists(ROOT . '/core/include/classes/' . $className . '.class.php')) {
-            require_once ROOT . '/core/include/classes/' . $className . '.class.php';
+        if (file_exists(ROOT . 'core/' . strtolower($className) . '.php')) {
+            require_once ROOT . 'core/' . strtolower($className) . '.php';
+        } else if (file_exists(ROOT . 'core/include/classes/' . $className . '.class.php')) {
+            require_once ROOT . 'core/include/classes/' . $className . '.class.php';
         }
     }
 

@@ -30,9 +30,9 @@ class Router
         $this->action            = null;
         $this->controller        = 'Controller';
         $this->controllerFile    = null;
-        $this->template['path']  = ROOT . '/site/templates/';
+        $this->template['path']  = ROOT . 'site/templates/';
         $this->template['value'] = "default_template.php";
-        $this->page['path']      = ROOT . '/site/pages/';
+        $this->page['path']      = ROOT . 'site/pages/';
         $this->page['value']     = "";
         $this->stylesheets_route = array();
         $this->scripts_route     = array();
@@ -159,11 +159,11 @@ class Router
                 $this->controllerFile = null;
             }
             if ($all || in_array('template', $route['clear'])) {
-                $this->template['path']  = ROOT . '/site/templates/';
+                $this->template['path']  = ROOT . 'site/templates/';
                 $this->template['value'] = "default_template.php";
             }
             if ($all || in_array('page', $route['clear'])) {
-                $this->page['path']  = ROOT . '/site/pages/';
+                $this->page['path']  = ROOT . 'site/pages/';
                 $this->page['value'] = "";
             }
             if ($all || in_array('action', $route['clear'])) {
@@ -245,7 +245,7 @@ class Router
         if ($page == "") {
             $page = $this->page['value'];
         }
-        $this->page['path']  = $this->base_path . "/pages/";
+        $this->page['path']  = $this->base_path . "pages/";
         $this->page['value'] = $page . ".php";
     }
 }

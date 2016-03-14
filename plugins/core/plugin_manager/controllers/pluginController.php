@@ -43,21 +43,21 @@ class pluginController extends AdminController
                     // Perform Query
                     $stmt = $this->model->run($sql, [$plugin]);
                     if ($stmt->rowCount()) {
-                        $message = "Plugin " . $plugin . " successfully enabled.";
+                        $message = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> successfully enabled.";
                     } else {
-                        $error = "Could not enable plugin " . $plugin . ".<br>";
+                        $error = "Could not enable plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b>.<br>";
                     }
                 } else {
                     $path = $this->plugin_manager->all_plugins[$plugin]['path'];
                     if (rename($path . $plugin . ".disabled", $path . $plugin . ".info")) {
-                        $message = "Plugin " . $plugin . " successfully enabled.";
+                        $message = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> successfully enabled.";
                     } else {
-                        $error = "Could not enable plugin " . $plugin . ".<br>";
+                        $error = "Could not enable plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b>.<br>";
                         $info  = "As you have no database connection, you can also try to enable plugin manually by changing the .disabled file to .info";
                     }
                 }
             } else {
-                $error = "Plugin " . $plugin . " not found.";
+                $error = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> not found.";
             }
         } else {
             $error = "No plugin specified";
@@ -96,21 +96,21 @@ class pluginController extends AdminController
                 // Perform Query
                 $stmt = $this->model->run($sql, [$plugin]);
                 if ($stmt->rowCount()) {
-                    $message = "Plugin " . $plugin . " successfully disabled.";
+                    $message = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> successfully disabled.";
                 } else {
-                    $error = "Could not disable plugin " . $plugin . ".<br>";
+                    $error = "Could not disable plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b>.<br>";
                 }
 
             } else {
                 if (isset($this->plugin_manager->all_plugins[$plugin])) {
                     $path = $this->plugin_manager->all_plugins[$plugin]['path'];
                     if (rename($path . $plugin . ".info", $path . $plugin . ".disabled")) {
-                        $message = "Plugin " . $plugin . " successfully disabled.";
+                        $message = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> successfully disabled.";
                     } else {
                         $error = "No database connection and plugin folder isn't writable, please disable plugin manually by changing the .info file to .disabled";
                     }
                 } else {
-                    $error = "Plugin " . $plugin . " not found.";
+                    $error = "Plugin <b>" . $this->plugin_manager->all_plugins[$plugin]['name'] . "</b> not found.";
                 }
             }
         } else {

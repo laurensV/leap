@@ -8,7 +8,7 @@ class BasicController extends Controller
 
     public function includeHeaderHook()
     {
-        return array(ROOT . "/site/pages/include/menu.php");
+        return array(ROOT . "site/pages/include/menu.php");
     }
 
 }
