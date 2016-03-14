@@ -25,4 +25,21 @@ $(document).ready(function () {
             }
         });
     });
+
+    $('button[data-confirm]').click(function(ev) {
+        var form = $(this).closest("form");
+
+        if (!$('#dataConfirmModal').length) {
+            $('body').append('<div id="dataConfirmModal" class="modal fade" role="dialog" aria-labelledby="dataConfirmLabel"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title">Please Confirm</h4></div><div class="modal-body"></div><div class="modal-footer"><button class="btn btn-sm btn-default" data-dismiss="modal" aria-hidden="true">Cancel</button><button id="dataConfirmOK">OK</button></div></div></div></div>');
+        } 
+        $('#dataConfirmModal').find('.modal-body').text($(this).attr('data-confirm'));
+        $('#dataConfirmOK').attr("class", $(this).attr("class"));
+        $('#dataConfirmOK').text($(this).text());
+        $('#dataConfirmOK').unbind('click');
+        $('#dataConfirmOK').click(function(){
+            form.submit();
+        });
+        $('#dataConfirmModal').modal({show:true});
+        return false;
+    });
 });

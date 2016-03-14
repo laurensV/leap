@@ -50,6 +50,10 @@
         </div>
     </nav>
     <div id="page-wrapper">
-        <?php echo $page; ?>
+        <h3><?php echo $title ?></h3>
+        <?php 
+        echo $messages;
+        echo $page; 
+        ?>
     </div>
 </div>

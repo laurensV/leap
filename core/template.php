@@ -18,6 +18,33 @@ class Template
         $this->plugins           = $plugins;
         $this->stylesheets_route = $stylesheets_route;
         $this->scripts_route     = $scripts_route;
+        $this->initVars();
+    }
+
+    private function initVars() {
+        $this->set('site_title', config('application')['site_name']);
+        $this->set('messages', $this->render_messages(get_messages()));
+        $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
+        $this->set('title', ucfirst(end($tmp_page)));
+    }
+
+    private function render_messages($messages_array) {
+        $messages = "";
+        foreach ($messages_array as $type => $messages_of_type) {
+            switch ($type) {
+                case 'error':
+                    $class = 'danger';
+                    break;
+                default:
+                    $class = $type;
+                    break;
+            }
+            foreach ($messages_of_type as  $message_of_type) {
+                $messages .= '<div class="alert alert-'.$class.' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'.$message_of_type.'</div>';
+            }
+
+        }
+        return $messages;
     }
 
     public function addStylesheet($styleArray, $base_path)

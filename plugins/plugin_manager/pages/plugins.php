@@ -1,7 +1,3 @@
-<?php 
-printr($messages, false);
-?>
-<h3>Plugins</h3>
 <!-- TODO: add https://github.com/drvic10k/bootstrap-sortable -->
 <div class="table-searchable">
     <div class="input-group"> <span class="input-group-addon">Search</span>
@@ -22,11 +18,13 @@ printr($messages, false);
                 foreach ($plugins as $plugin) {
                     if (!$plugin['status']) {
                         $form = '<form action="'. BASE_URL . '/admin/plugins/enable" method="post">';
-                        $form .= "<button name='pid' type='submit' class='btn btn-success btn-outline btn-sm' value='" . $plugin['pid'] . "'>enable</button>";
+                        $form .= '<input type="hidden" value='.$plugin['pid'].' name="pid" />';
+                        $form .= "<button name='pid' type='submit' data-confirm='Are you sure you want to enable ".$plugin['name']."?'class='btn btn-success btn-outline btn-sm' value='" . $plugin['pid'] . "'>Enable</button>";
                         $form .= '</form>';
                     } else {
                         $form = '<form action="'. BASE_URL . '/admin/plugins/disable" method="post">';
-                        $form .= "<button name='pid' type='submit' class='btn btn-danger btn-outline btn-sm' value='" . $plugin['pid'] . "'>disable</button>";
+                        $form .= '<input type="hidden" value='.$plugin['pid'].' name="pid" />';
+                        $form .= "<button type='submit' data-confirm='Are you sure you want to disable ".$plugin['name']."?' class='btn btn-danger btn-outline btn-sm' value='" . $plugin['pid'] . "'>Disable</button>";
                         $form .= '</form>';
                     }
                     if(!empty($plugin['dependencies'])){

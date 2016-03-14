@@ -19,8 +19,6 @@ class Controller
             $this->plugin_manager = $plugin_manager;
             $this->template       = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
             $this->page           = $page;
-            $this->set('site_title', config('application')['site_name']);
-            $this->set('messages', get_messages());
             $this->init();
             $this->result = 1;
         } else {
