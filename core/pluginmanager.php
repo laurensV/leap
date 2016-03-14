@@ -13,7 +13,7 @@ class PluginManager
 
     public function getAllPlugins($pdo)
     {
-        $directory = new RecursiveDirectoryIterator(ROOT . '/plugins');
+        $directory = new RecursiveDirectoryIterator(ROOT . 'plugins');
         $all_files = new RecursiveIteratorIterator($directory);
 
         if (is_object($pdo)) {
@@ -26,7 +26,7 @@ class PluginManager
                 $path                = $file->getPath();
                 $pid                 = $file->getBasename('.' . $ext);
                 $plugin_info         = $this->parsePluginFile($file);
-                $plugin_info['path'] = $path;
+                $plugin_info['path'] = $path . "/";
             
                 if ($ext == "disabled") {
                     $plugin_info['status'] = 0;
@@ -42,7 +42,7 @@ class PluginManager
                 } else {
                     $dependencies = $plugin_info['dependencies'];
                 }
-                    $data         = array('pid' => $pid, 'path' => $path, 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies);
+                    $data         = array('pid' => $pid, 'path' => $plugin_info['path'], 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies);
                     $stmt->execute($data);
                 }
             }
@@ -133,7 +133,7 @@ class PluginManager
                     // evil hack that can be used to auto define namespace:
                     /*eval('namespace hooks\\' . $pid . ' {?>' . file_get_contents($pid . ".hooks.php") .  '}');*/
                 }
-                $this->router->addRouteFile($this->all_plugins[$pid]['path'] . "/" . $pid . ".routes");
+                $this->router->addRouteFile($this->all_plugins[$pid]['path'] . $pid . ".routes");
             }
         }
         $functions = get_defined_functions();

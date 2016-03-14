@@ -62,7 +62,7 @@ class Template
 
         if (!filter_var($style, FILTER_VALIDATE_URL)) {
             if ($style[0] != "/") {
-                $style = strReplaceFirst(ROOT, BASE_URL, $base_path) . "/" . $style;
+                $style = strReplaceFirst(ROOT, BASE_URL, $base_path) . $style;
             }
         }
 
@@ -73,7 +73,7 @@ class Template
     {
         if (!filter_var($script, FILTER_VALIDATE_URL)) {
             if ($script[0] != "/") {
-                $script = strReplaceFirst(ROOT, BASE_URL, $base_path) . "/" . $script;
+                $script = strReplaceFirst(ROOT, BASE_URL, $base_path) . $script;
             }
         }
         return $script;
@@ -125,7 +125,7 @@ class Template
         $this->includeScriptsCss();
 
         /* include the start of the html page */
-        require_once ROOT . "/core/include/start_page.php";
+        require_once ROOT . "core/include/start_page.php";
 
         chdir($this->page['path']);
         ob_start();
@@ -151,7 +151,7 @@ class Template
             echo $page;
         }
         /* include the end of the html page */
-        require_once ROOT . "/core/include/end_page.php";
+        require_once ROOT . "core/include/end_page.php";
     }
 
 }

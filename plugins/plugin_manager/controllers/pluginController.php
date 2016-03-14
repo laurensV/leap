@@ -49,7 +49,7 @@ class pluginController extends AdminController
                     }
                 } else {
                     $path = $this->plugin_manager->all_plugins[$plugin]['path'];
-                    if (rename($path . "/" . $plugin . ".disabled", $path . "/" . $plugin . ".info")) {
+                    if (rename($path . $plugin . ".disabled", $path . $plugin . ".info")) {
                         $message = "Plugin " . $plugin . " successfully enabled.";
                     } else {
                         $error = "Could not enable plugin " . $plugin . ".<br>";
@@ -73,7 +73,7 @@ class pluginController extends AdminController
             set_message($info, "info");
         }
         if ($checkDependencies) {
-            header("Location: " . BASE_URL . "/admin/plugins");
+            header("Location: " . BASE_URL . "admin/plugins");
         }
     }
 
@@ -104,7 +104,7 @@ class pluginController extends AdminController
             } else {
                 if (isset($this->plugin_manager->all_plugins[$plugin])) {
                     $path = $this->plugin_manager->all_plugins[$plugin]['path'];
-                    if (rename($path . "/" . $plugin . ".info", $path . "/" . $plugin . ".disabled")) {
+                    if (rename($path . $plugin . ".info", $path . $plugin . ".disabled")) {
                         $message = "Plugin " . $plugin . " successfully disabled.";
                     } else {
                         $error = "No database connection and plugin folder isn't writable, please disable plugin manually by changing the .info file to .disabled";
@@ -127,7 +127,7 @@ class pluginController extends AdminController
             set_message($info, "info");
         }
         if ($checkDependents) {
-            header("Location: " . BASE_URL . "/admin/plugins");
+            header("Location: " . BASE_URL . "admin/plugins");
         }
     }
 
@@ -144,7 +144,7 @@ class pluginController extends AdminController
                 $this->enablePlugin($plugin, false);
             }
         }
-        header("Location: " . BASE_URL . "/admin/plugins");
+        header("Location: " . BASE_URL . "admin/plugins");
     }
 
     /* recursive dependent plugins checker */

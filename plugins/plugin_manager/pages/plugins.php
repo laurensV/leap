@@ -17,12 +17,12 @@
                 <?php
                 foreach ($plugins as $plugin) {
                     if (!$plugin['status']) {
-                        $form = '<form action="'. BASE_URL . '/admin/plugins/enable" method="post">';
+                        $form = '<form action="'. BASE_URL . 'admin/plugins/enable" method="post">';
                         $form .= '<input type="hidden" value='.$plugin['pid'].' name="pid" />';
                         $form .= "<button name='pid' type='submit' data-confirm='Are you sure you want to enable ".$plugin['name']."?'class='btn btn-success btn-outline btn-sm' value='" . $plugin['pid'] . "'>Enable</button>";
                         $form .= '</form>';
                     } else {
-                        $form = '<form action="'. BASE_URL . '/admin/plugins/disable" method="post">';
+                        $form = '<form action="'. BASE_URL . 'admin/plugins/disable" method="post">';
                         $form .= '<input type="hidden" value='.$plugin['pid'].' name="pid" />';
                         $form .= "<button type='submit' data-confirm='Are you sure you want to disable ".$plugin['name']."?' class='btn btn-danger btn-outline btn-sm' value='" . $plugin['pid'] . "'>Disable</button>";
                         $form .= '</form>';

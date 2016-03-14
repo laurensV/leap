@@ -8,7 +8,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <?php echo l("Admin Section", "/admin", array("class" => "navbar-brand")); ?>
+            <?php echo l("Admin Section", "admin", array("class" => "navbar-brand")); ?>
         </div>
         <!-- /.navbar-header -->
 
@@ -19,10 +19,10 @@
     	            	if(isset($links)){
     						foreach($links as $link){
     							switch (strtolower($link['link'])) {
-    								case '/admin/dashboard':
+    								case 'admin/dashboard':
     									$link['name'] = '<span class="glyphicon glyphicon-dashboard" aria-hidden="true"></span> '.$link['name'];
     									break;
-    								case '/admin/plugins':
+    								case 'admin/plugins':
     									$link['name'] = '<span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span> '.$link['name'];
     									break;
     								default:

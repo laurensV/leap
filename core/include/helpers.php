@@ -43,9 +43,9 @@ function arg($id = null, $args_raw = null)
     }
 }
 
-function l($name, $link, $attributes = array())
+function l($name, $link, $attributes = array(), $relative = false)
 {
-    if ($link[0] == "/") {
+    if (!$relative) {
         $link = BASE_URL . $link;
     }
     $attributes_string = " ";
