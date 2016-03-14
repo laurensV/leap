@@ -1,7 +1,7 @@
 <!-- TODO: add https://github.com/drvic10k/bootstrap-sortable -->
 <div class="table-searchable">
     <div class="input-group"> <span class="input-group-addon">Search</span>
-        <input type="text" class="form-control search-table" placeholder="search for plugins..">
+        <input autofocus type="text" class="form-control search-table" placeholder="search for plugins..">
     </div>
     <div class="table-responsive">
         <table class="table table-striped table-hover">
