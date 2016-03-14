@@ -11,7 +11,7 @@ class Controller
     /**
      * Whenever controller is created, load the model and the template.
      */
-    public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route)
+    public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route, $title)
     {
         if ($this->grantAccess()) {
             $this->model          = new $model($pdo);
@@ -21,6 +21,12 @@ class Controller
             $this->page           = $page;
             $this->init();
             $this->result = 1;
+            if($title){
+                $this->set('title', $title);
+            } else {
+                $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
+                $this->set('title', ucfirst(end($tmp_page)));
+            }
         } else {
             $this->result = -1;
         }

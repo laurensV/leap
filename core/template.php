@@ -24,8 +24,6 @@ class Template
     private function initVars() {
         $this->set('site_title', config('application')['site_name']);
         $this->set('messages', $this->render_messages(get_messages()));
-        $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
-        $this->set('title', ucfirst(end($tmp_page)));
     }
 
     private function render_messages($messages_array) {

@@ -78,7 +78,7 @@ class Application
             }
 
             $this->router->routeUrl($this->url);
-            $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route);
+            $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route, $this->router->title);
         }
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);

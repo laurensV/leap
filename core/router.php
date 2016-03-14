@@ -14,6 +14,7 @@ class Router
     private $plugin_manager;
     public $stylesheets_route;
     public $scripts_route;
+    public $title;
 
     public function __construct()
     {
@@ -30,11 +31,12 @@ class Router
         $this->controller        = 'Controller';
         $this->controllerFile    = null;
         $this->template['path']  = ROOT . '/site/templates';
-        $this->template['value'] = "default_page.php";
+        $this->template['value'] = "default_template.php";
         $this->page['path']      = ROOT . '/site/pages';
         $this->page['value']     = "";
         $this->stylesheets_route = array();
         $this->scripts_route     = array();
+        $this->title             = null;
     }
 
     public function setPluginManager($plugin_manager)
@@ -159,7 +161,7 @@ class Router
             }
             if ($all || in_array('template', $route['clear'])) {
                 $this->template['path']  = ROOT . '/site/templates';
-                $this->template['value'] = "default_page.php";
+                $this->template['value'] = "default_template.php";
             }
             if ($all || in_array('page', $route['clear'])) {
                 $this->page['path']  = ROOT . '/site/pages';
@@ -167,6 +169,9 @@ class Router
             }
             if ($all || in_array('action', $route['clear'])) {
                 $this->action = null;
+            }
+            if ($all || in_array('title', $route['clear'])) {
+                $this->title = null;
             }
         }
 
@@ -206,6 +211,9 @@ class Router
         }
         if (isset($route['action'])) {
             $this->action = $route['action']['value'];
+        }
+        if (isset($route['title'])) {
+            $this->title = $route['title']['value'];
         }
         if (isset($route['stylesheets'])) {
             $this->stylesheets_route[] = $route['stylesheets'];
