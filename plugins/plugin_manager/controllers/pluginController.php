@@ -1,5 +1,6 @@
 <?php
 require $this->plugin_manager->getPath("admin") . "/controllers/AdminController.php";
+
 class pluginController extends AdminController
 {
     public function getPlugins()

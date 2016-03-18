@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class Router
 {
     public $routes;
@@ -8,7 +10,7 @@ class Router
     public $model;
     private $modelFile;
     public $controller;
-    private $controllerFile;
+    public $controllerFile;
     public $template;
     private $base_path;
     private $plugin_manager;
@@ -110,13 +112,13 @@ class Router
             if (isset($this->modelFile)) {
                 chdir($this->modelFile['path']);
                 if (file_exists($this->modelFile['value'])) {
-                    require_once $this->modelFile['value'];
+                    require $this->modelFile['value'];
                 }
             }
             if (isset($this->controllerFile)) {
                 chdir($this->controllerFile['path']);
                 if (file_exists($this->controllerFile['value'])) {
-                    require_once $this->controllerFile['value'];
+                    require $this->controllerFile['value'];
                 }
             }
             if ($this->page['value'] == "") {

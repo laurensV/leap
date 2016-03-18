@@ -1,4 +1,5 @@
 <?php
+namespace Frameworkname\Core;
 
 class SQLHandler
 {

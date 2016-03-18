@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class Model extends SQLHandler
 {
     public function __construct($pdo)

@@ -1,6 +1,11 @@
 <?php
+namespace Frameworkname\Core;
+/**
+ * { class_description }
+ */
 class Application
 {
+    
     private $router;
     private $controller;
     private $model;
@@ -11,14 +16,13 @@ class Application
 
     /**
      * "Start" the application:
-     * Analyze the URL elements and calls the according controller/method or the fallback
      */
     public function __construct()
     {
         $this->setReporting();
-        $this->addClasses();
-        spl_autoload_register(array($this, 'autoloadClasses'));
-        $this->defineHooks();
+        /* TODO: think about making own psr-4 autoload function or use composer */
+        //spl_autoload_register(array($this, 'autoloadClasses'));
+        $this->hooks          = new Hooks();
         $this->url            = $this->getUrl();
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
@@ -26,18 +30,9 @@ class Application
         $this->bootstrap();
     }
 
-    private function getUrl()
-    {
-        return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
-    }
-
-    private function defineHooks()
-    {
-        /* TODO: automatically find hooks */
-        $hook_names  = array("parseStylesheet", "prerouteUrl", "adminLinks");
-        $this->hooks = new Hooks($hook_names);
-    }
-
+    /**
+     * { function_description }
+     */
     private function bootstrap()
     {
         session_start();
@@ -57,7 +52,11 @@ class Application
         }
 
         $this->plugin_manager->loadPlugins($plugins_to_enable);
-        /* Plugins are loaded, so from now on we can fire hooks */
+
+        /******
+         Plugins are loaded, so from now on we can fire hooks 
+         ******/
+
         $this->router->addRouteFile(ROOT . "core/routes.ini");
         $this->router->addRouteFile(ROOT . "site/routes.ini");
         $this->hooks->fire("hook_prerouteUrl", array(&$this->url));
@@ -78,17 +77,34 @@ class Application
             }
 
             $this->router->routeUrl($this->url);
+            /* TODO: consider singleton for plugin_manager and router */
+            if(isset($this->router->controllerFile)) {
+                /* TODO: think about adding controller and model classes with composer instead of with router */
+            } else {
+                $this->router->controller = "Frameworkname\\Core\\" . $this->router->controller;
+            }
             $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route, $this->router->title);
         }
         if (method_exists($this->controller, $this->router->action)) {
             $this->controller->{$this->router->action}($this->router->params);
         } else {
+            /* TODO: rewrite */
             /* when the second argument is not an action, it is probably a parameter */
             $this->router->params = $this->router->action . "/" . $this->router->params;
             $this->controller->defaultAction($this->router->params);
         }
 
         $this->controller->render();
+    }
+
+    /**
+     * retrieve the raw arguments after the base url
+     *
+     * @return     string
+     */
+    private function getUrl()
+    {
+        return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
     }
 
     /**
@@ -106,20 +122,19 @@ class Application
         ini_set('error_log', ROOT . 'core/logs/error.log');
     }
 
+
     /**
      * Autoload any classes that are required
+     *
+     * @param      string  $className  name of the class to autoload
      */
-    public function autoloadClasses($className)
+    private function autoloadClasses($className)
     {
+        /* TODO: rewrite folder structure classes */
         if (file_exists(ROOT . 'core/' . strtolower($className) . '.php')) {
             require_once ROOT . 'core/' . strtolower($className) . '.php';
         } else if (file_exists(ROOT . 'core/include/classes/' . $className . '.class.php')) {
             require_once ROOT . 'core/include/classes/' . $className . '.class.php';
         }
-    }
-
-    private function addClasses()
-    {
-        /* load the less to css compiler */
     }
 }

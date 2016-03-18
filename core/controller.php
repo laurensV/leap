@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class Controller
 {
     protected $model;
@@ -14,6 +16,7 @@ class Controller
     public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route, $title)
     {
         if ($this->grantAccess()) {
+            $model = "Frameworkname\\Core\\" . $model;
             $this->model          = new $model($pdo);
             $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;

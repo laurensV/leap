@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class PluginManager
 {
     private $router;
@@ -13,8 +15,8 @@ class PluginManager
 
     public function getAllPlugins($pdo)
     {
-        $directory = new RecursiveDirectoryIterator(ROOT . 'plugins');
-        $all_files = new RecursiveIteratorIterator($directory);
+        $directory = new \RecursiveDirectoryIterator(ROOT . 'plugins');
+        $all_files = new \RecursiveIteratorIterator($directory);
 
         if (is_object($pdo)) {
             $stmt = $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
@@ -139,9 +141,9 @@ class PluginManager
         $functions = get_defined_functions();
         foreach ($functions['user'] as $function) {
             $parts = explode("\\", $function);
-            if ($parts[0] == "hooks") {
-                if (isset($parts[2])) {
-                    $this->hooks->add($parts[2], $parts[1]);
+            if ($parts[0] == "frameworkname" && $parts[1] == "hooks") {
+                if (isset($parts[3])) {
+                    $this->hooks->add($parts[3], $parts[2]);
                 }
             }
         }

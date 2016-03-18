@@ -1,4 +1,10 @@
 <?php
+define('ROOT', call_user_func(function () {
+    $root = str_replace("\\", "/", dirname(dirname(__FILE__)));
+    $root .= (substr($root, -1) == '/' ? '' : '/');
+    return $root;
+}));
+
 $config = parse_ini_file(ROOT . "config.ini", true);
 
 /* check for local settings */

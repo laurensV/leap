@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class Template
 {
     private $template;

@@ -1,5 +1,5 @@
 <?php
-namespace hooks\alias{
+namespace Frameworkname\Hooks\Alias {
     function hook_prerouteUrl(&$url)
     {
         $alias = getAliases();

@@ -1,5 +1,5 @@
 <?php
-namespace hooks\less {
+namespace Frameworkname\Hooks\Less {
     require LIBRARIES . 'less.php/Less.php';
 
     function hook_parseStylesheet(&$style, $base_path)

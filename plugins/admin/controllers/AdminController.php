@@ -1,4 +1,6 @@
 <?php
+use Frameworkname\Core\Controller;
+
 class AdminController extends Controller
 {
     public function grantAccess()

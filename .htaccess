@@ -1,19 +1,31 @@
-Options +FollowSymLinks
+#
+# Apache settings for frameworkname:
+#
+
+# Don't show directory listings for URLs which map to a directory.
 Options All -Indexes
-DirectoryIndex disabled
+
+# Set the default handler.
+DirectoryIndex index.php index.html index.htm
+
 <IfModule mod_rewrite.c>
     # Tell PHP that the mod_rewrite module is ENABLED.
     SetEnv HTTP_MOD_REWRITE On
     RewriteEngine on
+
+    # Pass all requests referring directly to files or directories to index.php.
     RewriteCond %{REQUEST_FILENAME} !-f
-	RewriteRule ^(.*)$ core/index.php?args=$1 [QSA,L,NC]
+    RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^(.*)$ index.php?args=$1 [QSA,L,NC]
  </IfModule>
 
+# TODO: make frameworkname work without modrewrite
 <IfModule !mod_rewrite.c>
 	ErrorDocument 403 /framework/core/pages/enable_modrewrite.php
 </IfModule>
 
-<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project|plugin)$">
+# Protect files and directories
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|inc|bak|psd|DS_Store|project|plugin|inc|install|make|sh|.*sql|info)$">
     Order Allow,Deny
     Deny from all
 </FilesMatch>

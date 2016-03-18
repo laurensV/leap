@@ -1,4 +1,6 @@
 <?php
+namespace Frameworkname\Core;
+
 class Hooks
 {
     private $hooks;
@@ -22,7 +24,7 @@ class Hooks
         if (!isset($this->hooks[$name])) {
             $this->create($name);
         }
-        $callback             = "hooks\\" . $namespace . "\\" . $name;
+        $callback             = "Frameworkname\\Hooks\\" . $namespace . "\\" . $name;
         $this->hooks[$name][] = $callback;
     }
 
