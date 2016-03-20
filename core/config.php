@@ -18,7 +18,7 @@ if (!isset($config['database']['plugins_from_db'])) {
     $config['general']['plugins_from_db'] = true;
 }
 define('BASE_URL', call_user_func(function () {
-    $sub_dir = str_replace("\\", "/", dirname(dirname($_SERVER['PHP_SELF'])));
+    $sub_dir = str_replace("\\", "/", dirname($_SERVER['PHP_SELF']));
     $sub_dir .= (substr($sub_dir, -1) == '/' ? '' : '/');
     return $sub_dir;
 }));
