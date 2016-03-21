@@ -1,5 +1,5 @@
 <?php
-require $this->plugin_manager->getPath("admin") . "/controllers/AdminController.php";
+require_once $this->plugin_manager->getPath("admin") . "/controllers/AdminController.php";
 
 class pluginController extends AdminController
 {
