@@ -94,7 +94,7 @@ class PluginManager
     public function pluginsToLoad($pdo)
     {
         $plugins = [];
-        $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(PDO::FETCH_COLUMN);
+        $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
         foreach ($plugins_query as $pid) {
             if($this->all_plugins[$pid]['status'] != 0){
                 $plugins[] = $pid;

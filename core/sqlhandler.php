@@ -28,12 +28,12 @@ class SQLHandler
                 return 0;
             }
             $opt = array(
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => true,
+                \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES   => true,
             );
             $dsn = 'mysql:host=' . $db_conf['db_host'] . ';dbname=' . $db_conf['db_name'] . ';charset=utf8';
-            return new PDO($dsn, $db_conf['db_user'], $db_conf['db_pass'], $opt);
+            return new \PDO($dsn, $db_conf['db_user'], $db_conf['db_pass'], $opt);
         } else {
             return -1;
         }
