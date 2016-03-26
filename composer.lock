@@ -1,0 +1,31 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "e4e2d92c08f1c1f8d9228cc5da3b9e31",
+    "content-hash": "83a0e9efa02d31edda5c75eabdd105cb",
+    "packages": [
+        {
+            "name": "frameworkname/admin",
+            "version": "1.0",
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/cordoval/SmirikQuizBundle/zipball/master",
+                "reference": null,
+                "shasum": null
+            },
+            "type": "frameworkname-plugin",
+            "description": "admin plugin for frameworkname"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}

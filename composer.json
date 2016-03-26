@@ -10,15 +10,20 @@
     },
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/laurensV/php-framework"
-        },
-        {
-            "type": "vcs",
-            "url": "https://github.com/laurensV/php-framework/tree/master/plugins/admin"
+            "type": "package",
+            "package": {
+                "name": "frameworkname/admin",
+                "description": "admin plugin for frameworkname",
+                "version": "1.0",
+                "type": "frameworkname-plugin",
+                "dist": {
+                    "url": "https://github.com/cordoval/SmirikQuizBundle/zipball/master",
+                    "type": "zip"
+                }
+            }
         }
     ],
     "require": {
-        "frameworkname/admin": "dev-master"
+        "frameworkname/admin": "1.0"
     }
 }

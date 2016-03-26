@@ -1,0 +1,31 @@
+parameters:
+  quiz.manager.class:      Smirik\QuizBundle\Entity\QuizManager
+  question.manager.class:  Smirik\QuizBundle\Entity\QuestionManager
+  user_quiz.manager.class: Smirik\QuizBundle\Entity\UserQuizManager
+  answer.manager.class:    Smirik\QuizBundle\Entity\UserQuizManager
+  user_question.manager.class: Smirik\QuizBundle\Entity\UserQuestionManager
+  user.manager.class:          Smirik\QuizBundle\Entity\UserManager
+
+services:
+  quiz.manager:
+    class:     %quiz.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\Quiz]
+  question.manager:
+    class:     %question.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\Question]
+  user_quiz.manager:
+    class:     %user_quiz.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\UserQuiz]
+  answer.manager:
+    class:     %answer.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\Answer]
+  user_question.manager:
+    class:     %user_question.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\UserQuestion]
+  user.manager:
+    class:     %user.manager.class%
+    arguments: ["@doctrine.orm.entity_manager", Smirik\QuizBundle\Entity\User]
+  quiz.configure_menu_listener:
+      class: Smirik\QuizBundle\EventListener\ConfigureMenuListener
+      tags:
+        - { name: kernel.event_listener, event: smirik_admin.menu_configure, method: onMenuConfigure }    
