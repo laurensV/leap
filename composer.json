@@ -10,23 +10,13 @@
     },
     "repositories": [
         {
-            "type": "package",
-            "package": {
-                "name": "frameworkname/admin",
-                "description": "admin plugin for frameworkname2",
-                "version": "3.0",
-                "type": "frameworkname-plugin",
-                "dist": {
-                    "url": "https://github.com/laurensV/php-framework/raw/master/plugins/admin.zip",
-                    "type": "zip"
-                }
-            }
+            "type": "vcs",
+            "url": "https://github.com/laurensV/frameworkname-admin"
         }
     ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "frameworkname/admin": "3.0",
-        "oyejorge/less.php": "~1.7.0.9"
+        "frameworkname/admin": "dev-master"
     },
     "extra": {
         "custom-installer": {

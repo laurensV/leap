@@ -2,5 +2,8 @@
     "name": "frameworkname/admin",
     "description": "admin plugin for frameworkname",
     "type": "frameworkname-plugin",
-    "license": "GPL-2.0+"
+    "license": "GPL-2.0+",
+    "require": {
+        "oyejorge/less.php": "~1.7.0.9"
+    }
 }
