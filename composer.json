@@ -13,17 +13,24 @@
             "type": "package",
             "package": {
                 "name": "frameworkname/admin",
-                "description": "admin plugin for frameworkname",
-                "version": "1.0",
+                "description": "admin plugin for frameworkname2",
+                "version": "3.0",
                 "type": "frameworkname-plugin",
                 "dist": {
-                    "url": "https://github.com/cordoval/SmirikQuizBundle/zipball/master",
+                    "url": "https://github.com/laurensV/php-framework/raw/master/plugins/admin.zip",
                     "type": "zip"
                 }
             }
         }
     ],
     "require": {
-        "frameworkname/admin": "1.0"
+        "davidbarratt/custom-installer": "1.0.*@dev",
+        "frameworkname/admin": "3.0"
+    },
+    "extra": {
+        "custom-installer": {
+            "core/": ["type:frameworkname-core"],
+            "plugins/{$name}/": ["type:frameworkname-plugin"]
+        }
     }
 }

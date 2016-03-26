@@ -4,26 +4,67 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "e4e2d92c08f1c1f8d9228cc5da3b9e31",
-    "content-hash": "83a0e9efa02d31edda5c75eabdd105cb",
+    "hash": "1af29e5bfd70999b0abf7efce778b5cb",
+    "content-hash": "43ecabadcbebd4c6044504b549382d7f",
     "packages": [
         {
-            "name": "frameworkname/admin",
-            "version": "1.0",
+            "name": "davidbarratt/custom-installer",
+            "version": "1.0.0-alpha2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/davidbarratt/custom-installer.git",
+                "reference": "90009113204b8b6257ead91866cc5cddc6876834"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://github.com/cordoval/SmirikQuizBundle/zipball/master",
+                "url": "https://api.github.com/repos/davidbarratt/custom-installer/zipball/90009113204b8b6257ead91866cc5cddc6876834",
+                "reference": "90009113204b8b6257ead91866cc5cddc6876834",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "~1.0"
+            },
+            "require-dev": {
+                "composer/composer": "~1.0@dev",
+                "phpunit/phpunit": "~4.1",
+                "squizlabs/php_codesniffer": "~2.5"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "DavidBarratt\\CustomInstaller\\CustomInstallerPlugin"
+            },
+            "autoload": {
+                "psr-4": {
+                    "DavidBarratt\\CustomInstaller\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "Install custom types into custom locations.",
+            "homepage": "https://github.com/davidbarratt/custom-installer",
+            "time": "2016-01-23 14:33:27"
+        },
+        {
+            "name": "frameworkname/admin",
+            "version": "3.0",
+            "dist": {
+                "type": "zip",
+                "url": "https://github.com/laurensV/php-framework/raw/master/plugins/admin.zip",
                 "reference": null,
                 "shasum": null
             },
             "type": "frameworkname-plugin",
-            "description": "admin plugin for frameworkname"
+            "description": "admin plugin for frameworkname2"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "davidbarratt/custom-installer": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": [],

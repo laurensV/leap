@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Frameworkname\\' => array($baseDir . '/'),
+    'DavidBarratt\\CustomInstaller\\' => array($vendorDir . '/davidbarratt/custom-installer/src'),
 );
