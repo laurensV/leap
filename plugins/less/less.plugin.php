@@ -1,7 +1,5 @@
 <?php
 namespace Frameworkname\Hooks\Less {
-    require LIBRARIES . 'less.php/Less.php';
-
     function hook_parseStylesheet(&$style, $base_path)
     {
         if (substr($style, -5) == ".less") {

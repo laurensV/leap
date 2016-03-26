@@ -25,12 +25,16 @@
     ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "frameworkname/admin": "3.0"
+        "frameworkname/admin": "3.0",
+        "oyejorge/less.php": "~1.7.0.9"
     },
     "extra": {
         "custom-installer": {
             "core/": ["type:frameworkname-core"],
             "plugins/{$name}/": ["type:frameworkname-plugin"]
         }
+    },
+    "config": {
+        "vendor-dir": "libraries"
     }
 }
