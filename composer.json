@@ -12,6 +12,13 @@
         {
             "type": "vcs",
             "url": "https://github.com/laurensV/php-framework"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/laurensV/php-framework/tree/master/plugins/admin"
         }
-    ]
+    ],
+    "require": {
+        "frameworkname/admin": "dev-master"
+    }
 }
