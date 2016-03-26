@@ -1,0 +1,6 @@
+{
+    "name": "frameworkname/admin",
+    "description": "admin plugin for frameworkname",
+    "type": "frameworkname-plugin",
+    "license": "GPL-2.0+"
+}
