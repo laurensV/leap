@@ -1,7 +1,7 @@
 {
-    "name": "frameworkname/admin",
-    "description": "Admin plugin for frameworkname",
-    "type": "frameworkname-plugin",
+    "name": "leap/admin",
+    "description": "Admin plugin for leap",
+    "type": "leap-plugin",
     "license": "GPL-2.0+",
     "require": {
         "oyejorge/less.php": "~1.7.0.9"

@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Core;
+namespace Leap\Core;
 
 class PluginManager
 {
@@ -141,7 +141,7 @@ class PluginManager
         $functions = get_defined_functions();
         foreach ($functions['user'] as $function) {
             $parts = explode("\\", $function);
-            if ($parts[0] == "frameworkname" && $parts[1] == "hooks") {
+            if ($parts[0] == "leap" && $parts[1] == "hooks") {
                 if (isset($parts[3])) {
                     $this->hooks->add($parts[3], $parts[2]);
                 }

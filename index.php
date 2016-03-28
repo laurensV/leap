@@ -10,4 +10,4 @@ require 'libraries/autoload.php';
 require 'core/config.php';
 require 'core/include/helpers.php';
 
-$app = new Frameworkname\Core\Application();
+$app = new Leap\Core\Application();

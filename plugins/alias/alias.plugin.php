@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Hooks\Alias {
+namespace Leap\Hooks\Alias {
     function hook_prerouteUrl(&$url)
     {
         $alias = getAliases();

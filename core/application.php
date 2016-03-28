@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Core;
+namespace Leap\Core;
 /**
  * { class_description }
  */
@@ -81,7 +81,7 @@ class Application
             if(isset($this->router->controllerFile)) {
                 /* TODO: think about adding controller and model classes with composer instead of with router */
             } else {
-                $this->router->controller = "Frameworkname\\Core\\" . $this->router->controller;
+                $this->router->controller = "Leap\\Core\\" . $this->router->controller;
             }
             $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route, $this->router->title);
         }

@@ -1,5 +1,5 @@
 #
-# Apache settings for frameworkname:
+# Apache settings for leap:
 #
 
 # Don't show directory listings for URLs which map to a directory.
@@ -19,7 +19,7 @@ DirectoryIndex index.php index.html index.htm
 	RewriteRule ^(.*)$ index.php?args=$1 [QSA,L,NC]
  </IfModule>
 
-# TODO: make frameworkname work without modrewrite
+# TODO: make leap work without modrewrite
 <IfModule !mod_rewrite.c>
 	ErrorDocument 403 /framework/core/pages/enable_modrewrite.php
 </IfModule>

@@ -1,11 +1,11 @@
 {
-    "name": "frameworkname/frameworkname",
-    "description": "frameworkname is an open source PHP framework.",
+    "name": "leap/leap",
+    "description": "leap is an open source PHP framework.",
     "type": "project",
     "license": "GPL-2.0+",
     "autoload": {
         "psr-4": {
-            "Frameworkname\\":""
+            "Leap\\":""
         }
     },
     "repositories": [
@@ -16,12 +16,12 @@
     ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "frameworkname/admin": "dev-master"
+        "leap/admin": "dev-master"
     },
     "extra": {
         "custom-installer": {
-            "core/": ["type:frameworkname-core"],
-            "plugins/{$name}/": ["type:frameworkname-plugin"]
+            "core/": ["type:leap-core"],
+            "plugins/{$name}/": ["type:leap-plugin"]
         }
     },
     "config": {

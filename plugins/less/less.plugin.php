@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Hooks\Less {
+namespace Leap\Hooks\Less {
     function hook_parseStylesheet(&$style, $base_path)
     {
         if (substr($style, -5) == ".less") {

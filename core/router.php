@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Core;
+namespace Leap\Core;
 
 class Router
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Frameworkname\Core;
+namespace Leap\Core;
 
 class Hooks
 {
@@ -24,7 +24,7 @@ class Hooks
         if (!isset($this->hooks[$name])) {
             $this->create($name);
         }
-        $callback             = "Frameworkname\\Hooks\\" . $namespace . "\\" . $name;
+        $callback             = "Leap\\Hooks\\" . $namespace . "\\" . $name;
         $this->hooks[$name][] = $callback;
     }
 

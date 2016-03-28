@@ -1,5 +1,5 @@
 <?php
-use Frameworkname\Core\Controller;
+use Leap\Core\Controller;
 
 class AdminController extends Controller
 {
