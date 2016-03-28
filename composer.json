@@ -10,8 +10,8 @@
     },
     "repositories": [
         {
-            "type": "vcs",
-            "url": "https://github.com/laurensV/frameworkname-admin"
+            "type": "composer",
+            "url": "http://localhost/satis/web/"
         }
     ],
     "require": {
