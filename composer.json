@@ -16,12 +16,16 @@
     ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "leap/admin": "dev-master"
+        "leap/admin": "dev-master",
+        "leap/alias": "dev-master",
+        "leap/less": "dev-master",
+        "leap/pluginmanager": "dev-master"
     },
     "extra": {
         "custom-installer": {
             "core/": ["type:leap-core"],
-            "plugins/{$name}/": ["type:leap-plugin"]
+            "plugins/{$name}/": ["type:leap-plugin"],
+            "testfolder/": ["composer/composer"]
         }
     },
     "config": {

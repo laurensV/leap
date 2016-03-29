@@ -1,5 +1,0 @@
-name = Plugin Manager
-description = Manage plugins
-package = admin
-configure = admin/plugins
-dependencies[] = admin

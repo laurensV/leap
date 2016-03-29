@@ -1,0 +1,9 @@
+{
+    "name": "leap/less",
+    "description": "Less compiler plugin for Leap framework",
+    "type": "leap-plugin",
+    "license": "GPL-2.0+",
+    "require": {
+        "oyejorge/less.php": "~1.7.0.9"
+    }
+}
