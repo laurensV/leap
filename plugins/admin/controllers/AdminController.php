@@ -1,7 +1,7 @@
 <?php
-use Leap\Core\Controller;
+namespace Leap\Plugins\Admin\Controllers;
 
-class AdminController extends Controller
+class AdminController extends \Leap\Core\Controller
 {
     public function grantAccess()
     {

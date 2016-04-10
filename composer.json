@@ -16,19 +16,21 @@
     ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "leap/admin": "dev-master",
-        "leap/alias": "dev-master",
         "leap/less": "dev-master",
-        "leap/pluginmanager": "dev-master"
+        "leap/pluginmanager": "dev-master",
+        "leap/admin": "dev-master",
+        "composer/composer" : "dev-master",
+        "leap/alias": "dev-master",
+        "twig/twig": "^1.24"
     },
     "extra": {
         "custom-installer": {
             "core/": ["type:leap-core"],
-            "plugins/{$name}/": ["type:leap-plugin"],
-            "testfolder/": ["composer/composer"]
+            "plugins/{$name}/": ["type:leap-plugin"]
         }
     },
     "config": {
-        "vendor-dir": "libraries"
+        "vendor-dir": "libraries",
+        "secure-http": false
     }
 }
