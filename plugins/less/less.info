@@ -1,4 +1,0 @@
-name = Less Parser PHP
-description = Provides a parser to compile Less to CSS files for PHP
-package = stylesheets
-configure = admin/config/less

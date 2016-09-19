@@ -1,6 +1,0 @@
-{
-    "name": "leap/admin",
-    "description": "Admin plugin for Leap framework",
-    "type": "leap-plugin",
-    "license": "GPL-2.0+"
-}

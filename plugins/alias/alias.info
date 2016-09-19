@@ -1,4 +1,0 @@
-name = Aliases
-description = Create path aliases
-package = routing
-configure = admin/config/alias

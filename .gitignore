@@ -4,3 +4,4 @@ config.local.ini
 libraries
 composer.lock
 .idea/
+plugins/*
