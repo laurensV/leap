@@ -31,7 +31,7 @@ class Router
         $this->base_path         = null;
         $this->action            = null;
         $this->controller        = 'Controller';
-        $this->controllerFile    = null;
+        $this->controllerFile    = array('plugin' => 'core');
         $this->template['path']  = ROOT . 'site/templates/';
         $this->template['value'] = "default_template.php";
         $this->page['path']      = ROOT . 'site/pages/';
@@ -46,7 +46,7 @@ class Router
         $this->plugin_manager = $plugin_manager;
     }
 
-    public function addRouteFile($file)
+    public function addRouteFile($file, $plugin)
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
@@ -64,8 +64,12 @@ class Router
                         continue;
                     }
                 }
+
                 foreach ($routes[$regex] as $option => $value) {
                     $routes[$regex][$option] = array("value" => $value, "path" => $path);
+                    if($option == "controller" || $option == "model") {
+                        $routes[$regex][$option]['plugin'] = $plugin;
+                    }
                 }
                 $routes[$regex]['last_path'] = $path;
             }
@@ -109,16 +113,17 @@ class Router
             $this->routeUrl('404');
             return;
         } else {
-            if (isset($this->modelFile)) {
+            if (isset($this->modelFile['path'])) {
                 chdir($this->modelFile['path']);
                 if (file_exists($this->modelFile['value'])) {
                     require $this->modelFile['value'];
                 }
             }
-            if (isset($this->controllerFile)) {
+            if (isset($this->controllerFile['path'])) {
                 chdir($this->controllerFile['path']);
                 if (file_exists($this->controllerFile['value'])) {
-                    require $this->controllerFile['value'];
+                    /* load controller classes TODO: either pick this or autoload with composer */
+                    //require $this->controllerFile['value'];
                 }
             }
             if ($this->page['value'] == "") {
@@ -158,7 +163,7 @@ class Router
                 $this->controller = 'Controller';
             }
             if ($all || in_array('controllerFile', $route['clear'])) {
-                $this->controllerFile = null;
+                $this->controllerFile = array('plugin' => 'core');
             }
             if ($all || in_array('template', $route['clear'])) {
                 $this->template['path']  = ROOT . 'site/templates/';
@@ -186,6 +191,7 @@ class Router
             } else {
                 $this->modelFile = array("value" => "models/" . $this->model . ".php", "path" => $route['model']['path']);
             }
+            $this->modelFile['plugin'] = $route['model']['plugin'];
         }
         if (isset($route['controller'])) {
             $this->controller = $route['controller']['value'];
@@ -195,8 +201,10 @@ class Router
                     $this->controllerFile['value'] = ROOT . substr($this->controllerFile['value'], 1);
                 }
             } else {
+                /* TODO: get rid of this */
                 $this->controllerFile = array("value" => "controllers/" . $this->controller . ".php", "path" => $route['controller']['path']);
             }
+            $this->controllerFile['plugin'] = $route['controller']['plugin'];
         }
         if (isset($route['page'])) {
             $this->page = $route['page'];

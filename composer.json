@@ -3,6 +3,8 @@
     "description": "leap is an open source PHP framework.",
     "type": "project",
     "license": "GPL-2.0+",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Leap\\":""
@@ -21,12 +23,18 @@
         "leap/admin": "dev-master",
         "composer/composer" : "dev-master",
         "leap/alias": "dev-master",
-        "twig/twig": "^1.24"
+        "twig/twig": "^1.24",
+        "wikimedia/composer-merge-plugin": "dev-master"
     },
     "extra": {
         "custom-installer": {
             "core/": ["type:leap-core"],
             "plugins/{$name}/": ["type:leap-plugin"]
+        },
+        "merge-plugin": {
+            "include": [
+                "plugins/*/composer.json"
+            ]
         }
     },
     "config": {

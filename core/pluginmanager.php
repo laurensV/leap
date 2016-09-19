@@ -114,7 +114,7 @@ class PluginManager
         return $plugins;
     }
 
-    /* function that loads a list of plugins without a database connection */
+    /* function that loads a list of plugins */
     public function loadPlugins($plugins)
     {
         $this->enabled_plugins = $plugins;
@@ -135,7 +135,9 @@ class PluginManager
                     // evil hack that can be used to auto define namespace:
                     /*eval('namespace hooks\\' . $pid . ' {?>' . file_get_contents($pid . ".hooks.php") .  '}');*/
                 }
-                $this->router->addRouteFile($this->all_plugins[$pid]['path'] . $pid . ".routes");
+                global $autoloader;
+                $autoloader->setPsr4("Leap\\Plugins\\" . ucfirst($pid) . "\\", $this->all_plugins[$pid]['path']);
+                $this->router->addRouteFile($this->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
             }
         }
         $functions = get_defined_functions();

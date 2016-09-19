@@ -1,4 +1,5 @@
 <?php
+//
 namespace Leap\Plugins\Admin\Controllers;
 
 class AdminController extends \Leap\Core\Controller
