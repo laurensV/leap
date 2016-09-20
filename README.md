@@ -1,4 +1,4 @@
-<img src="http://i.imgur.com/LvqmQ6y.png" width="200">
+<img src="http://imgh.us/leap-logo.svg" width="200">
 
 Lightweight Extensible Adaptable PHP framework made by Laurens Verspeek
 
