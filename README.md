@@ -1,4 +1,6 @@
-Basis PHP framework made by Laurens Verspeek
+<img src="http://i.imgur.com/LvqmQ6y.png" width="200">
+
+Lightweight Extensible Adaptable PHP framework made by Laurens Verspeek
 
 - Directory `core` contains the core files for the framework
 - Directory `site` will hold all files for your site (pages, javascript, stylesheets, images etc.)
