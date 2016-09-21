@@ -93,7 +93,11 @@ class LeApp
             if ($route['controller'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller'], "Controller")){
                 $this->controller = new $route['controller']($route, $this->hooks, $this->plugin_manager, $this->pdo);
             } else {
-                printr("Controller class '" . $route['controller'] . "' does not extend the base 'Leap\Core\Controller' class");
+                if(class_exists($route['controller'])){
+                    printr("Controller class '" . $route['controller'] . "' does not extend the base 'Leap\Core\Controller' class");
+                } else {
+                    printr("Controller class '" . $route['controller'] . "' not found");
+                }
             }
         }
         if (method_exists($this->controller, $route['action'])) {
