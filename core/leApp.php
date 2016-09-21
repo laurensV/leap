@@ -71,8 +71,7 @@ class LeApp
                 /* check if we have access in the controller */
                 if (!$this->controller->access) {
                     header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-                    /* reset router values */
-                    $this->router->defaultValues();
+                    /* reroute to permission denied page */
                     $this->url = "permission_denied";
                 } else {
                     /* We have access, break out of this for loop */
@@ -91,7 +90,11 @@ class LeApp
                 $namespace = "Leap\\Plugins\\" . ucfirst($route['controllerFile']['plugin']) . "\\Controllers\\";
             }
             $route['controller'] = $namespace . $route['controller'];
-            $this->controller = new $route['controller']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+            if ($route['controller'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller'], "Controller")){
+                $this->controller = new $route['controller']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+            } else {
+                printr("Controller class '" . $route['controller'] . "' does not extend the base 'Leap\Core\Controller' class");
+            }
         }
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}($route['params']);
