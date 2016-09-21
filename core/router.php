@@ -12,23 +12,22 @@ class Router
     {
         $this->routes      = [];
         $this->parsedRoute = [];
-        $this->defaultValues();
     }
 
-    public function defaultValues()
+    private function defaultRouteValues()
     {
-        $this->parsedRoute['model']             = 'Model';
-        $this->parsedRoute['modelFile']         = null;
-        $this->parsedRoute['base_path']         = null;
-        $this->parsedRoute['action']            = null;
-        $this->parsedRoute['controller']        = 'Controller';
-        $this->parsedRoute['controllerFile']    = array('plugin' => 'core');
-        $this->parsedRoute['template']          = array('path' => ROOT . 'site/templates/', 'value' => "default_template.php");
-        $this->parsedRoute['page']              = array('path' => ROOT . 'site/pages/', 'value' => "");
-        $this->parsedRoute['stylesheets'] = array();
-        $this->parsedRoute['scripts']     = array();
-        $this->parsedRoute['title']             = null;
-        $this->parsedRoute['params']            = null;
+        $this->parsedRoute['model']          = 'Model';
+        $this->parsedRoute['modelFile']      = null;
+        $this->parsedRoute['base_path']      = null;
+        $this->parsedRoute['action']         = null;
+        $this->parsedRoute['controller']     = 'Controller';
+        $this->parsedRoute['controllerFile'] = array('plugin' => 'core');
+        $this->parsedRoute['template']       = array('path' => ROOT . 'site/templates/', 'value' => "default_template.php");
+        $this->parsedRoute['page']           = array('path' => ROOT . 'site/pages/', 'value' => "");
+        $this->parsedRoute['stylesheets']    = array();
+        $this->parsedRoute['scripts']        = array();
+        $this->parsedRoute['title']          = null;
+        $this->parsedRoute['params']         = null;
     }
 
     public function setPluginManager($plugin_manager)
@@ -69,6 +68,7 @@ class Router
 
     public function routeUrl($url)
     {
+        $this->defaultRouteValues();
         // sort route array by length of keys
         uksort($this->routes, function ($a, $b) {return strlen($a) - strlen($b);});
         $no_route = true;
@@ -124,7 +124,6 @@ class Router
         }
         chdir($this->parsedRoute['page']['path']);
         if (!file_exists($this->parsedRoute['page']['value'])) {
-            $this->defaultValues();
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             $this->routeUrl('404');
             return;
@@ -132,7 +131,7 @@ class Router
         return $this->parsedRoute;
     }
 
-    public function parseRoute($route, $url, $wildcard_args)
+    private function parseRoute($route, $url, $wildcard_args)
     {
         $this->parsedRoute['base_path'] = $route['last_path'];
 
