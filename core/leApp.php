@@ -82,21 +82,21 @@ class LeApp
             /* TODO: let this function return the right values instead of storing this in router object */
             $route = $this->router->routeUrl($this->url);
             
-            if ($route['controllerFile']['plugin'] == 'core') {
+            if ($route['controller']['plugin'] == 'core') {
                 $namespace = "Leap\\Core\\";
-            } else if ($route['controllerFile']['plugin'] == 'site') {
+            } else if ($route['controller']['plugin'] == 'site') {
                 $namespace = "Leap\\Site\\Controllers\\";
             } else {
-                $namespace = "Leap\\Plugins\\" . ucfirst($route['controllerFile']['plugin']) . "\\Controllers\\";
+                $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
             }
-            $route['controller'] = $namespace . $route['controller'];
-            if ($route['controller'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller'], "Controller")){
-                $this->controller = new $route['controller']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+            $route['controller']['class'] = $namespace . $route['controller']['class'];
+            if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller']['class'], "Leap\Core\Controller")){
+                $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
             } else {
-                if(class_exists($route['controller'])){
-                    printr("Controller class '" . $route['controller'] . "' does not extend the base 'Leap\Core\Controller' class");
+                if(class_exists($route['controller']['class'])){
+                    printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\Core\Controller' class");
                 } else {
-                    printr("Controller class '" . $route['controller'] . "' not found");
+                    printr("Controller class '" . $route['controller']['class'] . "' not found");
                 }
             }
         }
