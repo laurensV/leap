@@ -18,6 +18,7 @@
 /* TODO: composer: eigen custom installer maken */
 /* TODO: move file directory */
 /* TODO: move autoloader to core folder */
+/* TODO: namespace function for plugins */
 
 //print `echo php -q longThing.php | at now`;
 
