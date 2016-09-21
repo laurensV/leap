@@ -82,14 +82,17 @@ class LeApp
             /* TODO: let this function return the right values instead of storing this in router object */
             $route = $this->router->routeUrl($this->url);
             
-            if ($route['controller']['plugin'] == 'core') {
-                $namespace = "Leap\\Core\\";
-            } else if ($route['controller']['plugin'] == 'site') {
-                $namespace = "Leap\\Site\\Controllers\\";
-            } else {
-                $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
+            if(strpos($route['controller']['class'], "\\") === FALSE) {
+                if ($route['controller']['plugin'] == 'core') {
+                    $namespace = "Leap\\Core\\";
+                } else if ($route['controller']['plugin'] == 'site') {
+                    $namespace = "Leap\\Site\\Controllers\\";
+                } else {
+                    $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
+                }
+                $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
-            $route['controller']['class'] = $namespace . $route['controller']['class'];
+            
             if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller']['class'], "Leap\Core\Controller")){
                 $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
             } else {

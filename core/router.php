@@ -193,7 +193,7 @@ class Router
                 }
             }
             if (isset($route['controllerPlugin'])) {
-                $this->parsedRoute['controller']['plugin'] = $route['controllerPlugin'];
+                $this->parsedRoute['controller']['plugin'] = $route['controllerPlugin']['value'];
             } else {
                 $this->parsedRoute['controller']['plugin'] = $route['controller']['plugin'];
             }
