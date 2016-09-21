@@ -8,30 +8,31 @@ class Controller
     protected $template;
     protected $hooks;
     protected $plugin_manager;
-    public $result;
+    public $access;
 
     /**
      * Whenever controller is created, load the model and the template.
      */
-    public function __construct($model, $template, $page, $hooks, $plugin_manager, $pdo, $stylesheets_route, $scripts_route, $title)
+    public function __construct($route, $hooks, $plugin_manager, $pdo)
     {
         if ($this->grantAccess()) {
-            $model = "Leap\\Core\\" . $model;
+            /* TODO: rewrite in same way as controller */
+            $model = "Leap\\Core\\" . $route['model'];
             $this->model          = new $model($pdo);
             $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;
-            $this->template       = new Template($template, $page, $hooks, $this->plugin_manager->enabled_plugins, $stylesheets_route, $scripts_route);
-            $this->page           = $page;
+            $this->template       = new Template($route['template'], $route['page'], $hooks, $this->plugin_manager->enabled_plugins, $route['stylesheets'], $route['scripts']);
+            $this->page           = $route['page'];
             $this->init();
-            $this->result = 1;
-            if($title){
-                $this->set('title', $title);
+            $this->access = true;
+            if($route['title']){
+                $this->set('title', $route['title']);
             } else {
                 $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
                 $this->set('title', ucfirst(end($tmp_page)));
             }
         } else {
-            $this->result = -1;
+            $this->access = false;
         }
     }
 

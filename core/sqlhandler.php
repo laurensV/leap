@@ -20,6 +20,7 @@ class SQLHandler
         return is_object($this->pdo);
     }
 
+    /* needs to be static as it is called in leApp.php before the model Class is loaded */
     public static function connect()
     {
         $db_conf = config('database');

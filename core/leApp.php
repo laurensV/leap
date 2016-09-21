@@ -15,13 +15,12 @@ class LeApp
     private $pdo;
 
     /**
-     * "Start" the application:
+     * { function_description }
      */
     public function __construct()
     {
+        /* TODO: consider singleton for plugin_manager and router */
         $this->setReporting();
-        /* TODO: think about making own psr-4 autoload function or use composer */
-        //spl_autoload_register(array($this, 'autoloadClasses'));
         $this->hooks          = new Hooks();
         $this->url            = $this->getUrl();
         $this->router         = new Router();
@@ -36,6 +35,7 @@ class LeApp
     private function bootstrap()
     {
         session_start();
+        /* Try to connect to a database. Returns -1 when no database is used */
         $this->pdo                = SQLHandler::connect();
         $auto_enable_dependencies = false;
         /* TODO: cache getting plugin info */
@@ -61,43 +61,45 @@ class LeApp
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
         //printr($this->router->routes);
-        $this->hooks->fire("hook_prerouteUrl", array(&$this->url));
-        /* TODO: rewrite for loop to: while there is a redirect.. */
-        for ($i = 0; $i < 2; $i++) {
-            if ($i == 1) {
-                if ($this->controller->result == -1) {
+        $this->hooks->fire("hook_preRouteUrl", array(&$this->url));
+        
+        /* has to be run twice in order to check if there was a redirect to
+         * the permission denied page */
+        for ($run = 1; $run <= 2; $run++) {
+            /* check if we are in second run of for loop */
+            if ($run == 2) {
+                /* check if we have access in the controller */
+                if (!$this->controller->access) {
                     header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-                    $this->router->default_values();
+                    /* reset router values */
+                    $this->router->defaultValues();
                     $this->url = "permission_denied";
-                } else if (!$this->controller->result) {
-                    /* Something went wrong */
-                    // TODO: error handling
-                    break;
                 } else {
-                    /* everything is oke */
+                    /* We have access, break out of this for loop */
                     break;
                 }
             }
 
-            $this->router->routeUrl($this->url);
-            /* TODO: consider singleton for plugin_manager and router */
-            if ($this->router->controllerFile['plugin'] == 'core') {
+            /* TODO: let this function return the right values instead of storing this in router object */
+            $route = $this->router->routeUrl($this->url);
+            
+            if ($route['controllerFile']['plugin'] == 'core') {
                 $namespace = "Leap\\Core\\";
-            } else if ($this->router->controllerFile['plugin'] == 'site') {
+            } else if ($route['controllerFile']['plugin'] == 'site') {
                 $namespace = "Leap\\Site\\Controllers\\";
             } else {
-                $namespace = "Leap\\Plugins\\" . ucfirst($this->router->controllerFile['plugin']) . "\\Controllers\\";
+                $namespace = "Leap\\Plugins\\" . ucfirst($route['controllerFile']['plugin']) . "\\Controllers\\";
             }
-            $this->router->controller = $namespace . $this->router->controller;
-            $this->controller = new $this->router->controller($this->router->model, $this->router->template, $this->router->page, $this->hooks, $this->plugin_manager, $this->pdo, $this->router->stylesheets_route, $this->router->scripts_route, $this->router->title);
+            $route['controller'] = $namespace . $route['controller'];
+            $this->controller = new $route['controller']($route, $this->hooks, $this->plugin_manager, $this->pdo);
         }
-        if (method_exists($this->controller, $this->router->action)) {
-            $this->controller->{$this->router->action}($this->router->params);
+        if (method_exists($this->controller, $route['action'])) {
+            $this->controller->{$route['action']}($route['params']);
         } else {
             /* TODO: rewrite */
             /* when the second argument is not an action, it is probably a parameter */
-            $this->router->params = $this->router->action . "/" . $this->router->params;
-            $this->controller->defaultAction($this->router->params);
+            $route['params'] = $route['action'] . "/" . $route['params'];
+            $this->controller->defaultAction($route['params']);
         }
 
         $this->controller->render();
