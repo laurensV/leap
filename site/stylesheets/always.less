@@ -19,7 +19,7 @@ table{
 }
 
 
-@keyframes bounce {
+@keyframes logo-bounce {
   0% {
     transform: translate(0px, 0px) scale(1.0);
   }
@@ -30,7 +30,7 @@ table{
     transform: translate(48px, -8px) scale(1.53);
   }
 }
-@keyframes bounce-leaf {
+@keyframes logo-bounce-leaf {
   0% {
     transform: translate(0px, 0px) rotate(0deg) scale(1.0);
   }
@@ -41,7 +41,7 @@ table{
     transform: translate(53px, -20px) rotate(0deg) scale(1.3);
   }
 }
-@keyframes bounce-back {
+@keyframes logo-bounce-back {
   100% {
     transform: translate(0px, 0px) scale(1.0);
   }
@@ -52,7 +52,7 @@ table{
     transform: translate(48px, -8px) scale(1.53);
   }
 }
-@keyframes bounce-leaf-back {
+@keyframes logo-bounce-leaf-back {
   100% {
     transform: translate(0px, 0px) rotate(0deg) scale(1.0);
   }
@@ -64,31 +64,29 @@ table{
   }
 }
 
-svg path {
-    transition: all 1s;
-    transform-origin: center;
-}
-
-svg {
+#logo{
+    cursor: pointer;
+    path {
+        transform-origin: center;
+    }
     .leap-logo-sparkle {
-        animation: bounce-back 0.45s ease forwards;
+        animation: logo-bounce-back (@logo-animation-duration - 0.05s) ease-out forwards;
     }
     .leap-logo-berry {
-        animation: bounce-back 0.4s ease forwards;
+        animation: logo-bounce-back (@logo-animation-duration - 0.1s) ease-out forwards;
     }
     .leap-logo-leaf {
-        animation: bounce-leaf-back 0.5s ease forwards;
+        animation: logo-bounce-leaf-back @logo-animation-duration ease-out forwards;
     }
-}
-
-svg:hover {
-    .leap-logo-sparkle {
-        animation: bounce 0.45s ease forwards;
-    }
-    .leap-logo-berry {
-        animation: bounce 0.4s ease forwards;
-    }
-    .leap-logo-leaf {
-        animation: bounce-leaf 0.5s ease forwards;
+    &:hover {
+        .leap-logo-sparkle {
+            animation: logo-bounce (@logo-animation-duration - 0.05s) ease-out forwards;
+        }
+        .leap-logo-berry {
+            animation: logo-bounce (@logo-animation-duration - 0.1s) ease-out forwards;
+        }
+        .leap-logo-leaf {
+            animation: logo-bounce-leaf @logo-animation-duration ease-out forwards;
+        }
     }
 }

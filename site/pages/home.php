@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" width="200px" height="112px" viewBox="0 0 200 80" enable-background="new 0 0 200 112" xml:space="preserve">
+<svg id="logo" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" width="200px" height="112px" viewBox="0 0 200 80" enable-background="new 0 0 200 112" xml:space="preserve">
     <g>
         <path class="leap-logo-p" fill="#080808" d="M130.906,65.061c0,8.351,0,24.063,0,24.354c-2.219,0-3.717,0.001-6.116,0.001c0-6.13,0-12.222,0-18.31
             c0.001-7.813-0.194-15.636,0.048-23.439c0.4-12.929,11.042-23.818,23.309-24.178c13.174-0.386,23.641,8.704,25.205,21.892
