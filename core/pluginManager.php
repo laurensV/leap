@@ -95,9 +95,11 @@ class PluginManager
     {
         $plugins = [];
         $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
-        foreach ($plugins_query as $pid) {
-            if($this->all_plugins[$pid]['status'] != 0){
-                $plugins[] = $pid;
+        if (is_array($plugins_query)) {
+            foreach ($plugins_query as $pid) {
+                if ($this->all_plugins[$pid]['status'] != 0){
+                    $plugins[] = $pid;
+                }
             }
         }
         return $plugins;
@@ -106,9 +108,11 @@ class PluginManager
     public function PluginsToLoadNoDB()
     {
         $plugins = [];
-        foreach ($this->all_plugins as $pid => $plugin) {
-            if($plugin['status'] == 1){
-                $plugins[] = $pid;
+        if (is_array($this->all_plugins)) {
+            foreach ($this->all_plugins as $pid => $plugin) {
+                if ($plugin['status'] == 1){
+                    $plugins[] = $pid;
+                }
             }
         }
         return $plugins;
