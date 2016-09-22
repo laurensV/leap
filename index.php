@@ -4,7 +4,7 @@
  *
  * @package  Leap
  * @author   Laurens Verspeek
- * 
+ *
  * The index page that serves all page requests on a Leap installation.
  *
  * All Leap code is released under the GNU General Public License.
