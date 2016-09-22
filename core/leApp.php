@@ -8,7 +8,6 @@ class LeApp
 {
     private $router;
     private $controller;
-    private $model;
     private $url;
     private $hooks;
     private $plugin_manager;
@@ -42,27 +41,25 @@ class LeApp
         $this->plugin_manager->getAllPlugins($this->pdo);
         if (is_object($this->pdo)) {
             $plugins_to_enable = $this->plugin_manager->pluginsToLoad($this->pdo);
+        } else if ($this->pdo == -1) {
+            /* site is run without database, so use custom function to load plugins */
+            $plugins_to_enable        = $this->plugin_manager->PluginsToLoadNoDB();
+            $auto_enable_dependencies = true;
         } else {
-            if ($this->pdo == -1) {
-                /* site is run without database, so use custom function to load plugins */
-                $plugins_to_enable        = $this->plugin_manager->PluginsToLoadNoDB();
-                $auto_enable_dependencies = true;
-            } else {
-                printr("database error");
-            }
+            printr("database error");
         }
 
         $this->plugin_manager->loadPlugins($plugins_to_enable);
 
         /******
-        Plugins are loaded, so from now on we can fire hooks
+         * Plugins are loaded, so from now on we can fire hooks
          ******/
 
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
         //printr($this->router->routes);
-        $this->hooks->fire("hook_preRouteUrl", array(&$this->url));
-        
+        $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
+
         /* has to be run twice in order to check if there was a redirect to
          * the permission denied page */
         for ($run = 1; $run <= 2; $run++) {
@@ -81,8 +78,8 @@ class LeApp
 
             /* TODO: let this function return the right values instead of storing this in router object */
             $route = $this->router->routeUrl($this->url);
-            
-            if(strpos($route['controller']['class'], "\\") === FALSE) {
+
+            if (strpos($route['controller']['class'], "\\") === FALSE) {
                 if ($route['controller']['plugin'] == 'core') {
                     $namespace = "Leap\\Core\\";
                 } else if ($route['controller']['plugin'] == 'site') {
@@ -90,18 +87,18 @@ class LeApp
                 } else {
                     $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
                 }
+
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
-            
-            if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of ($route['controller']['class'], "Leap\Core\Controller")){
+
+            if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
                 $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+            } else if (class_exists($route['controller']['class'])) {
+                printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class");
             } else {
-                if(class_exists($route['controller']['class'])){
-                    printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\Core\Controller' class");
-                } else {
-                    printr("Controller class '" . $route['controller']['class'] . "' not found");
-                }
+                printr("Controller class '" . $route['controller']['class'] . "' not found");
             }
+
         }
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}($route['params']);
@@ -143,7 +140,7 @@ class LeApp
     /**
      * Autoload any classes that are required
      *
-     * @param      string  $className  name of the class to autoload
+     * @param      string $className name of the class to autoload
      */
     private function autoloadClasses($className)
     {
