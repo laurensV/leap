@@ -36,19 +36,9 @@ class LeApp
         session_start();
         /* Try to connect to a database. Returns -1 when no database is used */
         $this->pdo                = SQLHandler::connect();
-        $auto_enable_dependencies = false;
         /* TODO: cache getting plugin info */
         $this->plugin_manager->getAllPlugins($this->pdo);
-        if (is_object($this->pdo)) {
-            $plugins_to_enable = $this->plugin_manager->pluginsToLoad($this->pdo);
-        } else if ($this->pdo == -1) {
-            /* site is run without database, so use custom function to load plugins */
-            $plugins_to_enable        = $this->plugin_manager->PluginsToLoadNoDB();
-            $auto_enable_dependencies = true;
-        } else {
-            printr("database error");
-        }
-
+        $plugins_to_enable = $this->plugin_manager->getEnabledPlugins($this->pdo);
         $this->plugin_manager->loadPlugins($plugins_to_enable);
 
         /******
@@ -57,7 +47,7 @@ class LeApp
 
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
-        //printr($this->router->routes);
+
         $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
 
         /* has to be run twice in order to check if there was a redirect to

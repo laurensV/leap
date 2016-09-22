@@ -91,21 +91,28 @@ class PluginManager
         return $this->all_plugins[$pid]['path'];
     }
 
-    public function pluginsToLoad($pdo)
+    public function getEnabledPlugins($pdo)
     {
-        $plugins = [];
-        $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
-        if (is_array($plugins_query)) {
-            foreach ($plugins_query as $pid) {
-                if ($this->all_plugins[$pid]['status'] != 0){
-                    $plugins[] = $pid;
+        if (is_object($pdo)) {
+            $plugins = [];
+            $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
+            if (is_array($plugins_query)) {
+                foreach ($plugins_query as $pid) {
+                    if ($this->all_plugins[$pid]['status'] != 0){
+                        $plugins[] = $pid;
+                    }
                 }
             }
+        } else if ($pdo == -1) {
+            /* site is run without database, so use custom function to load plugins */
+            $plugins = $this->getEnabledPluginsNoDB();
+        } else {
+            printr("database error");
         }
         return $plugins;
     }
 
-    public function PluginsToLoadNoDB()
+    private function getEnabledPluginsNoDB()
     {
         $plugins = [];
         if (is_array($this->all_plugins)) {
