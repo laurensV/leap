@@ -20,11 +20,16 @@ class LeApp
     {
         /* TODO: consider singleton for plugin_manager and router */
         $this->setReporting();
+        /* Object creation */
         $this->hooks          = new Hooks();
-        $this->url            = $this->getUrl();
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
+        /* TODO: try to get rid of this setter injection */
         $this->router->setPluginManager($this->plugin_manager);
+
+        /* variable values */
+        $this->url            = $this->getUrl();
+
         $this->bootstrap();
     }
 
