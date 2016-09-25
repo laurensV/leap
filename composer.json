@@ -10,11 +10,21 @@
             "Leap\\":""
         }
     },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "http://localhost/satis/web/"
+        }
+    ],
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
+        "leap/less": "dev-master",
+        "leap/pluginmanager": "dev-master",
+        "leap/admin": "dev-master",
         "composer/composer" : "dev-master",
-        "wikimedia/composer-merge-plugin": "dev-master",
-        "oyejorge/less.php": "v1.7.0.10"
+        "leap/alias": "dev-master",
+        "twig/twig": "^1.24",
+        "wikimedia/composer-merge-plugin": "dev-master"
     },
     "extra": {
         "custom-installer": {

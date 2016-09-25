@@ -1,6 +1,6 @@
 <?php
 /**
- * Leap - Lightweight Extensible And Powerfull PHP Framework
+ * Leap - Lightweight Extensible Adjustable PHP Framework
  *
  * @package  Leap
  * @author   Laurens Verspeek
