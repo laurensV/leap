@@ -131,19 +131,4 @@ class LeApp
         ini_set('log_errors', 1);
         ini_set('error_log', ROOT . 'core/logs/error.log');
     }
-
-    /**
-     * Autoload any classes that are required
-     *
-     * @param      string $className name of the class to autoload
-     */
-    private function autoloadClasses($className)
-    {
-        /* TODO: rewrite folder structure classes */
-        if (file_exists(ROOT . 'core/' . strtolower($className) . '.php')) {
-            require_once ROOT . 'core/' . strtolower($className) . '.php';
-        } else if (file_exists(ROOT . 'core/include/classes/' . $className . '.class.php')) {
-            require_once ROOT . 'core/include/classes/' . $className . '.class.php';
-        }
-    }
 }
