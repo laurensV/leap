@@ -101,7 +101,7 @@ class Router
             /* no route found, goto 404 */
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             $this->routeUrl('404');
-            return;
+            return null;
         } else {
             if (isset($this->parsedRoute['modelFile']['path'])) {
                 chdir($this->parsedRoute['modelFile']['path']);
@@ -123,7 +123,7 @@ class Router
         if (!file_exists($this->parsedRoute['page']['value'])) {
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             $this->routeUrl('404');
-            return;
+            return null;
         }
         return $this->parsedRoute;
     }

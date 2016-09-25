@@ -41,6 +41,7 @@ function arg($id = null, $args_raw = null)
             return $args[$id];
         }
     }
+    return null;
 }
 
 function l($name, $link, $attributes = array(), $relative = false)

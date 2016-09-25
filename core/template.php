@@ -94,6 +94,9 @@ class Template
 
     /**
      * Set Variables *
+     *
+     * @param $name
+     * @param $value
      */
     public function set($name, $value)
     {

@@ -12,6 +12,11 @@ class Controller
 
     /**
      * Whenever controller is created, load the model and the template.
+     *
+     * @param $route
+     * @param $hooks
+     * @param $plugin_manager
+     * @param $pdo
      */
     public function __construct($route, $hooks, $plugin_manager, $pdo)
     {
@@ -52,6 +57,9 @@ class Controller
 
     /**
      * Set Variables
+     *
+     * @param $name
+     * @param $value
      */
     public function set($name, $value)
     {
