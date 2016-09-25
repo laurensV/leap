@@ -2,7 +2,9 @@
 namespace Leap\Core;
 
 /**
- * { class_description }
+ * Leap Application
+ *
+ * @package Leap\Core
  */
 class LeApp
 {
@@ -14,42 +16,46 @@ class LeApp
     private $pdo;
 
     /**
-     * { function_description }
+     * LeApp constructor.
      */
     public function __construct()
     {
-        /* TODO: consider singleton for plugin_manager and router */
+        /* Set the error reporting level based on the environment variable */
         $this->setReporting();
-        /* Object creation */
+        /* - Object creation - */
         $this->hooks          = new Hooks();
+        /* TODO: consider singleton for plugin_manager and router */
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
         /* TODO: try to get rid of this setter injection */
         $this->router->setPluginManager($this->plugin_manager);
 
-        /* variable values */
-        $this->url            = $this->getUrl();
+        /* - Variable values - */
+        $this->url = $this->getUrl();
 
+        /* Setup the application */
         $this->bootstrap();
     }
 
     /**
-     * { function_description }
+     * Setup the application
      */
     private function bootstrap()
     {
         session_start();
         /* Try to connect to a database. Returns -1 when no database is used */
-        $this->pdo                = SQLHandler::connect();
+        $this->pdo = SQLHandler::connect();
         /* TODO: cache getting plugin info */
         $this->plugin_manager->getAllPlugins($this->pdo);
         $plugins_to_enable = $this->plugin_manager->getEnabledPlugins($this->pdo);
         $this->plugin_manager->loadPlugins($plugins_to_enable);
 
-        /******
-         * Plugins are loaded, so from now on we can fire hooks
-         ******/
+        /* ########################################################
+         * # Plugins are loaded, so from now on we can fire hooks #
+         * ########################################################
+         */
 
+        /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
@@ -71,9 +77,10 @@ class LeApp
                 }
             }
 
-            /* TODO: let this function return the right values instead of storing this in router object */
+            /* Get route information for the url */
             $route = $this->router->routeUrl($this->url);
 
+            /* If the class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === FALSE) {
                 if ($route['controller']['plugin'] == 'core') {
                     $namespace = "Leap\\Core\\";
@@ -86,7 +93,9 @@ class LeApp
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
 
+            /* Check if controller class extends the core controller */
             if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+                /* Create the controller instance */
                 $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
             } else if (class_exists($route['controller']['class'])) {
                 printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class");
@@ -108,7 +117,7 @@ class LeApp
     }
 
     /**
-     * retrieve the raw arguments after the base url
+     * Retrieve the raw arguments after the base url
      *
      * @return     string
      */
@@ -118,7 +127,7 @@ class LeApp
     }
 
     /**
-     * Check if environment is development and display errors
+     * Set error level based on environment
      */
     private function setReporting()
     {
@@ -128,7 +137,9 @@ class LeApp
         } else {
             ini_set('display_errors', 0);
         }
+        /* Always log the errors */
         ini_set('log_errors', 1);
+        /* TODO: create variable for custom log file */
         ini_set('error_log', ROOT . 'core/logs/error.log');
     }
 }
