@@ -52,8 +52,8 @@ class LeApp
 
         /* ########################################################
          * # Plugins are loaded, so from now on we can fire hooks #
-         * ########################################################
-         */
+         * ######################################################## */
+
 
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
@@ -80,7 +80,8 @@ class LeApp
             /* Get route information for the url */
             $route = $this->router->routeUrl($this->url);
 
-            /* If the class name does not contain the namespace yet, add it */
+            /* TODO: move adding of namespaces to the router or somewhere else */
+            /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === FALSE) {
                 if ($route['controller']['plugin'] == 'core') {
                     $namespace = "Leap\\Core\\";
@@ -89,8 +90,18 @@ class LeApp
                 } else {
                     $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
                 }
-
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
+            }
+            /* If the model name does not contain the namespace yet, add it */
+            if (strpos($route['model']['class'], "\\") === FALSE) {
+                if ($route['model']['plugin'] == 'core') {
+                    $namespace = "Leap\\Core\\";
+                } else if ($route['model']['plugin'] == 'site') {
+                    $namespace = "Leap\\Site\\Models\\";
+                } else {
+                    $namespace = "Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\";
+                }
+                $route['model']['class'] = $namespace . $route['model']['class'];
             }
 
             /* Check if controller class extends the core controller */

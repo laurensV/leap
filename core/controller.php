@@ -22,7 +22,7 @@ class Controller
     {
         if ($this->grantAccess()) {
             /* TODO: rewrite in same way as controller */
-            $model = "Leap\\Core\\" . $route['model'];
+            $model = $route['model']['class'];
             $this->model          = new $model($pdo);
             $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;
