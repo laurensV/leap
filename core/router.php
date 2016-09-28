@@ -1,40 +1,81 @@
 <?php
 namespace Leap\Core;
 
+/**
+ * Class Router
+ *
+ * @package Leap\Core
+ */
 class Router
 {
     private $routes;
-    public $params;
+    public  $params;
     private $plugin_manager;
     private $parsedRoute;
+    private $defaultValues;
 
+    /**
+     * Router constructor.
+     */
     public function __construct()
     {
-        $this->routes      = [];
-        $this->parsedRoute = [];
+        $this->routes        = [];
+        $this->parsedRoute   = [];
+        $this->defaultValues = [];
     }
 
-    private function defaultRouteValues()
+    /**
+     * Set default values for the route
+     *
+     * @param array $properties
+     */
+    private function defaultRouteValues($properties = null)
     {
-        $this->parsedRoute['model']                = 'Model';
-        $this->parsedRoute['modelFile']            = null;
-        $this->parsedRoute['base_path']            = null;
-        $this->parsedRoute['action']               = null;
-        $this->parsedRoute['controller']['class']  = 'Controller';
-        $this->parsedRoute['controller']['plugin'] = 'core';
-        $this->parsedRoute['template']             = array('path' => ROOT . 'site/templates/', 'value' => "default_template.php");
-        $this->parsedRoute['page']                 = array('path' => ROOT . 'site/pages/', 'value' => "");
-        $this->parsedRoute['stylesheets']          = array();
-        $this->parsedRoute['scripts']              = array();
-        $this->parsedRoute['title']                = null;
-        $this->parsedRoute['params']               = null;
+        /* initialize default values once */
+        if (empty($this->defaultValues)) {
+            $this->defaultValues['model']       = ['class' => 'Model', 'plugin' => 'core'];
+            $this->defaultValues['base_path']   = null;
+            $this->defaultValues['action']      = null;
+            $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
+            $this->defaultValues['template']    = ['path' => ROOT . 'site/templates/', 'value' => "default_template.php"];
+            $this->defaultValues['page']        = ['path' => ROOT . 'site/pages/', 'value' => ""];
+            $this->defaultValues['stylesheets'] = [];
+            $this->defaultValues['scripts']     = [];
+            $this->defaultValues['title']       = null;
+            $this->defaultValues['params']      = null;
+        }
+
+        if (isset($properties) && !in_array("all", $properties)) {
+            /* set array of properties to their default values */
+            foreach ($properties as $property) {
+                if (isset($defaultValues[$property])) {
+                    $this->parsedRoute[$property] = $defaultValues[$property];
+                }
+            }
+        } else {
+            /* set all properties to their default values */
+            foreach ($this->defaultValues as $property => $value) {
+                $this->parsedRoute[$property] = $value;
+            }
+        }
     }
 
+    /**
+     * Setter injection for a plugin manager instance
+     *
+     * @param $plugin_manager
+     */
     public function setPluginManager($plugin_manager)
     {
         $this->plugin_manager = $plugin_manager;
     }
 
+    /**
+     * Add a new file with routes
+     *
+     * @param $file
+     * @param $plugin
+     */
     public function addRouteFile($file, $plugin)
     {
         if (file_exists($file)) {
@@ -55,7 +96,7 @@ class Router
                 }
 
                 foreach ($routes[$regex] as $option => $value) {
-                    $routes[$regex][$option] = array("value" => $value, "path" => $path);
+                    $routes[$regex][$option] = ["value" => $value, "path" => $path];
                     if ($option == "controller" || $option == "model") {
                         $routes[$regex][$option]['plugin'] = $plugin;
                     }
@@ -66,16 +107,25 @@ class Router
         }
     }
 
+    /**
+     * Route a given url based on the added route files
+     *
+     * @param $url
+     *
+     * @return array|null
+     */
     public function routeUrl($url)
     {
         $this->defaultRouteValues();
         // sort route array by length of keys
-        uksort($this->routes, function ($a, $b) {return strlen($a) - strlen($b);});
+        uksort($this->routes, function ($a, $b) {
+            return strlen($a) - strlen($b);
+        });
         $no_route = true;
         foreach ($this->routes as $regex => $options) {
             $multi_regex = explode(",", $regex);
             foreach ($multi_regex as $pattern) {
-                $wildcard_args = array();
+                $wildcard_args = [];
                 if (strpos($pattern, ":")) {
                     if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
                         $wildcard_args['pattern'] = $pattern;
@@ -103,17 +153,15 @@ class Router
             $this->routeUrl('404');
             return null;
         } else {
-            if (isset($this->parsedRoute['modelFile']['path'])) {
-                chdir($this->parsedRoute['modelFile']['path']);
-                if (file_exists($this->parsedRoute['modelFile']['value'])) {
-                    /* TODO: load with composer autoload */
-                    require $this->parsedRoute['modelFile']['value'];
-                }
+            if (isset($this->parsedRoute['model']['file'])) {
+                global $autoloader;
+                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($this->parsedRoute['model']['plugin']) . "\\Models\\" . $this->parsedRoute['model']['class'] => $this->parsedRoute['model']['file']]);
             }
             if (isset($this->parsedRoute['controller']['file'])) {
                 global $autoloader;
-                $autoloader->addClassMap(array("Leap\\Plugins\\" . ucfirst($this->parsedRoute['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']));
+                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($this->parsedRoute['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']]);
             }
+            /* If we don't have a page value from the route files, try to parse the page from the url */
             if ($this->parsedRoute['page']['value'] == "") {
                 /* parse only the page from the url */
                 $this->parsePageFromUrl($url);
@@ -128,6 +176,13 @@ class Router
         return $this->parsedRoute;
     }
 
+    /**
+     * Parse a route from a route file
+     *
+     * @param $route
+     * @param $url
+     * @param $wildcard_args
+     */
     private function parseRoute($route, $url, $wildcard_args)
     {
         $this->parsedRoute['base_path'] = $route['last_path'];
@@ -135,39 +190,7 @@ class Router
         /* TODO: get default values from function */
         if (isset($route['clear'])) {
             $route['clear'] = $route['clear']['value'];
-            $all            = in_array('all', $route['clear']);
-            if ($all || in_array('scripts', $route['clear'])) {
-                $this->parsedRoute['scripts'] = array();
-            }
-            if ($all || in_array('stylesheets', $route['clear'])) {
-                $this->parsedRoute['stylesheets'] = array();
-            }
-            if ($all || in_array('model', $route['clear'])) {
-                $this->parsedRoute['model'] = 'Model';
-            }
-            if ($all || in_array('modelFile', $route['clear'])) {
-                $this->parsedRoute['modelFile'] = null;
-            }
-            if ($all || in_array('controller', $route['clear'])) {
-                $this->parsedRoute['controller']['class'] = 'Controller';
-            }
-            if ($all || in_array('controllerFile', $route['clear'])) {
-                $this->parsedRoute['controllerFile'] = array('plugin' => 'core');
-            }
-            if ($all || in_array('template', $route['clear'])) {
-                $this->parsedRoute['template']['path']  = ROOT . 'site/templates/';
-                $this->parsedRoute['template']['value'] = "default_template.php";
-            }
-            if ($all || in_array('page', $route['clear'])) {
-                $this->parsedRoute['page']['path']  = ROOT . 'site/pages/';
-                $this->parsedRoute['page']['value'] = "";
-            }
-            if ($all || in_array('action', $route['clear'])) {
-                $this->parsedRoute['action'] = null;
-            }
-            if ($all || in_array('title', $route['clear'])) {
-                $this->parsedRoute['title'] = null;
-            }
+            $this->defaultRouteValues($route['clear']);
         }
 
         if (isset($route['model'])) {
@@ -178,12 +201,12 @@ class Router
                     $this->parsedRoute['modelFile']['value'] = ROOT . substr($this->parsedRoute['modelFile']['value'], 1);
                 }
             } else {
-                $this->parsedRoute['modelFile'] = array("value" => "models/" . $this->parsedRoute['model'] . ".php", "path" => $route['model']['path']);
+                $this->parsedRoute['modelFile'] = ["value" => "models/" . $this->parsedRoute['model'] . ".php", "path" => $route['model']['path']];
             }
             $this->parsedRoute['modelFile']['plugin'] = $route['model']['plugin'];
         }
         if (isset($route['controller'])) {
-            $this->parsedRoute['controller'] = array();
+            $this->parsedRoute['controller']          = [];
             $this->parsedRoute['controller']['class'] = $route['controller']['value'];
             if (isset($route['controllerFile'])) {
                 if ($route['controllerFile']['value'][0] == "/") {
@@ -224,7 +247,7 @@ class Router
         }
         if (!empty($wildcard_args)) {
             if (preg_match_all("'" . $wildcard_args['pattern'] . "'", $url, $matches)) {
-                $this->parsedRoute['params'] = array();
+                $this->parsedRoute['params'] = [];
                 global $wildcards_from_url;
                 foreach ($matches as $key => $arg) {
                     if (!$key) {
@@ -239,6 +262,11 @@ class Router
         }
     }
 
+    /**
+     * Parse the page value based on the url
+     *
+     * @param $url
+     */
     private function parsePageFromUrl($url)
     {
         $this->parsedRoute['page']['value'] = "home";
