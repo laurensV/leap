@@ -1,9 +1,20 @@
 <?php
 namespace Leap\Core;
 
+/**
+ * Class Hooks
+ *
+ * @package Leap\Core
+ */
 class Hooks
 {
     private $hooks;
+
+    /**
+     * Hooks constructor.
+     *
+     * @param array $hooks
+     */
     public function __construct($hooks = array())
     {
         $this->hooks = array();
@@ -12,11 +23,22 @@ class Hooks
         }
     }
 
+    /**
+     * Return all hook names
+     *
+     * @return array
+     */
     public function getHooks()
     {
         return array_keys($this->hooks);
     }
 
+    /**
+     * Add a callback to a hook. If they hook does not exist, it is created.
+     *
+     * @param $name
+     * @param $namespace
+     */
     public function add($name, $namespace)
     {
         // callback parameters must be at least syntactically
@@ -24,20 +46,39 @@ class Hooks
         if (!isset($this->hooks[$name])) {
             $this->create($name);
         }
+        /* TODO: change namespace to Leap\Plugins\[pluginname]\Hooks ? */
         $callback             = "Leap\\Hooks\\" . $namespace . "\\" . $name;
         $this->hooks[$name][] = $callback;
     }
 
+    /**
+     * Get all callbacks for a given hook
+     *
+     * @param $name
+     *
+     * @return array|mixed
+     */
     public function getCallbacks($name)
     {
         return isset($this->hooks[$name]) ? $this->hooks[$name] : array();
     }
 
+    /**
+     * Create a hook
+     *
+     * @param $name
+     */
     public function create($name)
     {
         $this->hooks[strtolower($name)] = array();
     }
 
+    /**
+     * Fire a hook
+     *
+     * @param       $name
+     * @param array $args
+     */
     public function fire($name, $args = array())
     {
         foreach ($this->getCallbacks(strtolower($name)) as $callback) {

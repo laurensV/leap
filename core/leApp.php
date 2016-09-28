@@ -24,10 +24,10 @@ class LeApp
         $this->setReporting();
         /* - Object creation - */
         $this->hooks          = new Hooks();
-        /* TODO: consider singleton for plugin_manager and router */
+        /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
-        /* TODO: try to get rid of this setter injection */
+        /* TODO: Can we get rid of this setter injection? */
         $this->router->setPluginManager($this->plugin_manager);
 
         /* - Variable values - */
