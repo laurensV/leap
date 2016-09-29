@@ -23,7 +23,7 @@ class LeApp
         /* Set the error reporting level based on the environment variable */
         $this->setReporting();
         /* - Object creation - */
-        $this->hooks          = new Hooks();
+        $this->hooks = new Hooks();
         /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
@@ -54,7 +54,6 @@ class LeApp
          * # Plugins are loaded, so from now on we can fire hooks #
          * ######################################################## */
 
-
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
@@ -82,25 +81,13 @@ class LeApp
 
             /* TODO: move adding of namespaces to the router or somewhere else */
             /* If the controller class name does not contain the namespace yet, add it */
-            if (strpos($route['controller']['class'], "\\") === FALSE) {
-                if ($route['controller']['plugin'] == 'core') {
-                    $namespace = "Leap\\Core\\";
-                } else if ($route['controller']['plugin'] == 'site') {
-                    $namespace = "Leap\\Site\\Controllers\\";
-                } else {
-                    $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
-                }
+            if (strpos($route['controller']['class'], "\\") === false) {
+                $namespace = $this->getNamespace($route['controller']['plugin'], "controller");
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
             /* If the model name does not contain the namespace yet, add it */
-            if (strpos($route['model']['class'], "\\") === FALSE) {
-                if ($route['model']['plugin'] == 'core') {
-                    $namespace = "Leap\\Core\\";
-                } else if ($route['model']['plugin'] == 'site') {
-                    $namespace = "Leap\\Site\\Models\\";
-                } else {
-                    $namespace = "Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\";
-                }
+            if (strpos($route['model']['class'], "\\") === false) {
+                $namespace = $this->getNamespace($route['model']['plugin'], "model");
                 $route['model']['class'] = $namespace . $route['model']['class'];
             }
 
@@ -135,6 +122,29 @@ class LeApp
     private function getUrl()
     {
         return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
+    }
+
+    /**
+     * @param string $plugin
+     * @param string $type
+     *
+     * @return string
+     */
+    private function getNamespace($plugin = "", $type = "")
+    {
+        $namespace = "Leap\\";
+        if (!empty($plugin)) {
+            if ($plugin != "core" && $plugin != "site") {
+                $namespace .= "Plugins\\";
+            }
+            $namespace .= ucfirst($plugin) . "\\";
+            /* add type to namespace unless we are in core */
+            if (!empty($type) && $plugin != "core") {
+                $namespace .= ucfirst($type) . "s\\";
+            }
+        }
+
+        return $namespace;
     }
 
     /**
