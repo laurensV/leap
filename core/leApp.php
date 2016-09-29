@@ -105,9 +105,6 @@ class LeApp
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}($route['params']);
         } else {
-            /* TODO: rewrite */
-            /* When the second argument is not an action, it is probably a parameter */
-            $route['params'] = $route['action'] . "/" . $route['params'];
             $this->controller->defaultAction($route['params']);
         }
 
