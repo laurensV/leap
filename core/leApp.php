@@ -79,7 +79,6 @@ class LeApp
             /* Get route information for the url */
             $route = $this->router->routeUrl($this->url);
 
-            /* TODO: move adding of namespaces to the router or somewhere else */
             /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === false) {
                 $namespace                    = $this->getNamespace($route['controller']['plugin'], "controller");
@@ -125,6 +124,9 @@ class LeApp
     }
 
     /**
+     * Function to retrieve the namespace given the plugin and type
+     * TODO: think about moving to different place (helpers.php?)
+     *
      * @param string $plugin
      * @param string $type
      *
