@@ -193,16 +193,20 @@ class Router
         }
 
         if (isset($route['model'])) {
-            $this->parsedRoute['model'] = $route['model']['value'];
+            $this->parsedRoute['model']          = [];
+            $this->parsedRoute['model']['class'] = $route['model']['value'];
             if (isset($route['modelFile'])) {
-                $this->parsedRoute['modelFile'] = $route['modelFile'];
-                if ($this->parsedRoute['modelFile']['value'][0] == "/") {
-                    $this->parsedRoute['modelFile']['value'] = ROOT . substr($this->parsedRoute['modelFile']['value'], 1);
+                if ($route['modelFile']['value'][0] == "/") {
+                    $this->parsedRoute['model']['file'] = ROOT . substr($route['modelFile']['value'], 1);
+                } else {
+                    $this->parsedRoute['model']['file'] = $route['modelFile']['path'] . $route['modelFile']['value'];
                 }
-            } else {
-                $this->parsedRoute['modelFile'] = ["value" => "models/" . $this->parsedRoute['model'] . ".php", "path" => $route['model']['path']];
             }
-            $this->parsedRoute['modelFile']['plugin'] = $route['model']['plugin'];
+            if (isset($route['modelPlugin'])) {
+                $this->parsedRoute['model']['plugin'] = $route['modelPlugin']['value'];
+            } else {
+                $this->parsedRoute['model']['plugin'] = $route['model']['plugin'];
+            }
         }
         if (isset($route['controller'])) {
             $this->parsedRoute['controller']          = [];
