@@ -20,6 +20,31 @@ function strReplaceFirst($search, $replace, $subject)
     return $subject;
 }
 
+/**
+ * Function to retrieve the namespace given the plugin and type
+ *
+ * @param string $plugin
+ * @param string $type
+ *
+ * @return string
+ */
+function getNamespace($plugin = "", $type = "")
+{
+    $namespace = "Leap\\";
+    if (!empty($plugin)) {
+        if ($plugin != "core" && $plugin != "site") {
+            $namespace .= "Plugins\\";
+        }
+        $namespace .= ucfirst($plugin) . "\\";
+        /* add type to namespace unless we are in core */
+        if (!empty($type) && $plugin != "core") {
+            $namespace .= ucfirst($type) . "s\\";
+        }
+    }
+
+    return $namespace;
+}
+
 $wildcards_from_url = array();
 function arg($id = null, $args_raw = null)
 {

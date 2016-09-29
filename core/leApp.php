@@ -81,12 +81,12 @@ class LeApp
 
             /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === false) {
-                $namespace                    = $this->getNamespace($route['controller']['plugin'], "controller");
+                $namespace                    = getNamespace($route['controller']['plugin'], "controller");
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
             /* If the model name does not contain the namespace yet, add it */
             if (strpos($route['model']['class'], "\\") === false) {
-                $namespace               = $this->getNamespace($route['model']['plugin'], "model");
+                $namespace               = getNamespace($route['model']['plugin'], "model");
                 $route['model']['class'] = $namespace . $route['model']['class'];
             }
 
@@ -121,32 +121,6 @@ class LeApp
     private function getUrl()
     {
         return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
-    }
-
-    /**
-     * Function to retrieve the namespace given the plugin and type
-     * TODO: think about moving to different place (helpers.php?)
-     *
-     * @param string $plugin
-     * @param string $type
-     *
-     * @return string
-     */
-    private function getNamespace($plugin = "", $type = "")
-    {
-        $namespace = "Leap\\";
-        if (!empty($plugin)) {
-            if ($plugin != "core" && $plugin != "site") {
-                $namespace .= "Plugins\\";
-            }
-            $namespace .= ucfirst($plugin) . "\\";
-            /* add type to namespace unless we are in core */
-            if (!empty($type) && $plugin != "core") {
-                $namespace .= ucfirst($type) . "s\\";
-            }
-        }
-
-        return $namespace;
     }
 
     /**
