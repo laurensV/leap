@@ -58,18 +58,18 @@ class LeApp
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
-        /* fire the hook preRouteUrl */
+        /* Fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
 
-        /* has to be run twice in order to check if there was a redirect to
+        /* Has to be run twice in order to check if there was a redirect to
          * the permission denied page */
         for ($run = 1; $run <= 2; $run++) {
-            /* check if we are in second run of for loop */
+            /* Check if we are in second run of for loop */
             if ($run == 2) {
-                /* check if we have access in the controller */
+                /* Check if we have access in the controller */
                 if (!$this->controller->access) {
                     header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-                    /* reroute to permission denied page */
+                    /* Reroute to permission denied page */
                     $this->url = "permission_denied";
                 } else {
                     /* We have access, break out of this for loop */
@@ -106,7 +106,7 @@ class LeApp
             $this->controller->{$route['action']}($route['params']);
         } else {
             /* TODO: rewrite */
-            /* when the second argument is not an action, it is probably a parameter */
+            /* When the second argument is not an action, it is probably a parameter */
             $route['params'] = $route['action'] . "/" . $route['params'];
             $this->controller->defaultAction($route['params']);
         }
