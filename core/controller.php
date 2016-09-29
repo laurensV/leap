@@ -21,7 +21,6 @@ class Controller
     public function __construct($route, $hooks, $plugin_manager, $pdo)
     {
         if ($this->grantAccess()) {
-            /* TODO: rewrite in same way as controller */
             $model = $route['model']['class'];
             $this->model          = new $model($pdo);
             $this->hooks          = $hooks;

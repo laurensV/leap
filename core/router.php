@@ -187,7 +187,6 @@ class Router
     {
         $this->parsedRoute['base_path'] = $route['last_path'];
 
-        /* TODO: get default values from function */
         if (isset($route['clear'])) {
             $route['clear'] = $route['clear']['value'];
             $this->defaultRouteValues($route['clear']);
