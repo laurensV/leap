@@ -82,12 +82,12 @@ class LeApp
             /* TODO: move adding of namespaces to the router or somewhere else */
             /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === false) {
-                $namespace = $this->getNamespace($route['controller']['plugin'], "controller");
+                $namespace                    = $this->getNamespace($route['controller']['plugin'], "controller");
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
             /* If the model name does not contain the namespace yet, add it */
             if (strpos($route['model']['class'], "\\") === false) {
-                $namespace = $this->getNamespace($route['model']['plugin'], "model");
+                $namespace               = $this->getNamespace($route['model']['plugin'], "model");
                 $route['model']['class'] = $namespace . $route['model']['class'];
             }
 
