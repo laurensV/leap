@@ -112,7 +112,7 @@ class Router
      *
      * @param $url
      *
-     * @return array|null
+     * @return array
      */
     public function routeUrl($url)
     {
@@ -150,8 +150,7 @@ class Router
         if ($no_route) {
             /* no route found, goto 404 */
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            $this->routeUrl('404');
-            return null;
+            return $this->routeUrl('404');
         } else {
             if (isset($this->parsedRoute['model']['file'])) {
                 global $autoloader;
