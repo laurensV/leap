@@ -58,6 +58,7 @@ class LeApp
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
+        /* fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
 
         /* has to be run twice in order to check if there was a redirect to
