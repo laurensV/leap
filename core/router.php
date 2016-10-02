@@ -159,11 +159,6 @@ class Router
                 global $autoloader;
                 $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($this->parsedRoute['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']]);
             }
-            /* If we don't have a page value from the route files, try to parse the page from the url */
-            if ($this->parsedRoute['page']['value'] == "") {
-                /* parse only the page from the url */
-                $this->parsePageFromUrl($url);
-            }
         }
         chdir($this->parsedRoute['page']['path']);
         if (!file_exists($this->parsedRoute['page']['value'])) {
@@ -310,22 +305,5 @@ class Router
         } else {
             return $string;
         }
-    }
-
-    /**
-     * Parse the page value based on the url
-     *
-     * @param $url
-     */
-    private function parsePageFromUrl($url)
-    {
-        $this->parsedRoute['page']['value'] = "home";
-        $args                               = arg(null, $url);
-        $page                               = end($args);
-        if ($page == "") {
-            $page = $this->parsedRoute['page']['value'];
-        }
-        $this->parsedRoute['page']['path']  = $this->parsedRoute['base_path'] . "pages/";
-        $this->parsedRoute['page']['value'] = $page . ".php";
     }
 }
