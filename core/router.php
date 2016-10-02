@@ -132,7 +132,7 @@ class Router
                         foreach ($matches[0] as $key => $whole_match) {
                             $pattern = str_replace($whole_match, "*ARG*", $pattern);
                             /* TODO: fix pattern*/
-                            $wildcard_args['pattern'] = str_replace('\\'.$whole_match, "([^/]+)", $wildcard_args['pattern']);
+                            $wildcard_args['pattern'] = str_replace('\\' . $whole_match, "([^/]+)", $wildcard_args['pattern']);
                             $wildcard_args['args'][]  = $matches[1][$key];
                         }
                     }
@@ -174,6 +174,8 @@ class Router
     }
 
     /**
+     * Function used for wildcard pattern matching (based on fnmatch)
+     *
      * @param      $pattern
      * @param      $string
      * @param bool $include_slash
@@ -188,8 +190,8 @@ class Router
             '\*'      => '.*',
             '\?'      => '.',
             '\[\!'    => '[^',
-            '\['    => '[',
-            '\]'    => ']'
+            '\['      => '[',
+            '\]'      => ']'
         ];
         // Forward slash in string must be in pattern:
         if (!$include_slash) {
@@ -197,7 +199,7 @@ class Router
         }
 
         $pattern = '#^' . strtr(preg_quote($pattern, '#'), $transforms) . '$#i';
-        if(isset($string)) {
+        if (isset($string)) {
             return (boolean)preg_match($pattern, $string);
         } else {
             return $pattern;
@@ -220,9 +222,25 @@ class Router
             $this->defaultRouteValues($route['clear']);
         }
 
+        if (!empty($wildcard_args)) {
+            if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
+                $this->parsedRoute['params'] = [];
+                global $wildcards_from_url;
+                foreach ($matches as $key => $arg) {
+                    if (!$key) {
+                        continue;
+                    }
+
+                    /* TODO: choose if wildcard gets available through params or through arg() function */
+                    $this->parsedRoute['params'][":" . $wildcard_args['args'][$key - 1]] = $arg[0];
+                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]                = $arg[0];
+                }
+            }
+        }
+
         if (isset($route['model'])) {
             $this->parsedRoute['model']          = [];
-            $this->parsedRoute['model']['class'] = $route['model']['value'];
+            $this->parsedRoute['model']['class'] = $this->replaceWildcardArgs($route['model']['value']);
             if (isset($route['modelFile'])) {
                 if ($route['modelFile']['value'][0] == "/") {
                     $this->parsedRoute['model']['file'] = ROOT . substr($route['modelFile']['value'], 1);
@@ -238,7 +256,7 @@ class Router
         }
         if (isset($route['controller'])) {
             $this->parsedRoute['controller']          = [];
-            $this->parsedRoute['controller']['class'] = $route['controller']['value'];
+            $this->parsedRoute['controller']['class'] = $this->replaceWildcardArgs($route['controller']['value']);
             if (isset($route['controllerFile'])) {
                 if ($route['controllerFile']['value'][0] == "/") {
                     $this->parsedRoute['controller']['file'] = ROOT . substr($route['controllerFile']['value'], 1);
@@ -253,9 +271,11 @@ class Router
             }
         }
         if (isset($route['page'])) {
+            $route['page']['value']    = $this->replaceWildcardArgs($route['page']['value']);
             $this->parsedRoute['page'] = $route['page'];
             if ($this->parsedRoute['page']['value'][0] == "/") {
-                $this->parsedRoute['page'] = ROOT . substr($this->parsedRoute['page']['value'], 1);
+                $this->parsedRoute['page']['value'] = substr($this->parsedRoute['page']['value'], 1);
+                $this->parsedRoute['page']['path']  = ROOT;
             }
         }
         if (isset($route['template'])) {
@@ -265,10 +285,10 @@ class Router
             }
         }
         if (isset($route['action'])) {
-            $this->parsedRoute['action'] = $route['action']['value'];
+            $this->parsedRoute['action'] = $this->replaceWildcardArgs($route['action']['value']);
         }
         if (isset($route['title'])) {
-            $this->parsedRoute['title'] = $route['title']['value'];
+            $this->parsedRoute['title'] = $this->replaceWildcardArgs($route['title']['value']);
         }
         if (isset($route['stylesheets'])) {
             $this->parsedRoute['stylesheets'][] = $route['stylesheets'];
@@ -276,20 +296,19 @@ class Router
         if (isset($route['scripts'])) {
             $this->parsedRoute['scripts'][] = $route['scripts'];
         }
-        if (!empty($wildcard_args)) {
-            if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
-                $this->parsedRoute['params'] = [];
-                global $wildcards_from_url;
-                foreach ($matches as $key => $arg) {
-                    if (!$key) {
-                        continue;
-                    }
+    }
 
-                    /* TODO: choose if wildcard gets available through params or through arg() function */
-                    // $this->parsedRoute['params'][$wildcard_args['args'][$key - 1]]       = $arg[0];
-                    $wildcards_from_url[$wildcard_args['args'][$key - 1]] = $arg[0];
-                }
-            }
+    /**
+     * @param string $string
+     *
+     * @return string
+     */
+    private function replaceWildcardArgs($string)
+    {
+        if (isset($this->parsedRoute['params']) && !empty($this->parsedRoute['params'])) {
+            return strtr($string, $this->parsedRoute['params']);
+        } else {
+            return $string;
         }
     }
 
