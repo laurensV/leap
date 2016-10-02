@@ -197,7 +197,6 @@ class Router
         }
 
         $pattern = '#^' . strtr(preg_quote($pattern, '#'), $transforms) . '$#i';
-        printr($pattern, false);
         if(isset($string)) {
             return (boolean)preg_match($pattern, $string);
         } else {
@@ -291,7 +290,6 @@ class Router
                     $wildcards_from_url[$wildcard_args['args'][$key - 1]] = $arg[0];
                 }
             }
-            printr($wildcards_from_url);
         }
     }
 
