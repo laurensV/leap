@@ -38,6 +38,7 @@ class Controller
             }
             $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;
+            /* TODO: pass whole route variable */
             $this->template       = new Template($route['template'], $route['page'], $hooks, $this->plugin_manager->enabled_plugins, $route['stylesheets'], $route['scripts']);
             $this->page           = $route['page'];
             $this->init();
