@@ -23,11 +23,11 @@ class LeApp
         /* Set the error reporting level based on the environment variable */
         $this->setReporting();
         /* - Object creation - */
-        $this->hooks          = new Hooks();
-        /* TODO: consider singleton for plugin_manager and router */
+        $this->hooks = new Hooks();
+        /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
-        /* TODO: try to get rid of this setter injection */
+        /* TODO: Can we get rid of this setter injection? */
         $this->router->setPluginManager($this->plugin_manager);
 
         /* - Variable values - */
@@ -53,24 +53,24 @@ class LeApp
 
         /* ########################################################
          * # Plugins are loaded, so from now on we can fire hooks #
-         * ########################################################
-         */
+         * ######################################################## */
 
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
+        /* Fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
 
-        /* has to be run twice in order to check if there was a redirect to
+        /* Has to be run twice in order to check if there was a redirect to
          * the permission denied page */
         for ($run = 1; $run <= 2; $run++) {
-            /* check if we are in second run of for loop */
+            /* Check if we are in second run of for loop */
             if ($run == 2) {
-                /* check if we have access in the controller */
+                /* Check if we have access in the controller */
                 if (!$this->controller->access) {
                     header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-                    /* reroute to permission denied page */
+                    /* Reroute to permission denied page */
                     $this->url = "permission_denied";
                 } else {
                     /* We have access, break out of this for loop */
@@ -81,17 +81,15 @@ class LeApp
             /* Get route information for the url */
             $route = $this->router->routeUrl($this->url);
 
-            /* If the class name does not contain the namespace yet, add it */
-            if (strpos($route['controller']['class'], "\\") === FALSE) {
-                if ($route['controller']['plugin'] == 'core') {
-                    $namespace = "Leap\\Core\\";
-                } else if ($route['controller']['plugin'] == 'site') {
-                    $namespace = "Leap\\Site\\Controllers\\";
-                } else {
-                    $namespace = "Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\";
-                }
-
+            /* If the controller class name does not contain the namespace yet, add it */
+            if (strpos($route['controller']['class'], "\\") === false) {
+                $namespace                    = getNamespace($route['controller']['plugin'], "controller");
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
+            }
+            /* If the model name does not contain the namespace yet, add it */
+            if (strpos($route['model']['class'], "\\") === false) {
+                $namespace               = getNamespace($route['model']['plugin'], "model");
+                $route['model']['class'] = $namespace . $route['model']['class'];
             }
 
             /* Check if controller class extends the core controller */
@@ -108,9 +106,6 @@ class LeApp
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}($route['params']);
         } else {
-            /* TODO: rewrite */
-            /* when the second argument is not an action, it is probably a parameter */
-            $route['params'] = $route['action'] . "/" . $route['params'];
             $this->controller->defaultAction($route['params']);
         }
 
