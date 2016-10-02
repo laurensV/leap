@@ -179,18 +179,18 @@ class Router
      */
     private function pattern_match($pattern, $string = null, $include_slash = false)
     {
-
         $transforms = [
             '\*ARG\*' => '[^/]+',
-            '\*'      => '.*',
+            '\*'      => '[^/]*',
             '\?'      => '.',
             '\[\!'    => '[^',
             '\['      => '[',
             '\]'      => ']'
         ];
+
         // Forward slash in string must be in pattern:
-        if (!$include_slash) {
-            $transforms['\*'] = '[^/]*';
+        if ($include_slash) {
+            $transforms['\*'] = '.*';
         }
 
         $pattern = '#^' . strtr(preg_quote($pattern, '#'), $transforms) . '$#i';
