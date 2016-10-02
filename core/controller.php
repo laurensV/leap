@@ -42,7 +42,7 @@ class Controller
             $this->page           = $route['page'];
             $this->init();
             $this->access = true;
-            if ($route['title']) {
+            if (isset($route['title'])) {
                 $this->set('title', $route['title']);
             } else {
                 $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
