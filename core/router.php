@@ -132,6 +132,7 @@ class Router
             }
         }
         // sort route array by length of keys
+        // TODO: implement weight property for routes
         uksort($this->routes, function ($a, $b) {
             return strlen($a) - strlen($b);
         });
