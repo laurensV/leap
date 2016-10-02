@@ -9,19 +9,19 @@ namespace Leap\Core;
 class Router
 {
     private $routes;
-    public  $params;
     private $plugin_manager;
     private $parsedRoute;
     private $defaultValues;
+    private $replaceWildcardArgs;
 
     /**
      * Router constructor.
      */
     public function __construct()
     {
-        $this->routes        = [];
-        $this->parsedRoute   = [];
-        $this->defaultValues = [];
+        $this->routes              = [];
+        $this->parsedRoute         = [];
+        $this->defaultValues       = [];
     }
 
     /**
@@ -42,7 +42,6 @@ class Router
             $this->defaultValues['stylesheets'] = [];
             $this->defaultValues['scripts']     = [];
             $this->defaultValues['title']       = null;
-            $this->defaultValues['params']      = null;
         }
 
         if (isset($properties) && !in_array("all", $properties)) {
@@ -219,16 +218,15 @@ class Router
 
         if (!empty($wildcard_args)) {
             if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
-                $this->parsedRoute['params'] = [];
+                $this->replaceWildcardArgs = [];
                 global $wildcards_from_url;
                 foreach ($matches as $key => $arg) {
                     if (!$key) {
                         continue;
                     }
 
-                    /* TODO: choose if wildcard gets available through params or through arg() function */
-                    $this->parsedRoute['params'][":" . $wildcard_args['args'][$key - 1]] = $arg[0];
-                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]                = $arg[0];
+                    $this->replaceWildcardArgs[":" . $wildcard_args['args'][$key - 1]] = $arg[0];
+                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]              = $arg[0];
                 }
             }
         }
@@ -300,8 +298,8 @@ class Router
      */
     private function replaceWildcardArgs($string)
     {
-        if (isset($this->parsedRoute['params']) && !empty($this->parsedRoute['params'])) {
-            return strtr($string, $this->parsedRoute['params']);
+        if (!empty($this->replaceWildcardArgs)) {
+            return strtr($string, $this->replaceWildcardArgs);
         } else {
             return $string;
         }

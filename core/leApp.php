@@ -104,9 +104,9 @@ class LeApp
 
         }
         if (method_exists($this->controller, $route['action'])) {
-            $this->controller->{$route['action']}($route['params']);
+            $this->controller->{$route['action']}();
         } else {
-            $this->controller->defaultAction($route['params']);
+            $this->controller->defaultAction();
         }
 
         $this->controller->render();
