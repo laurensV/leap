@@ -43,6 +43,7 @@ class LeApp
     private function bootstrap()
     {
         session_start();
+
         /* Try to connect to a database. Returns -1 when no database is used */
         $this->pdo = SQLHandler::connect();
         /* TODO: cache getting plugin info */
