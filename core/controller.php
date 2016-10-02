@@ -63,7 +63,7 @@ class Controller
     /**
      * @param $params
      */
-    public function defaultAction($params)
+    public function defaultAction()
     {
     }
 
@@ -101,6 +101,7 @@ class Controller
      */
     public function grantAccess()
     {
+        /* this core controller has to return true as access to be able to access core pages */
         return true;
     }
 

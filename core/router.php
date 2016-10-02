@@ -19,9 +19,9 @@ class Router
      */
     public function __construct()
     {
-        $this->routes              = [];
-        $this->parsedRoute         = [];
-        $this->defaultValues       = [];
+        $this->routes        = [];
+        $this->parsedRoute   = [];
+        $this->defaultValues = [];
     }
 
     /**
@@ -116,39 +116,50 @@ class Router
     public function routeUrl($url)
     {
         $this->defaultRouteValues();
+
+        // multi-value keys seperation
+        foreach ($this->routes as $route => $options) {
+            $multi_regex = explode(",", $route);
+            if (isset($multi_regex[1])) {
+                foreach ($multi_regex as $pattern) {
+                    if (isset($this->routes[$pattern])) {
+                        $this->routes[$pattern] = array_merge($this->routes[$pattern], $options);
+                    } else {
+                        $this->routes[$pattern] = $options;
+                    }
+                }
+                unset($this->routes[$route]);
+            }
+        }
         // sort route array by length of keys
         uksort($this->routes, function ($a, $b) {
             return strlen($a) - strlen($b);
         });
         $no_route = true;
-        foreach ($this->routes as $regex => $options) {
-            $multi_regex = explode(",", $regex);
-            foreach ($multi_regex as $pattern) {
-                $wildcard_args = [];
-                if (strpos($pattern, ":") !== false) {
-                    if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
-                        $wildcard_args['pattern'] = $this->pattern_match($pattern);
-                        foreach ($matches[0] as $key => $whole_match) {
-                            $pattern = str_replace($whole_match, "*ARG*", $pattern);
-                            /* TODO: fix pattern*/
-                            $wildcard_args['pattern'] = str_replace('\\' . $whole_match, "([^/]+)", $wildcard_args['pattern']);
-                            $wildcard_args['args'][]  = $matches[1][$key];
-                        }
+        foreach ($this->routes as $pattern => $options) {
+            $include_slash = (isset($options['include_slash']) && $options['include_slash']);
+            $pattern   = $this->getPregPattern($pattern, $include_slash);
+            $wildcard_args = [];
+            /* Search for wildcard arguments */
+            if (strpos($pattern, ":") !== false) {
+                if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
+                    $wildcard_args['pattern'] = $pattern;
+                    foreach ($matches[0] as $key => $whole_match) {
+                        $pattern = str_replace('\\' .$whole_match, "[^/]+", $pattern);
+                        $wildcard_args['pattern'] = str_replace('\\' . $whole_match, "([^/]+)", $wildcard_args['pattern']);
+                        $wildcard_args['args'][]  = $matches[1][$key];
                     }
                 }
-                $include_slash = (isset($options['include_slash']) && $options['include_slash']);
-
-                if ($this->pattern_match($pattern, $url, $include_slash)) {
-                    $no_route = false;
-                    $this->parseRoute($options, $url, $wildcard_args);
-                    break;
-                }
+            }
+            if (preg_match($pattern, $url)) {
+                $no_route = false;
+                $this->parseRoute($options, $url, $wildcard_args);
             }
         }
         if ($no_route) {
-            /* no route found, goto 404 */
+            /* No route found, goto 404 */
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            return $this->routeUrl('page_not_found');
+            return $this->routeUrl('page-not-found');
         } else {
             if (isset($this->parsedRoute['model']['file'])) {
                 global $autoloader;
@@ -162,24 +173,22 @@ class Router
         chdir($this->parsedRoute['page']['path']);
         if (!file_exists($this->parsedRoute['page']['value'])) {
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            return $this->routeUrl('page_not_found');
+            return $this->routeUrl('page-not-found');
         }
         return $this->parsedRoute;
     }
 
     /**
-     * Function used for wildcard pattern matching (based on fnmatch)
+     * Get regex pattern for preg* functions based on fnmatch function pattern
      *
      * @param      $pattern
-     * @param      $string
      * @param bool $include_slash
      *
-     * @return bool|string
+     * @return string
      */
-    private function pattern_match($pattern, $string = null, $include_slash = false)
+    private function getPregPattern($pattern, $include_slash = false)
     {
         $transforms = [
-            '\*ARG\*' => '[^/]+',
             '\*'      => '[^/]*',
             '\?'      => '.',
             '\[\!'    => '[^',
@@ -192,12 +201,7 @@ class Router
             $transforms['\*'] = '.*';
         }
 
-        $pattern = '#^' . strtr(preg_quote($pattern, '#'), $transforms) . '$#i';
-        if (isset($string)) {
-            return (boolean)preg_match($pattern, $string);
-        } else {
-            return $pattern;
-        }
+        return '#^' . strtr(preg_quote(trim($pattern), '#'), $transforms) . '$#i';
     }
 
     /**

@@ -71,7 +71,7 @@ class LeApp
                 if (!$this->controller->access) {
                     header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
                     /* Reroute to permission denied page */
-                    $this->url = "permission_denied";
+                    $this->url = "permission-denied";
                 } else {
                     /* We have access, break out of this for loop */
                     break;
@@ -103,12 +103,14 @@ class LeApp
             }
 
         }
+
+        /* Call the action from the Controller class */
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}();
         } else {
             $this->controller->defaultAction();
         }
-
+        /* Render the templates */
         $this->controller->render();
     }
 
