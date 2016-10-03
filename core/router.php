@@ -131,18 +131,9 @@ class Router
                 unset($this->routes[$route]);
             }
         }
-        // Sort route array by weight first, then by length of route (key)
-        $weight = [];
-        $routeLength = [];
-        foreach ($this->routes as $key => $value) {
-            if (isset($value['weight'])){
-                $weight[] = $value['weight']['value'];
-            } else{
-                $weight[] = 1;
-            }
-            $routeLength[] = strlen($key);
-        }
-        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $this->routes);
+
+        // Sort route array
+        $this->routes = $this->sortRoutes($this->routes);
 
         // Try to match url to one or multiple routes
         $no_route = true;
@@ -170,7 +161,7 @@ class Router
         if ($no_route) {
             // No route found, goto 404
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            return $this->routeUrl('page-not-found');
+            return $this->routeUrl('404');
         } else {
             if (isset($this->parsedRoute['model']['file'])) {
                 global $autoloader;
@@ -184,9 +175,33 @@ class Router
         chdir($this->parsedRoute['page']['path']);
         if (!file_exists($this->parsedRoute['page']['value'])) {
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-            return $this->routeUrl('page-not-found');
+            return $this->routeUrl('404');
         }
         return $this->parsedRoute;
+    }
+
+    /**
+     * Sort route array by weight first, then by length of route (key)
+     *
+     * @param array $routes
+     *
+     * @return array
+     */
+    private function sortRoutes($routes) {
+        $weight = [];
+        $routeLength = [];
+        foreach ($routes as $key => $value) {
+            if (isset($value['weight'])){
+                $weight[] = $value['weight']['value'];
+            } else{
+                $weight[] = 1;
+            }
+            $routeLength[] = strlen($key);
+        }
+        /* TODO: check overhead for fix for array_multisort who re-indexes numeric keys */
+        $orig_keys = array_keys($routes); // Fix for re-indexing of numeric keys
+        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routes, $orig_keys);
+        return array_combine($orig_keys, $routes); // Fix for re-indexing of numeric keys
     }
 
     /**
