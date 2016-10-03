@@ -117,7 +117,7 @@ class Router
     {
         $this->defaultRouteValues();
 
-        // multi-value keys seperation
+        // Multi-value keys seperation
         foreach ($this->routes as $route => $options) {
             $multi_regex = explode(",", $route);
             if (isset($multi_regex[1])) {
@@ -131,17 +131,26 @@ class Router
                 unset($this->routes[$route]);
             }
         }
-        // sort route array by length of keys
-        // TODO: implement weight property for routes
-        uksort($this->routes, function ($a, $b) {
-            return strlen($a) - strlen($b);
-        });
+        // Sort route array by weight first, then by length of route (key)
+        $weight = [];
+        $routeLength = [];
+        foreach ($this->routes as $key => $value) {
+            if (isset($value['weight'])){
+                $weight[] = $value['weight']['value'];
+            } else{
+                $weight[] = 1;
+            }
+            $routeLength[] = strlen($key);
+        }
+        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $this->routes);
+
+        // Try to match url to one or multiple routes
         $no_route = true;
         foreach ($this->routes as $pattern => $options) {
             $include_slash = (isset($options['include_slash']) && $options['include_slash']);
             $pattern   = $this->getPregPattern($pattern, $include_slash);
             $wildcard_args = [];
-            /* Search for wildcard arguments */
+            // Search for wildcard arguments
             if (strpos($pattern, ":") !== false) {
                 if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
                     $wildcard_args['pattern'] = $pattern;
@@ -152,13 +161,14 @@ class Router
                     }
                 }
             }
+
             if (preg_match($pattern, $url)) {
                 $no_route = false;
                 $this->parseRoute($options, $url, $wildcard_args);
             }
         }
         if ($no_route) {
-            /* No route found, goto 404 */
+            // No route found, goto 404
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
             return $this->routeUrl('page-not-found');
         } else {
