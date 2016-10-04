@@ -8,7 +8,7 @@ namespace Leap\Core;
  */
 class Router
 {
-    private $routes;
+    private $routeCollection;
     private $plugin_manager;
     private $parsedRoute;
     private $defaultValues;
@@ -19,9 +19,9 @@ class Router
      */
     public function __construct()
     {
-        $this->routes        = [];
-        $this->parsedRoute   = [];
-        $this->defaultValues = [];
+        $this->routeCollection = [];
+        $this->parsedRoute     = [];
+        $this->defaultValues   = [];
     }
 
     /**
@@ -102,8 +102,38 @@ class Router
                 }
                 $routes[$regex]['last_path'] = $path;
             }
-            $this->routes = array_replace_recursive($this->routes, $routes);
+            $this->routeCollection = array_replace_recursive($this->routeCollection, $routes);
         }
+    }
+
+    /**
+     * Add a new route to the route collection
+     * TODO: finish
+     *
+     */
+    public function addRoute($route, $path, $plugin)
+    {
+        if (isset($route['dependencies'])) {
+            $error = "";
+            foreach ($route['dependencies'] as $plugin) {
+                if (!$this->plugin_manager->isEnabled($plugin)) {
+                    $error .= "need plugin " . $plugin . " for route \n";
+                }
+            }
+            if ($error != "") {
+                return;
+            }
+        }
+
+        foreach ($route as $option => $value) {
+            $route[$option] = ["value" => $value, "path" => $path];
+            if ($option == "controller" || $option == "model") {
+                $route['plugin'] = $plugin;
+            }
+        }
+        $route['last_path'] = $path;
+        /////////
+        $this->routeCollection = array_replace_recursive($this->routeCollection, $routes);
     }
 
     /**
@@ -118,35 +148,35 @@ class Router
         $this->defaultRouteValues();
 
         // Multi-value keys seperation
-        foreach ($this->routes as $route => $options) {
+        foreach ($this->routeCollection as $route => $options) {
             $multi_regex = explode(",", $route);
             if (isset($multi_regex[1])) {
                 foreach ($multi_regex as $pattern) {
-                    if (isset($this->routes[$pattern])) {
-                        $this->routes[$pattern] = array_merge($this->routes[$pattern], $options);
+                    if (isset($this->routeCollection[$pattern])) {
+                        $this->routeCollection[$pattern] = array_merge($this->routeCollection[$pattern], $options);
                     } else {
-                        $this->routes[$pattern] = $options;
+                        $this->routeCollection[$pattern] = $options;
                     }
                 }
-                unset($this->routes[$route]);
+                unset($this->routeCollection[$route]);
             }
         }
 
         // Sort route array
-        $this->routes = $this->sortRoutes($this->routes);
+        $this->routeCollection = $this->sortRoutes($this->routeCollection);
 
         // Try to match url to one or multiple routes
         $no_route = true;
-        foreach ($this->routes as $pattern => $options) {
+        foreach ($this->routeCollection as $pattern => $options) {
             $include_slash = (isset($options['include_slash']) && $options['include_slash']);
-            $pattern   = $this->getPregPattern($pattern, $include_slash);
+            $pattern       = $this->getPregPattern($pattern, $include_slash);
             $wildcard_args = [];
             // Search for wildcard arguments
             if (strpos($pattern, ":") !== false) {
                 if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
                     $wildcard_args['pattern'] = $pattern;
                     foreach ($matches[0] as $key => $whole_match) {
-                        $pattern = str_replace('\\' .$whole_match, "[^/]+", $pattern);
+                        $pattern                  = str_replace('\\' . $whole_match, "[^/]+", $pattern);
                         $wildcard_args['pattern'] = str_replace('\\' . $whole_match, "([^/]+)", $wildcard_args['pattern']);
                         $wildcard_args['args'][]  = $matches[1][$key];
                     }
@@ -187,13 +217,14 @@ class Router
      *
      * @return array
      */
-    private function sortRoutes($routes) {
-        $weight = [];
+    private function sortRoutes($routes)
+    {
+        $weight      = [];
         $routeLength = [];
         foreach ($routes as $key => $value) {
-            if (isset($value['weight'])){
+            if (isset($value['weight'])) {
                 $weight[] = $value['weight']['value'];
-            } else{
+            } else {
                 $weight[] = 1;
             }
             $routeLength[] = strlen($key);
@@ -215,11 +246,11 @@ class Router
     private function getPregPattern($pattern, $include_slash = false)
     {
         $transforms = [
-            '\*'      => '[^/]*',
-            '\?'      => '.',
-            '\[\!'    => '[^',
-            '\['      => '[',
-            '\]'      => ']'
+            '\*'   => '[^/]*',
+            '\?'   => '.',
+            '\[\!' => '[^',
+            '\['   => '[',
+            '\]'   => ']'
         ];
 
         // Forward slash in string must be in pattern:
