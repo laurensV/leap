@@ -1,5 +1,9 @@
 <?php
-function printr($data, $exit = true)
+/**
+ * @param      $data
+ * @param bool $exit
+ */
+function printr($data, $exit = false)
 {
     if ($data) {
         print '<pre>';
@@ -11,6 +15,13 @@ function printr($data, $exit = true)
     }
 }
 
+/**
+ * @param $search
+ * @param $replace
+ * @param $subject
+ *
+ * @return mixed
+ */
 function strReplaceFirst($search, $replace, $subject)
 {
     $pos = strpos($subject, $search);
@@ -45,7 +56,14 @@ function getNamespace($plugin = "", $type = "")
     return $namespace;
 }
 
-$wildcards_from_url = array();
+/** @var array $wildcards_from_url */
+$wildcards_from_url = [];
+/**
+ * @param null $id
+ * @param null $args_raw
+ *
+ * @return array|null
+ */
 function arg($id = null, $args_raw = null)
 {
     global $wildcards_from_url;
@@ -69,6 +87,14 @@ function arg($id = null, $args_raw = null)
     return null;
 }
 
+/**
+ * @param       $name
+ * @param       $link
+ * @param array $attributes
+ * @param bool  $relative
+ *
+ * @return string
+ */
 function l($name, $link, $attributes = array(), $relative = false)
 {
     if (!$relative) {
@@ -81,6 +107,12 @@ function l($name, $link, $attributes = array(), $relative = false)
     return "<a" . $attributes_string . "href='" . $link . "'>" . $name . "</a>";
 }
 
+/**
+ * @param      $name
+ * @param null $default
+ *
+ * @return null
+ */
 function config($name, $default = null)
 {
     global $config;
@@ -88,6 +120,12 @@ function config($name, $default = null)
     return isset($config[$name]) ? $config[$name] : $default;
 }
 
+/**
+ * @param null   $message
+ * @param string $type
+ *
+ * @return array|null
+ */
 function set_message($message = null, $type = 'default')
 {
     if ($message) {
@@ -103,6 +141,12 @@ function set_message($message = null, $type = 'default')
     return isset($_SESSION['messages']) ? $_SESSION['messages'] : null;
 }
 
+/**
+ * @param null $type
+ * @param bool $clear_queue
+ *
+ * @return array|null
+ */
 function get_messages($type = null, $clear_queue = true)
 {
     if ($messages = set_message()) {
