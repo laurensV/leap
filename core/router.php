@@ -117,6 +117,13 @@ class Router
             if ($option == "controller" || $option == "model") {
                 $options[$option]['plugin'] = $pluginForClass;
             }
+            if ($option == "method") {
+                $options[$option] = [];
+                /* TODO: change delimiter to | instead of , (problem: parsed as integer) */
+                foreach(explode(",", $value) as $method) {
+                    $options[$option][] = trim(strtoupper($method));
+                }
+            }
         }
         $options['last_path'] = $path;
         if (isset($this->routeCollection[$route])) {
@@ -161,8 +168,11 @@ class Router
             }
 
             if (preg_match($pattern, $url)) {
-                $no_route = false;
-                $this->parseRoute($options, $url, $wildcard_args);
+                if (!isset($options['method']) || in_array($_SERVER['REQUEST_METHOD'] ,  $options['method'])) {
+                    /* We found at least one valid route */
+                    $no_route = false;
+                    $this->parseRoute($options, $url, $wildcard_args);
+                }
             }
         }
         if ($no_route) {
