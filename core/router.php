@@ -80,42 +80,29 @@ class Router
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
             $path   = str_replace("\\", "/", dirname($file)) . "/";
-            foreach ($routes as $regex => $route) {
-                if (isset($route['dependencies'])) {
-                    $error = "";
-                    foreach ($route['dependencies'] as $plugin) {
-                        if (!$this->plugin_manager->isEnabled($plugin)) {
-                            $error .= "need plugin " . $plugin . " for route " . $regex . "\n";
-                        }
-                    }
-                    if ($error != "") {
-                        unset($routes[$regex]);
-                        continue;
-                    }
+            foreach ($routes as $route => $options) {
+                // Multi-value keys seperation
+                $multi_regex = explode(",", $route);
+                foreach ($multi_regex as $sep_route) {
+                    $this->addRoute($sep_route, $options, $path, $plugin);
                 }
-
-                foreach ($routes[$regex] as $option => $value) {
-                    $routes[$regex][$option] = ["value" => $value, "path" => $path];
-                    if ($option == "controller" || $option == "model") {
-                        $routes[$regex][$option]['plugin'] = $plugin;
-                    }
-                }
-                $routes[$regex]['last_path'] = $path;
             }
-            $this->routeCollection = array_replace_recursive($this->routeCollection, $routes);
         }
     }
 
     /**
      * Add a new route to the route collection
-     * TODO: finish
      *
+     * @param $route
+     * @param $options
+     * @param $path
+     * @param $pluginForClass
      */
-    public function addRoute($route, $path, $plugin)
+    public function addRoute($route, $options, $path, $pluginForClass)
     {
-        if (isset($route['dependencies'])) {
+        if (isset($options['dependencies'])) {
             $error = "";
-            foreach ($route['dependencies'] as $plugin) {
+            foreach ($options['dependencies'] as $plugin) {
                 if (!$this->plugin_manager->isEnabled($plugin)) {
                     $error .= "need plugin " . $plugin . " for route \n";
                 }
@@ -125,15 +112,20 @@ class Router
             }
         }
 
-        foreach ($route as $option => $value) {
-            $route[$option] = ["value" => $value, "path" => $path];
+        foreach ($options as $option => $value) {
+            $options[$option] = ["value" => $value, "path" => $path];
             if ($option == "controller" || $option == "model") {
-                $route['plugin'] = $plugin;
+                $options[$option]['plugin'] = $pluginForClass;
             }
         }
-        $route['last_path'] = $path;
-        /////////
-        $this->routeCollection = array_replace_recursive($this->routeCollection, $routes);
+        $options['last_path'] = $path;
+        if(isset($this->routeCollection[$route])) {
+            // Merge previous options with the new options
+            $this->routeCollection[$route] = array_replace($this->routeCollection[$route], $options);
+        } else {
+            // New route: simply add the options
+            $this->routeCollection[$route] = $options;
+        }
     }
 
     /**
@@ -146,21 +138,6 @@ class Router
     public function routeUrl($url)
     {
         $this->defaultRouteValues();
-
-        // Multi-value keys seperation
-        foreach ($this->routeCollection as $route => $options) {
-            $multi_regex = explode(",", $route);
-            if (isset($multi_regex[1])) {
-                foreach ($multi_regex as $pattern) {
-                    if (isset($this->routeCollection[$pattern])) {
-                        $this->routeCollection[$pattern] = array_merge($this->routeCollection[$pattern], $options);
-                    } else {
-                        $this->routeCollection[$pattern] = $options;
-                    }
-                }
-                unset($this->routeCollection[$route]);
-            }
-        }
 
         // Sort route array
         $this->routeCollection = $this->sortRoutes($this->routeCollection);
