@@ -112,13 +112,14 @@ class Router
             }
         }
 
+        /* Add path to all options. TODO: think of better way to do this */
         foreach ($options as $option => $value) {
             $options[$option] = ["value" => $value, "path" => $path];
-            if ($option == "controller" || $option == "model") {
-                $options[$option]['plugin'] = $pluginForClass;
-            }
         }
+        $options['controller']['plugin'] = $pluginForClass;
+        $options['model']['plugin'] = $pluginForClass;
         $options['last_path'] = $path;
+
         if(isset($this->routeCollection[$route])) {
             // Merge previous options with the new options
             $this->routeCollection[$route] = array_replace($this->routeCollection[$route], $options);
