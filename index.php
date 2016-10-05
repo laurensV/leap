@@ -19,8 +19,7 @@
 /* TODO: move file directory */
 /* TODO: move autoloader to core folder */
 /* TODO: namespace function for plugins */
-
-//print `echo php -q longThing.php | at now`;
+/* TODO: find out differences between hooks and events and pick one */
 
 /* include the autoloader from Composer */
 $autoloader = require 'libraries/autoload.php';

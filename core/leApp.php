@@ -38,7 +38,7 @@ class LeApp
     }
 
     /**
-     * Setup the application
+     * Boot up the application
      */
     private function bootstrap()
     {
@@ -101,7 +101,6 @@ class LeApp
             } else {
                 printr("Controller class '" . $route['controller']['class'] . "' not found");
             }
-
         }
 
         /* Call the action from the Controller class */

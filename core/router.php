@@ -119,7 +119,7 @@ class Router
             }
         }
         $options['last_path'] = $path;
-        if(isset($this->routeCollection[$route])) {
+        if (isset($this->routeCollection[$route])) {
             // Merge previous options with the new options
             $this->routeCollection[$route] = array_replace($this->routeCollection[$route], $options);
         } else {
