@@ -14,6 +14,7 @@ class LeApp
     private $hooks;
     private $plugin_manager;
     private $pdo;
+    private $route;
 
     /**
      * LeApp constructor.
@@ -82,12 +83,12 @@ class LeApp
             $route = $this->router->routeUrl($this->url);
 
             /* If the controller class name does not contain the namespace yet, add it */
-            if (strpos($route['controller']['class'], "\\") === false) {
+            if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
                 $namespace                    = getNamespace($route['controller']['plugin'], "controller");
                 $route['controller']['class'] = $namespace . $route['controller']['class'];
             }
             /* If the model name does not contain the namespace yet, add it */
-            if (strpos($route['model']['class'], "\\") === false) {
+            if (strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
                 $namespace               = getNamespace($route['model']['plugin'], "model");
                 $route['model']['class'] = $namespace . $route['model']['class'];
             }
@@ -97,12 +98,23 @@ class LeApp
                 /* Create the controller instance */
                 $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
             } else if (class_exists($route['controller']['class'])) {
-                printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class");
+                printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
             } else {
-                printr("Controller class '" . $route['controller']['class'] . "' not found");
+                printr("Controller class '" . $route['controller']['class'] . "' not found", true);
             }
         }
 
+        $this->route = $route;
+    }
+
+    /**
+     * Boot up the application
+     */
+    public function run($route = null)
+    {
+        if (!isset($route)) {
+            $route = $this->route;
+        }
         /* Call the action from the Controller class */
         if (method_exists($this->controller, $route['action'])) {
             $this->controller->{$route['action']}();

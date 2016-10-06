@@ -31,5 +31,8 @@ require 'core/config.php';
 /* include helper functions */
 require 'core/include/helpers.php';
 
-/* start the Leap application (core/leapp.php) */
+/* Setup the Leap application (core/leapp.php) */
 $app = new Leap\Core\LeApp();
+
+/* Run the application */
+$app->run();
