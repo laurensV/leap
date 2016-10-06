@@ -142,11 +142,12 @@ class Router
     /**
      * Route a given url based on the added route files
      *
-     * @param $url
+     * @param $uri
+     * @param $httpMethod
      *
      * @return array
      */
-    public function routeUrl($url)
+    public function routeUrl($uri, $httpMethod = 'GET')
     {
         $this->defaultRouteValues();
 
@@ -171,17 +172,17 @@ class Router
                 }
             }
 
-            if (preg_match($pattern, $url)) {
-                if (!isset($options['method']) || in_array($_SERVER['REQUEST_METHOD'], $options['method'])) {
+            if (preg_match($pattern, $uri)) {
+                if (!isset($options['method']) || in_array($httpMethod, $options['method'])) {
                     /* We found at least one valid route */
                     $no_route = false;
-                    $this->parseRoute($options, $url, $wildcard_args);
+                    $this->parseRoute($options, $uri, $wildcard_args);
                 }
             }
         }
         if ($no_route) {
             // No route found, goto 404
-            $this->pageNotFound($url);
+            $this->pageNotFound($uri);
         } else {
             if (isset($this->parsedRoute['model']['file'])) {
                 global $autoloader;
@@ -194,17 +195,22 @@ class Router
         }
         chdir($this->parsedRoute['page']['path']);
         if (!file_exists($this->parsedRoute['page']['value'])) {
-            $this->pageNotFound($url);
+            $this->pageNotFound($uri);
         }
         return $this->parsedRoute;
     }
 
+    /**
+     * @param string $url
+     *
+     * @return array
+     */
     private function pageNotFound($url = "") {
         if (isset($_SERVER["SERVER_PROTOCOL"])) {
             header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
         }
         if ($url != '404') {
-            return $this->routeUrl('404');
+            return $this->routeUrl('404', $_SERVER['REQUEST_METHOD']);
         } else {
             printr("Page not found and no valid route found for 404 page", true);
         }

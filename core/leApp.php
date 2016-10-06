@@ -80,7 +80,7 @@ class LeApp
             }
 
             /* Get route information for the url */
-            $route = $this->router->routeUrl($this->url);
+            $route = $this->router->routeUrl($this->url, $_SERVER['REQUEST_METHOD']);
 
             /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
