@@ -261,7 +261,7 @@ class Router
                 }
             }
         }
-
+        /* TODO: switch to switch statement */
         if (isset($route['model'])) {
             $this->parsedRoute['model']          = [];
             $this->parsedRoute['model']['class'] = $this->replaceWildcardArgs($route['model']);
