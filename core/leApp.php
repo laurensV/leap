@@ -70,7 +70,7 @@ class LeApp
     {
         /* Get route information for the url */
         $route = $this->router->routeUrl($uri, $_SERVER['REQUEST_METHOD']);
-        if ($route['page']['value'] == "" || !file_exists($route['page']['path'] . $route['page']['value'])) {
+        if (empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
             $route = $this->pageNotFound($uri);
         }
 
@@ -142,7 +142,11 @@ class LeApp
      */
     private function getUrl()
     {
-        return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
+        $uri = "";
+        if(isset($_GET['args'])){
+            $uri = $_GET['args'];
+        }
+        return $uri;
     }
 
     /**

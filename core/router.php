@@ -38,7 +38,7 @@ class Router
             $this->defaultValues['action']      = null;
             $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
             $this->defaultValues['template']    = ['path' => ROOT . 'site/templates/', 'value' => "default_template.php"];
-            $this->defaultValues['page']        = ['path' => ROOT . 'site/pages/', 'value' => ""];
+            $this->defaultValues['page']        = [];
             $this->defaultValues['stylesheets'] = [];
             $this->defaultValues['scripts']     = [];
             $this->defaultValues['title']       = null;
@@ -98,8 +98,9 @@ class Router
      * @param      $pluginForNamespace
      * @param      $path
      */
-    public function addRoute($route, $options, $path = NULL, $pluginForNamespace = NULL)
+    public function addRoute($route, $options, $path = ROOT, $pluginForNamespace = NULL)
     {
+        $route = trim($route, "/");
         if (isset($options['dependencies']) && isset($this->plugin_manager)) {
             $error = "";
             foreach ($options['dependencies'] as $plugin) {
@@ -121,11 +122,7 @@ class Router
             }
         }
         if (!isset($options['path'])) {
-            if (isset($path)) {
-                $options['path'] = $path;
-            } else {
-                $options['path'] = ROOT;
-            }
+            $options['path'] = $path;
         }
         if (!isset($options['plugin']) && isset($pluginForNamespace)) {
             $options['plugin'] = $pluginForNamespace;
@@ -149,6 +146,8 @@ class Router
      */
     public function routeUrl($uri, $httpMethod = 'GET')
     {
+        $uri = trim($uri, "/");
+
         $this->defaultRouteValues();
 
         // Sort route array
