@@ -155,7 +155,6 @@ class Router
         $this->routeCollection = $this->sortRoutes($this->routeCollection);
 
         // Try to match url to one or multiple routes
-        $no_route = true;
         foreach ($this->routeCollection as $pattern => $options) {
             $include_slash = (isset($options['include_slash']) && $options['include_slash']);
             $pattern       = $this->getPregPattern($pattern, $include_slash);
@@ -175,7 +174,6 @@ class Router
             if (preg_match($pattern, $uri)) {
                 if (!isset($options['method']) || in_array($httpMethod, $options['method'])) {
                     /* We found at least one valid route */
-                    $no_route = false;
                     $this->parseRoute($options, $uri, $wildcard_args);
                 }
             }

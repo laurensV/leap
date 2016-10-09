@@ -62,87 +62,77 @@ class LeApp
 
         /* Fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
+        // Retrieve the route
+        $this->route = $this->getRoute($this->url);
+    }
 
-        /* Has to be run twice in order to check if there was a redirect to
-         * the permission denied page */
-        for ($run = 1; $run <= 2; $run++) {
-            /* Check if we are in second run of for loop */
-            if ($run == 2) {
-                /* Check if we have access in the controller */
-                if (!$this->controller->access) {
-                    header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-                    /* Reroute to permission denied page */
-                    $this->url = "permission-denied";
-                } else {
-                    /* We have access, break out of this for loop */
-                    break;
-                }
-            }
-
-            /* Get route information for the url */
-            $route = $this->router->routeUrl($this->url, $_SERVER['REQUEST_METHOD']);
-            if (empty($route)) {
-                // No route found, goto 404
-                $route = $this->pageNotFound($this->url);
-            }
-
-            chdir($route['page']['path']);
-
-            if (!file_exists($route['page']['value'])) {
-                $route = $this->pageNotFound($this->url);
-            }
-
-            if (isset($route['model']['file'])) {
-                global $autoloader;
-                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\" . $this->parsedRoute['model']['class'] => $this->parsedRoute['model']['file']]);
-            }
-            if (isset($route['controller']['file'])) {
-                global $autoloader;
-                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']]);
-            }
-
-            /* If the controller class name does not contain the namespace yet, add it */
-            if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
-                $namespace                    = getNamespace($route['controller']['plugin'], "controller");
-                $route['controller']['class'] = $namespace . $route['controller']['class'];
-            }
-            /* If the model name does not contain the namespace yet, add it */
-            if (strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
-                $namespace               = getNamespace($route['model']['plugin'], "model");
-                $route['model']['class'] = $namespace . $route['model']['class'];
-            }
-
-            /* Check if controller class extends the core controller */
-            if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
-                /* Create the controller instance */
-                $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
-            } else if (class_exists($route['controller']['class'])) {
-                printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-            } else {
-                printr("Controller class '" . $route['controller']['class'] . "' not found", true);
-            }
+    public function getRoute($uri)
+    {
+        /* Get route information for the url */
+        $route = $this->router->routeUrl($uri, $_SERVER['REQUEST_METHOD']);
+        if ($route['page']['value'] == "" || !file_exists($route['page']['path'] . $route['page']['value'])) {
+            $route = $this->pageNotFound($uri);
         }
 
-        $this->route = $route;
+        if (isset($route['model']['file'])) {
+            global $autoloader;
+            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\" . $route['model']['class'] => $route['model']['file']]);
+        }
+        if (isset($route['controller']['file'])) {
+            global $autoloader;
+            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\" . $route['controller']['class'] => $route['controller']['file']]);
+        }
+
+        /* If the controller class name does not contain the namespace yet, add it */
+        if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
+            $namespace                    = getNamespace($route['controller']['plugin'], "controller");
+            $route['controller']['class'] = $namespace . $route['controller']['class'];
+        }
+        /* If the model name does not contain the namespace yet, add it */
+        if (strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
+            $namespace               = getNamespace($route['model']['plugin'], "model");
+            $route['model']['class'] = $namespace . $route['model']['class'];
+        }
+        return $route;
     }
 
     /**
      * Boot up the application
-     * TODO: fix route paramter
+     *
+     * @param array $route
      */
     public function run($route = null)
     {
         if (!isset($route)) {
-            $route = $this->route;
+            if (isset($this->route)) {
+                $route = $this->route;
+            } else {
+                printr("no route to run.", true);
+            }
         }
-        /* Call the action from the Controller class */
-        if (method_exists($this->controller, $route['action'])) {
-            $this->controller->{$route['action']}();
+        /* Check if controller class extends the core controller */
+        if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+            /* Create the controller instance */
+            $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+        } else if (class_exists($route['controller']['class'])) {
+            printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
         } else {
-            $this->controller->defaultAction();
+            printr("Controller class '" . $route['controller']['class'] . "' not found", true);
         }
-        /* Render the templates */
-        $this->controller->render();
+        if (!$this->controller->access) {
+            header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
+            $route = $this->getRoute("permission-denied");
+            $this->run($route);
+        } else {
+            /* Call the action from the Controller class */
+            if (method_exists($this->controller, $route['action'])) {
+                $this->controller->{$route['action']}();
+            } else {
+                $this->controller->defaultAction();
+            }
+            /* Render the templates */
+            $this->controller->render();
+        }
     }
 
     /**
@@ -160,12 +150,11 @@ class LeApp
      *
      * @return array
      */
-    private function pageNotFound($uri = "") {
-        if (isset($_SERVER["SERVER_PROTOCOL"])) {
-            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-        }
+    private function pageNotFound($uri = "")
+    {
+        header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
         if ($uri != '404') {
-            return $this->router->routeUrl('404', $_SERVER['REQUEST_METHOD']);
+            return $this->getRoute('404');
         } else {
             printr("Page not found and no valid route found for 404 page", true);
         }
