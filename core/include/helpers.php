@@ -5,11 +5,9 @@
  */
 function printr($data, $exit = false)
 {
-    if ($data) {
-        print '<pre>';
-        print_r($data);
-        print '</pre>';
-    }
+    print '<pre>';
+    print_r($data);
+    print '</pre>';
     if ($exit) {
         exit;
     }
