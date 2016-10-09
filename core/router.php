@@ -180,40 +180,8 @@ class Router
                 }
             }
         }
-        if ($no_route) {
-            // No route found, goto 404
-            $this->pageNotFound($uri);
-        } else {
-            if (isset($this->parsedRoute['model']['file'])) {
-                global $autoloader;
-                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($this->parsedRoute['model']['plugin']) . "\\Models\\" . $this->parsedRoute['model']['class'] => $this->parsedRoute['model']['file']]);
-            }
-            if (isset($this->parsedRoute['controller']['file'])) {
-                global $autoloader;
-                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($this->parsedRoute['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']]);
-            }
-        }
-        chdir($this->parsedRoute['page']['path']);
-        if (!file_exists($this->parsedRoute['page']['value'])) {
-            $this->pageNotFound($uri);
-        }
-        return $this->parsedRoute;
-    }
 
-    /**
-     * @param string $url
-     *
-     * @return array
-     */
-    private function pageNotFound($url = "") {
-        if (isset($_SERVER["SERVER_PROTOCOL"])) {
-            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
-        }
-        if ($url != '404') {
-            return $this->routeUrl('404', $_SERVER['REQUEST_METHOD']);
-        } else {
-            printr("Page not found and no valid route found for 404 page", true);
-        }
+        return $this->parsedRoute;
     }
 
     /**

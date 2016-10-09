@@ -81,6 +81,25 @@ class LeApp
 
             /* Get route information for the url */
             $route = $this->router->routeUrl($this->url, $_SERVER['REQUEST_METHOD']);
+            if (empty($route)) {
+                // No route found, goto 404
+                $route = $this->pageNotFound($this->url);
+            }
+
+            chdir($route['page']['path']);
+
+            if (!file_exists($route['page']['value'])) {
+                $route = $this->pageNotFound($this->url);
+            }
+
+            if (isset($route['model']['file'])) {
+                global $autoloader;
+                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\" . $this->parsedRoute['model']['class'] => $this->parsedRoute['model']['file']]);
+            }
+            if (isset($route['controller']['file'])) {
+                global $autoloader;
+                $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\" . $this->parsedRoute['controller']['class'] => $this->parsedRoute['controller']['file']]);
+            }
 
             /* If the controller class name does not contain the namespace yet, add it */
             if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
@@ -109,6 +128,7 @@ class LeApp
 
     /**
      * Boot up the application
+     * TODO: fix route paramter
      */
     public function run($route = null)
     {
@@ -133,6 +153,22 @@ class LeApp
     private function getUrl()
     {
         return rtrim(isset($_GET['args']) ? $_GET['args'] : "", "/");
+    }
+
+    /**
+     * @param string $uri
+     *
+     * @return array
+     */
+    private function pageNotFound($uri = "") {
+        if (isset($_SERVER["SERVER_PROTOCOL"])) {
+            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+        }
+        if ($uri != '404') {
+            return $this->router->routeUrl('404', $_SERVER['REQUEST_METHOD']);
+        } else {
+            printr("Page not found and no valid route found for 404 page", true);
+        }
     }
 
     /**
