@@ -1,6 +1,11 @@
 <?php
 namespace Leap\Core;
 
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequestFactory;
+
 /**
  * Leap Application
  *
@@ -10,7 +15,7 @@ class LeApp
 {
     private $router;
     private $controller;
-    private $url;
+    private $path;
     private $hooks;
     private $plugin_manager;
     private $pdo;
@@ -23,6 +28,11 @@ class LeApp
     {
         /* Set the error reporting level based on the environment variable */
         $this->setReporting();
+
+        /* Create PSR7 request and response */
+        $request  = ServerRequestFactory::fromGlobals();
+        $response = new Response();
+
         /* - Object creation - */
         $this->hooks = new Hooks();
         /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
@@ -32,16 +42,24 @@ class LeApp
         $this->router->setPluginManager($this->plugin_manager);
 
         /* - Variable values - */
-        $this->url = $this->getUrl();
+        $params = $request->getQueryParams();
+        if (isset($params['path'])) {
+            $this->path = $request->getQueryParams()['path'];
+        } else {
+            $this->path = "";
+        }
 
         /* Setup the application */
-        $this->bootstrap();
+        $this->bootstrap($request, $response);
     }
 
     /**
      * Boot up the application
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Message\ResponseInterface      $response
      */
-    private function bootstrap()
+    private function bootstrap(ServerRequestInterface $request, ResponseInterface $response)
     {
         session_start();
 
@@ -61,17 +79,17 @@ class LeApp
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
         /* Fire the hook preRouteUrl */
-        $this->hooks->fire("hook_preRouteUrl", [&$this->url]);
+        $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
         // Retrieve the route
-        $this->route = $this->getRoute($this->url);
+        $this->route = $this->getRoute($this->path, $request->getMethod());
     }
 
-    public function getRoute($uri)
+    public function getRoute($path, $method)
     {
         /* Get route information for the url */
-        $route = $this->router->routeUrl($uri, $_SERVER['REQUEST_METHOD']);
+        $route = $this->router->routeUrl($path, $method);
         if (empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
-            $route = $this->pageNotFound($uri);
+            $route = $this->pageNotFound($path);
         }
 
         if (isset($route['model']['file'])) {
@@ -133,20 +151,6 @@ class LeApp
             /* Render the templates */
             $this->controller->render();
         }
-    }
-
-    /**
-     * Retrieve the raw arguments after the base url
-     *
-     * @return     string
-     */
-    private function getUrl()
-    {
-        $uri = "";
-        if(isset($_GET['args'])){
-            $uri = $_GET['args'];
-        }
-        return $uri;
     }
 
     /**
