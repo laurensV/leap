@@ -1,8 +1,6 @@
 <?php
 namespace Leap\Core;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -20,6 +18,8 @@ class LeApp
     private $plugin_manager;
     private $pdo;
     private $route;
+    private $request;
+    private $response;
 
     /**
      * LeApp constructor.
@@ -30,8 +30,8 @@ class LeApp
         $this->setReporting();
 
         /* Create PSR7 request and response */
-        $request  = ServerRequestFactory::fromGlobals();
-        $response = new Response();
+        $this->request  = ServerRequestFactory::fromGlobals();
+        $this->response = new Response();
 
         /* - Object creation - */
         $this->hooks = new Hooks();
@@ -42,24 +42,22 @@ class LeApp
         $this->router->setPluginManager($this->plugin_manager);
 
         /* - Variable values - */
-        $params = $request->getQueryParams();
+        $params = $this->request->getQueryParams();
         if (isset($params['path'])) {
-            $this->path = $request->getQueryParams()['path'];
+            $this->path = $params['path'];
         } else {
             $this->path = "";
         }
 
         /* Setup the application */
-        $this->bootstrap($request, $response);
+        $this->bootstrap();
     }
 
     /**
      * Boot up the application
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface      $response
      */
-    private function bootstrap(ServerRequestInterface $request, ResponseInterface $response)
+    private function bootstrap()
     {
         session_start();
 
@@ -81,13 +79,63 @@ class LeApp
         /* Fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
         // Retrieve the route
-        $this->route = $this->getRoute($this->path, $request->getMethod());
+        $this->route = $this->getRoute($this->path);
     }
 
-    public function getRoute($path, $method)
+    /**
+     * Boot up the application
+     *
+     * @param array $route
+     */
+    public function run($route = null)
+    {
+        if (!isset($route)) {
+            if (isset($this->route)) {
+                $route = $this->route;
+            } else {
+                printr("no route to run.", true);
+            }
+        }
+        /* Check if controller class extends the core controller */
+        if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+            /* Create the controller instance */
+            $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
+        } else if (class_exists($route['controller']['class'])) {
+            printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+        } else {
+            printr("Controller class '" . $route['controller']['class'] . "' not found", true);
+        }
+        if (!$this->controller->access) {
+            header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
+            $route = $this->getRoute("permission-denied");
+            $this->run($route);
+        } else {
+            /* Call the action from the Controller class */
+            if (method_exists($this->controller, $route['action'])) {
+                $this->controller->{$route['action']}();
+            } else {
+                $this->controller->defaultAction();
+            }
+            /* Render the templates */
+            $this->controller->render();
+            foreach ($this->response->getHeaders() as $header) {
+                header($header, false);
+            }
+
+            echo $this->response->getBody();
+        }
+    }
+
+    /**
+     * @param $path
+     * @param $method
+     *
+     * @return array
+     */
+    public function getRoute($path)
     {
         /* Get route information for the url */
-        $route = $this->router->routeUrl($path, $method);
+        $route = $this->router->routeUrl($path, $this->request->getMethod());
         if (empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
             $route = $this->pageNotFound($path);
         }
@@ -112,45 +160,6 @@ class LeApp
             $route['model']['class'] = $namespace . $route['model']['class'];
         }
         return $route;
-    }
-
-    /**
-     * Boot up the application
-     *
-     * @param array $route
-     */
-    public function run($route = null)
-    {
-        if (!isset($route)) {
-            if (isset($this->route)) {
-                $route = $this->route;
-            } else {
-                printr("no route to run.", true);
-            }
-        }
-        /* Check if controller class extends the core controller */
-        if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
-            /* Create the controller instance */
-            $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
-        } else if (class_exists($route['controller']['class'])) {
-            printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-        } else {
-            printr("Controller class '" . $route['controller']['class'] . "' not found", true);
-        }
-        if (!$this->controller->access) {
-            header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-            $route = $this->getRoute("permission-denied");
-            $this->run($route);
-        } else {
-            /* Call the action from the Controller class */
-            if (method_exists($this->controller, $route['action'])) {
-                $this->controller->{$route['action']}();
-            } else {
-                $this->controller->defaultAction();
-            }
-            /* Render the templates */
-            $this->controller->render();
-        }
     }
 
     /**

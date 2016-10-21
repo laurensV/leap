@@ -119,8 +119,13 @@ class Template
 
     /**
      * Display Template *
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Message\ResponseInterface      $response
+     *
+     * @return mixed
      */
-    public function render()
+    public function render($request, $response)
     {
         if (!empty($this->variables)) {
             extract($this->variables);
@@ -129,6 +134,7 @@ class Template
         /* get all javascript and css files to be included */
         $this->includeScriptsCss();
 
+        ob_start();
         /* include the start of the html page */
         require_once ROOT . "core/include/start_page.php";
 
@@ -157,6 +163,9 @@ class Template
         }
         /* include the end of the html page */
         require_once ROOT . "core/include/end_page.php";
+        $html = ob_get_contents();
+        ob_end_clean();
+        return $response->getBody()->write($html);
     }
 
 }

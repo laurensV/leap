@@ -14,17 +14,23 @@ class Controller
     protected $hooks;
     protected $plugin_manager;
     public    $access;
+    private   $request;
+    private   $response;
 
     /**
      * Whenever controller is created, load the model and the template.
      *
-     * @param $route
-     * @param $hooks
-     * @param $plugin_manager
-     * @param $pdo
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Message\ResponseInterface      $response
+     * @param                                          $route
+     * @param                                          $hooks
+     * @param                                          $plugin_manager
+     * @param                                          $pdo
      */
-    public function __construct($route, $hooks, $plugin_manager, $pdo)
+    public function __construct($request, $response, $route, $hooks, $plugin_manager, $pdo)
     {
+        $this->request = $request;
+        $this->response = $response;
         if ($this->grantAccess()) {
             $model = $route['model']['class'];
             /* Check if model class extends the core model */
@@ -39,8 +45,8 @@ class Controller
             $this->hooks          = $hooks;
             $this->plugin_manager = $plugin_manager;
             /* TODO: pass whole route variable */
-            $this->template       = new Template($route['template'], $route['page'], $hooks, $this->plugin_manager->enabled_plugins, $route['stylesheets'], $route['scripts']);
-            $this->page           = $route['page'];
+            $this->template = new Template($route['template'], $route['page'], $hooks, $this->plugin_manager->enabled_plugins, $route['stylesheets'], $route['scripts']);
+            $this->page     = $route['page'];
             $this->init();
             $this->access = true;
             if (isset($route['title'])) {
@@ -111,6 +117,6 @@ class Controller
      */
     public function render()
     {
-        $this->template->render();
+        $this->template->render($this->request, $this->response);
     }
 }
