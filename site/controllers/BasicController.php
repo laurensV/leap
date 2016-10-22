@@ -1,7 +1,12 @@
 <?php
+
+namespace Leap\Site\Controllers;
+
+use Leap\Core\Controller;
+
 class BasicController extends Controller
 {
-    public function defaultAction($params)
+    public function defaultAction()
     {
         $this->set('site_title', "BasicController");
     }
@@ -9,6 +14,10 @@ class BasicController extends Controller
     public function includeHeaderHook()
     {
         return array(ROOT . "site/pages/include/menu.php");
+    }
+    public function grantAccess()
+    {
+        return false;
     }
 
 }
