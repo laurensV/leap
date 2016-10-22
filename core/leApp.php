@@ -1,7 +1,7 @@
 <?php
 namespace Leap\Core;
 
-use Zend\Diactoros\Response;
+use Zend\Diactoros\Server;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
@@ -12,13 +12,22 @@ use Zend\Diactoros\ServerRequestFactory;
 class LeApp
 {
     private $router;
+    /**
+     * @var \Leap\Core\Controller
+     */
     private $controller;
     private $path;
     private $hooks;
     private $plugin_manager;
     private $pdo;
     private $route;
+    /**
+     * @var \Psr\Http\Message\ServerRequestInterface
+     */
     private $request;
+    /**
+     * @var \Psr\Http\Message\ResponseInterface
+     */
     private $response;
 
     /**
@@ -86,8 +95,15 @@ class LeApp
      */
     public function run()
     {
-        $server = \Zend\Diactoros\Server::createServerFromRequest(
-            function ($request, $response, $done) {
+        $runFunction =
+            /**
+             * @param \Psr\Http\Message\ServerRequestInterface $request
+             * @param \Psr\Http\Message\ResponseInterface $response
+             * @param $done
+             *
+             * @return \Psr\Http\Message\ResponseInterface
+             */
+            function ($request, $response, $done) use (&$runFunction) {
                 $this->response = $response;
                 // Retrieve the route
                 $route = $this->getRoute($this->path);
@@ -102,8 +118,8 @@ class LeApp
                 }
                 if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
-                    $route = $this->getRoute("permission-denied");
-                    $this->run($route);
+                    $this->path = "permission-denied";
+                    $runFunction($request, $response, $done);
                 } else {
                     /* Call the action from the Controller class */
                     if (method_exists($this->controller, $route['action'])) {
@@ -116,7 +132,9 @@ class LeApp
                 }
                 return $this->response;
 
-            },
+            };
+        $server = Server::createServerFromRequest(
+            $runFunction,
             $this->request
         );
 
