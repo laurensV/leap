@@ -119,7 +119,7 @@ class LeApp
                 if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
                     $this->path = "permission-denied";
-                    $runFunction($request, $response, $done);
+                    $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
                     if (method_exists($this->controller, $route['action'])) {
