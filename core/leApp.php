@@ -31,7 +31,6 @@ class LeApp
 
         /* Create PSR7 request and response */
         $this->request  = ServerRequestFactory::fromGlobals();
-        $this->response = new Response();
 
         /* - Object creation - */
         $this->hooks = new Hooks();
@@ -78,8 +77,6 @@ class LeApp
 
         /* Fire the hook preRouteUrl */
         $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
-        // Retrieve the route
-        $this->route = $this->getRoute($this->path);
     }
 
     /**
@@ -87,43 +84,43 @@ class LeApp
      *
      * @param array $route
      */
-    public function run($route = null)
+    public function run()
     {
-        if (!isset($route)) {
-            if (isset($this->route)) {
-                $route = $this->route;
-            } else {
-                printr("no route to run.", true);
-            }
-        }
-        /* Check if controller class extends the core controller */
-        if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
-            /* Create the controller instance */
-            $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
-        } else if (class_exists($route['controller']['class'])) {
-            printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-        } else {
-            printr("Controller class '" . $route['controller']['class'] . "' not found", true);
-        }
-        if (!$this->controller->access) {
-            header($_SERVER["SERVER_PROTOCOL"] . " 403 Forbidden");
-            $route = $this->getRoute("permission-denied");
-            $this->run($route);
-        } else {
-            /* Call the action from the Controller class */
-            if (method_exists($this->controller, $route['action'])) {
-                $this->controller->{$route['action']}();
-            } else {
-                $this->controller->defaultAction();
-            }
-            /* Render the templates */
-            $this->controller->render();
-            foreach ($this->response->getHeaders() as $header) {
-                header($header, false);
-            }
+        $server = \Zend\Diactoros\Server::createServerFromRequest(
+            function ($request, $response, $done) {
+                $this->response = $response;
+                // Retrieve the route
+                $route = $this->getRoute($this->path);
+                /* Check if controller class extends the core controller */
+                if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+                    /* Create the controller instance */
+                    $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
+                } else if (class_exists($route['controller']['class'])) {
+                    printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+                } else {
+                    printr("Controller class '" . $route['controller']['class'] . "' not found", true);
+                }
+                if (!$this->controller->access) {
+                    $this->response = $this->response->withStatus(403);
+                    $route = $this->getRoute("permission-denied");
+                    $this->run($route);
+                } else {
+                    /* Call the action from the Controller class */
+                    if (method_exists($this->controller, $route['action'])) {
+                        $this->controller->{$route['action']}();
+                    } else {
+                        $this->controller->defaultAction();
+                    }
+                    /* Render the templates */
+                    $this->controller->render();
+                }
+                return $this->response;
 
-            echo $this->response->getBody();
-        }
+            },
+            $this->request
+        );
+
+        $server->listen();
     }
 
     /**
@@ -169,7 +166,8 @@ class LeApp
      */
     private function pageNotFound($uri = "")
     {
-        header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found");
+        $this->response = $this->response->withStatus(404);
+
         if ($uri != '404') {
             return $this->getRoute('404');
         } else {
