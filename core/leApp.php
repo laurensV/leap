@@ -20,7 +20,6 @@ class LeApp
     private $hooks;
     private $plugin_manager;
     private $pdo;
-    private $route;
     /**
      * @var \Psr\Http\Message\ServerRequestInterface
      */
@@ -91,7 +90,6 @@ class LeApp
     /**
      * Boot up the application
      *
-     * @param array $route
      */
     public function run()
     {
@@ -119,7 +117,7 @@ class LeApp
                 if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
                     $this->path = "permission-denied";
-                    $runFunction($request, $this->response, $done);
+                    return $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
                     if (method_exists($this->controller, $route['action'])) {
@@ -143,7 +141,6 @@ class LeApp
 
     /**
      * @param $path
-     * @param $method
      *
      * @return array
      */
@@ -186,11 +183,10 @@ class LeApp
     {
         $this->response = $this->response->withStatus(404);
 
-        if ($uri != '404') {
-            return $this->getRoute('404');
-        } else {
+        if ($uri == '404') {
             printr("Page not found and no valid route found for 404 page", true);
         }
+        return $this->getRoute('404');
     }
 
     /**
