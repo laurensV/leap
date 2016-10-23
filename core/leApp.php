@@ -1,7 +1,10 @@
 <?php
 namespace Leap\Core;
 
-use Zend\Diactoros\Server;
+use mindplay\middleman\Dispatcher;
+use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\Response\SapiStreamEmitter;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
@@ -39,6 +42,7 @@ class LeApp
 
         /* Create PSR7 request and response */
         $this->request  = ServerRequestFactory::fromGlobals();
+        $this->response = new Response();
 
         /* - Object creation - */
         $this->hooks = new Hooks();
@@ -93,50 +97,47 @@ class LeApp
      */
     public function run()
     {
-        $runFunction =
-            /**
-             * @param \Psr\Http\Message\ServerRequestInterface $request
-             * @param \Psr\Http\Message\ResponseInterface $response
-             * @param $done
-             *
-             * @return \Psr\Http\Message\ResponseInterface
-             */
-            function ($request, $response, $done) use (&$runFunction) {
-                $this->response = $response;
-                // Retrieve the route
-                $route = $this->getRoute($this->path);
-                /* Check if controller class extends the core controller */
-                if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
-                    /* Create the controller instance */
-                    $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
-                } else if (class_exists($route['controller']['class'])) {
-                    printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-                } else {
-                    printr("Controller class '" . $route['controller']['class'] . "' not found", true);
-                }
-                if (!$this->controller->access) {
-                    $this->response = $this->response->withStatus(403);
-                    $this->path = "permission-denied";
-                    return $runFunction($request, $this->response, $done);
-                } else {
-                    /* Call the action from the Controller class */
-                    if (method_exists($this->controller, $route['action'])) {
-                        $this->controller->{$route['action']}();
-                    } else {
-                        $this->controller->defaultAction();
-                    }
-                    /* Render the templates */
-                    $this->controller->render();
-                }
-                return $this->response;
 
-            };
-        $server = Server::createServerFromRequest(
-            $runFunction,
-            $this->request
-        );
+        $dispatcher = new Dispatcher([
+                                         function (ServerRequestInterface $request, callable $next) {
+                                             $response = $next($request); // delegate control to next middleware
+                                             $response->getBody()->write("this is test middleware");
+                                             return $response;
+                                         },
+                                         function (ServerRequestInterface $request) {
+                                             // Retrieve the route
+                                             $route = $this->getRoute($this->path);
+                                             /* Check if controller class extends the core controller */
+                                             if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+                                                 /* Create the controller instance */
+                                                 $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
+                                             } else if (class_exists($route['controller']['class'])) {
+                                                 printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+                                             } else {
+                                                 printr("Controller class '" . $route['controller']['class'] . "' not found", true);
+                                             }
+                                             if (!$this->controller->access) {
+                                                 $this->response = $this->response->withStatus(403);
+                                                 $this->path     = "permission-denied";
+                                                 //return $runFunction($request, $this->response, $done);
+                                             } else {
+                                                 /* Call the action from the Controller class */
+                                                 if (method_exists($this->controller, $route['action'])) {
+                                                     $this->controller->{$route['action']}();
+                                                 } else {
+                                                     $this->controller->defaultAction();
+                                                 }
+                                                 /* Render the templates */
+                                                 $this->controller->render();
+                                             }
+                                             return $this->response;
+                                         },
+                                         // ...
+                                     ]);
 
-        $server->listen();
+        $response = $dispatcher->dispatch($this->request);
+
+        (new SapiStreamEmitter())->emit($response);
     }
 
     /**
