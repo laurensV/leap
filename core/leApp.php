@@ -1,6 +1,8 @@
 <?php
 namespace Leap\Core;
 
+use Middlewares\TestMiddleware;
+use mindplay\middleman\ContainerResolver;
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
@@ -97,13 +99,17 @@ class LeApp
      */
     public function run()
     {
+        $container = new \League\Container\Container();;
 
+        require "TestMiddleware.php";
         $dispatcher = new Dispatcher([
                                          function (ServerRequestInterface $request, callable $next) {
                                              $response = $next($request); // delegate control to next middleware
                                              $response->getBody()->write("this is test middleware");
                                              return $response;
                                          },
+                                         \Psr7Middlewares\Middleware\BasicAuthentication::class,
+
                                          function (ServerRequestInterface $request) {
                                              // Retrieve the route
                                              $route = $this->getRoute($this->path);
@@ -132,8 +138,7 @@ class LeApp
                                              }
                                              return $this->response;
                                          },
-                                         // ...
-                                     ]);
+                                     ], new ContainerResolver($container));
 
         $response = $dispatcher->dispatch($this->request);
 
