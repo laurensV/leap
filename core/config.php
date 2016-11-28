@@ -1,4 +1,5 @@
 <?php
+/* Where am I? */
 define('ROOT', call_user_func(function () {
     $root = str_replace("\\", "/", dirname(dirname(__FILE__)));
     $root .= (substr($root, -1) == '/' ? '' : '/');
