@@ -50,10 +50,10 @@ require 'core/include/helpers.php';
 |--------------------------------------------------------------------------
 |
 | This bootstraps the Leap framework and gets it ready for use.
-| (core/leapp.php)
+| (core/kernel.php)
 |
 */
-$app = new Leap\Core\LeApp();
+$kernel = new Leap\Core\Kernel();
 
 /*
 |--------------------------------------------------------------------------
@@ -62,7 +62,7 @@ $app = new Leap\Core\LeApp();
 |
 | Time to run our bootstrapped Leap application!
 */
-$app->run();
+$kernel->run();
 
 /* TODO: implement unit testing with PHPUnit */
 /* TODO: error handling */
