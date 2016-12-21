@@ -40,7 +40,7 @@ if(!$config) {
         return $http . "://" . $_SERVER['SERVER_NAME'] . $port . BASE_URL;
     }));
 
-    define('LIBRARIES', ROOT . "libraries/");
+    define('LIBRARIES', ROOT . "vendor/");
 
     $args_raw = isset($_GET['args']) ? $_GET['args'] : "";
 }

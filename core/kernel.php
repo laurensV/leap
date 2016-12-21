@@ -3,9 +3,9 @@ namespace Leap\Core;
 
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Response\SapiStreamEmitter;
-use Zend\Diactoros\ServerRequestFactory;
+use Zend\Diactoros\{
+    Response, Response\SapiStreamEmitter, ServerRequestFactory
+};
 
 /**
  * Leap Application
@@ -54,11 +54,9 @@ class Kernel
 
         /* - Variable values - */
         $params = $this->request->getQueryParams();
-        if(isset($params['path'])) {
-            $this->path = $params['path'];
-        } else {
-            $this->path = "";
-        }
+
+        $this->path = $params['path'] ?? "";
+
 
         /* Setup the application */
         $this->bootstrap();
@@ -68,7 +66,7 @@ class Kernel
      * Boot up the application
      *
      */
-    private function bootstrap()
+    private function bootstrap() : void
     {
         session_start();
 
@@ -95,7 +93,7 @@ class Kernel
      * Boot up the application
      *
      */
-    public function run()
+    public function run() : void
     {
         $middlewares   = require "middlewares.php";
         $middlewares[] =
@@ -134,11 +132,11 @@ class Kernel
     }
 
     /**
-     * @param $path
+     * @param string $path
      *
      * @return array
      */
-    public function getRoute($path)
+    public function getRoute(string $path) : array
     {
         /* Get route information for the url */
         $route = $this->router->routeUrl($path, $this->request->getMethod());
@@ -173,7 +171,7 @@ class Kernel
      *
      * @return array
      */
-    private function pageNotFound($uri = "")
+    private function pageNotFound(string $uri = "") : array
     {
         $this->response = $this->response->withStatus(404);
 
@@ -186,7 +184,7 @@ class Kernel
     /**
      * Set error level based on environment
      */
-    private function setReporting()
+    private function setReporting() : void
     {
         error_reporting(E_ALL);
         if(config('general')['dev_env'] == true) {

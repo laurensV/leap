@@ -1,7 +1,7 @@
 files/*
 config.local.ini
 *.log
-libraries
+vendor
 composer.lock
 .idea/
 plugins/*

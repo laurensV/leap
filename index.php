@@ -21,7 +21,7 @@
 | class files. Simply include it and we'll get autoloading for free.
 */
 
-$autoloader = require 'libraries/autoload.php';
+$autoloader = require 'vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
