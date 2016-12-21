@@ -6,4 +6,4 @@ services:
     ports:
       - "80:80"
     volumes:
-      - c:/wamp64/www/leap/:/var/www/app
+      - //c/wamp64/www/leap/:/var/www/app

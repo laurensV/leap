@@ -14,6 +14,9 @@ use Zend\Diactoros\{
  */
 class Kernel
 {
+    /**
+     * @var \Leap\Core\Router
+     */
     private $router;
     /**
      * @var \Leap\Core\Controller
