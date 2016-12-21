@@ -1,0 +1,9 @@
+version: '2'
+services:
+  leap:
+    image: romeoz/docker-apache-php:7.1
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - c:/wamp64/www/leap/:/var/www/app
