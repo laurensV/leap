@@ -1,9 +1,39 @@
 version: '2'
+
+volumes:
+    database_data:
+        driver: local
+
 services:
-  leap:
-    image: romeoz/docker-apache-php:7.1
-    restart: always
-    ports:
-      - "80:80"
-    volumes:
-      - //c/wamp64/www/leap/:/var/www/app
+###########################
+# Setup the Nginx container
+###########################
+    nginx:
+        image: nginx:latest
+        ports:
+            - 8080:80
+        volumes:
+            - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        volumes_from:
+            - php
+
+###########################
+# Setup the PHP container
+###########################
+    php:
+        build: ./docker/php/
+        volumes:
+            - .:/var/www/html
+
+###########################
+# Setup the Database (MySQL) container
+###########################
+    mysql:
+        image: mysql:latest
+        volumes:
+            - database_data:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: secret
+            MYSQL_DATABASE: leap
+            MYSQL_USER: leap  
+            MYSQL_PASSWORD: password
