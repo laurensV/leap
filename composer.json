@@ -11,7 +11,7 @@
         }
     },
     "require": {
-        "php": "^7.0",
+        "php": "^7.1",
         "davidbarratt/custom-installer": "1.0.*@dev",
         "composer/composer" : "dev-master",
         "twig/twig": "^1.24",
