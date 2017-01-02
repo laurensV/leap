@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\{
     Response, Response\SapiStreamEmitter, ServerRequestFactory
 };
+use Aura\Di\ContainerBuilder;
 
 /**
  * Leap Application
@@ -47,8 +48,12 @@ class Kernel
         $this->request  = ServerRequestFactory::fromGlobals();
         $this->response = new Response();
 
+        $builder = new ContainerBuilder();
+        $di = $builder->newInstance();
+        $this->hooks = $di->get('Leap\Core\Hooks');
+
         /* - Object creation - */
-        $this->hooks = new Hooks();
+        //$this->hooks = new Hooks();
         /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
         $this->router         = new Router();
         $this->plugin_manager = new PluginManager($this->router, $this->hooks);
@@ -60,7 +65,6 @@ class Kernel
 
         $this->path = $params['path'] ?? "";
 
-
         /* Setup the application */
         $this->bootstrap();
     }
@@ -69,7 +73,7 @@ class Kernel
      * Boot up the application
      *
      */
-    private function bootstrap() : void
+    private function bootstrap(): void
     {
         session_start();
 
@@ -96,29 +100,29 @@ class Kernel
      * Boot up the application
      *
      */
-    public function run() : void
+    public function run(): void
     {
         $middlewares   = require "middlewares.php";
         $middlewares[] =
-            function(ServerRequestInterface $request) {
+            function (ServerRequestInterface $request) {
                 // Retrieve the route
                 $route = $this->getRoute($this->path);
                 /* Check if controller class extends the core controller */
-                if($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+                if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
                     $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
-                } else if(class_exists($route['controller']['class'])) {
+                } else if (class_exists($route['controller']['class'])) {
                     printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
                 } else {
                     printr("Controller class '" . $route['controller']['class'] . "' not found", true);
                 }
-                if(!$this->controller->access) {
+                if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
                     $this->path     = "permission-denied";
                     //return $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
-                    if(method_exists($this->controller, $route['action'])) {
+                    if (method_exists($this->controller, $route['action'])) {
                         $this->controller->{$route['action']}();
                     } else {
                         $this->controller->defaultAction();
@@ -139,30 +143,30 @@ class Kernel
      *
      * @return array
      */
-    public function getRoute(string $path) : array
+    public function getRoute(string $path): array
     {
         /* Get route information for the url */
         $route = $this->router->routeUrl($path, $this->request->getMethod());
-        if(empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
+        if (empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
             $route = $this->pageNotFound($path);
         }
 
-        if(isset($route['model']['file'])) {
+        if (isset($route['model']['file'])) {
             global $autoloader;
             $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\" . $route['model']['class'] => $route['model']['file']]);
         }
-        if(isset($route['controller']['file'])) {
+        if (isset($route['controller']['file'])) {
             global $autoloader;
             $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\" . $route['controller']['class'] => $route['controller']['file']]);
         }
 
         /* If the controller class name does not contain the namespace yet, add it */
-        if(strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
+        if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
             $namespace                    = getNamespace($route['controller']['plugin'], "controller");
             $route['controller']['class'] = $namespace . $route['controller']['class'];
         }
         /* If the model name does not contain the namespace yet, add it */
-        if(strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
+        if (strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
             $namespace               = getNamespace($route['model']['plugin'], "model");
             $route['model']['class'] = $namespace . $route['model']['class'];
         }
@@ -174,11 +178,11 @@ class Kernel
      *
      * @return array
      */
-    private function pageNotFound(string $uri = "") : array
+    private function pageNotFound(string $uri = ""): array
     {
         $this->response = $this->response->withStatus(404);
 
-        if($uri == '404') {
+        if ($uri == '404') {
             printr("Page not found and no valid route found for 404 page", true);
         }
         return $this->getRoute('404');
@@ -187,10 +191,10 @@ class Kernel
     /**
      * Set error level based on environment
      */
-    private function setReporting() : void
+    private function setReporting(): void
     {
         error_reporting(E_ALL);
-        if(config('general')['dev_env'] == true) {
+        if (config('general')['dev_env'] == true) {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

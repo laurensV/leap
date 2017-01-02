@@ -8,10 +8,25 @@ namespace Leap\Core;
  */
 class Router
 {
-    public  $routeCollection;
+    /**
+     * @var array
+     */
+    public $routeCollection;
+    /**
+     * @var PluginManager
+     */
     private $plugin_manager;
+    /**
+     * @var array
+     */
     private $parsedRoute;
+    /**
+     * @var array
+     */
     private $defaultValues;
+    /**
+     * @var array
+     */
     private $replaceWildcardArgs;
 
     /**
@@ -29,7 +44,7 @@ class Router
      *
      * @param array $properties
      */
-    private function defaultRouteValues($properties = null)
+    private function defaultRouteValues($properties = null): void
     {
         /* initialize default values once */
         if (empty($this->defaultValues)) {
@@ -64,7 +79,7 @@ class Router
      *
      * @param $plugin_manager
      */
-    public function setPluginManager($plugin_manager)
+    public function setPluginManager(PluginManager $plugin_manager): void
     {
         $this->plugin_manager = $plugin_manager;
     }
@@ -75,7 +90,7 @@ class Router
      * @param $file
      * @param $pluginForClass
      */
-    public function addRouteFile($file, $pluginForNamespace)
+    public function addRouteFile($file, $pluginForNamespace): void
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
@@ -98,7 +113,7 @@ class Router
      * @param      $pluginForNamespace
      * @param      $path
      */
-    public function addRoute($route, $options, $path = ROOT, $pluginForNamespace = NULL)
+    public function addRoute($route, $options, $path = ROOT, $pluginForNamespace = NULL): void
     {
         $route = trim($route, "/");
         if (isset($options['dependencies']) && isset($this->plugin_manager)) {
@@ -144,7 +159,7 @@ class Router
      *
      * @return array
      */
-    public function routeUrl($uri, $httpMethod = 'GET')
+    public function routeUrl($uri, $httpMethod = 'GET'): array
     {
         $uri = trim($uri, "/");
 
@@ -188,7 +203,7 @@ class Router
      *
      * @return array
      */
-    private function sortRoutes($routes)
+    private function sortRoutes($routes): array
     {
         $weight      = [];
         $routeLength = [];
@@ -214,7 +229,7 @@ class Router
      *
      * @return string
      */
-    private function getPregPattern($pattern, $include_slash = false)
+    private function getPregPattern($pattern, $include_slash = false): string
     {
         $transforms = [
             '\*'   => '[^/]*',
@@ -239,7 +254,7 @@ class Router
      * @param $url
      * @param $wildcard_args
      */
-    private function parseRoute($route, $url, $wildcard_args)
+    private function parseRoute($route, $url, $wildcard_args): void
     {
         $this->parsedRoute['base_path'] = $route['path'];
 
@@ -337,7 +352,7 @@ class Router
      *
      * @return string
      */
-    private function replaceWildcardArgs($string)
+    private function replaceWildcardArgs(string $string): string
     {
         if (!empty($this->replaceWildcardArgs)) {
             return strtr($string, $this->replaceWildcardArgs);
