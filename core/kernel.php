@@ -25,6 +25,9 @@ class Kernel
     private $controller;
     private $path;
     private $hooks;
+    /**
+     * @var \Leap\Core\PluginManager
+     */
     private $plugin_manager;
     private $pdo;
     /**
@@ -50,13 +53,20 @@ class Kernel
 
         $builder = new ContainerBuilder();
         $di = $builder->newInstance();
-        $this->hooks = $di->get('Leap\Core\Hooks');
+        $di->set('hooks', $di->lazyNew('Leap\Core\Hooks'));
+        $di->set('router', $di->lazyNew('Leap\Core\Router'));
+        $di->set('pluginManager', $di->lazyNew('Leap\Core\PluginManager'));
+        $di->params['Leap\Core\PluginManager']['router'] = $di->lazyGet('router');
+        $di->params['Leap\Core\PluginManager']['hooks'] = $di->lazyGet('hooks');
+        $this->hooks = $di->get('hooks');
+        $this->router = $di->get('router');
+        $this->plugin_manager = $di->get('pluginManager');
 
         /* - Object creation - */
         //$this->hooks = new Hooks();
         /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
-        $this->router         = new Router();
-        $this->plugin_manager = new PluginManager($this->router, $this->hooks);
+//        $this->router         = new Router();
+//        $this->plugin_manager = new PluginManager($this->router, $this->hooks);
         /* TODO: Can we get rid of this setter injection? */
         $this->router->setPluginManager($this->plugin_manager);
 

@@ -11,7 +11,6 @@
         }
     },
     "require": {
-        "php": "^7.1",
         "davidbarratt/custom-installer": "1.0.*@dev",
         "composer/composer" : "dev-master",
         "twig/twig": "^1.24",
@@ -21,7 +20,8 @@
         "mindplay/middleman": "^2.0",
         "league/container": "^2.2",
         "oscarotero/psr7-middlewares": "^3.17",
-        "aura/di": "^3.2"
+        "aura/di": "^3.2",
+        "oyejorge/less.php": "v1.7.0.10"
     },
     "extra": {
         "custom-installer": {

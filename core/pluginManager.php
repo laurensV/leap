@@ -7,7 +7,7 @@ class PluginManager
     private $hooks;
     public $all_plugins;
     public $enabled_plugins;
-    public function __construct($router, $hooks)
+    public function __construct(Router $router, Hooks $hooks)
     {
         $this->router = $router;
         $this->hooks  = $hooks;
