@@ -1,7 +1,10 @@
 <?php
 namespace Leap\Core;
 
-use mindplay\middleman\Dispatcher;
+use Leap\Core\Middleware\TestMiddleware;
+use mindplay\middleman\{
+    ContainerResolver, Dispatcher
+};
 use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
 };
@@ -77,21 +80,46 @@ class Kernel
         /* Create and config Dependency Injector Container */
         $builder  = new ContainerBuilder();
         $this->di = $builder->newInstance();
+
+        /* Services */
         $this->di->set('hooks', $this->di->lazyNew(Hooks::class));
         $this->di->set('router', $this->di->lazyNew(Router::class));
         $this->di->set('pluginManager', $this->di->lazyNew(PluginManager::class));
-//        $this->di->params(Controller::class)['route'] = $this->response;
-//        $this->di->params(Controller::class)['hooks'] = $this->response;
-//        $this->di->params(Controller::class)['plugin_manager'] = $this->response;
-//        $this->di->params(Controller::class)['pdo'] = $this->response;
+        $this->di->set('route', $this->di->lazy([$this, 'getRoute'],
+                                                $this->request
+        ));
+        $this->di->set('controller', $this->di->lazy(function () {
+            $route = $this->di->get('route');
+            return $this->di->newInstance($route->controller['class']);
+        }));
+        /* Set database service if specified in config */
+        $db_conf = config('database');
+        if ($db_conf['db_type'] === "mysql") {
+            if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
+                // TODO: error handling
+                die('not enough database info');
+            }
+            /* Create PdoPlus object with pdo connection inside */
+            $this->di->set('pdo', $this->di->lazyNew(PdoPlus::class));
+            $this->di->params[PdoPlus::class]['host']     = $db_conf['db_host'];
+            $this->di->params[PdoPlus::class]['username'] = $db_conf['db_user'];
+            $this->di->params[PdoPlus::class]['password'] = $db_conf['db_pass'];
+            $this->di->params[PdoPlus::class]['dbName']   = $db_conf['db_name'];
+        }
+
+        $this->di->params[Controller::class]['route']          = $this->di->lazyGet('route');
+        $this->di->params[Controller::class]['hooks']          = $this->di->lazyGet('hooks');
+        $this->di->params[Controller::class]['plugin_manager'] = $this->di->lazyGet('pluginManager');
+        $this->di->params[Controller::class]['pdo']            = $this->di->has('pdo') ? $this->di->lazyGet('pdo') : null;
+
+        /* Set plugin manager in router to support making routes dependent on plugins (optional) */
+        $this->di->setters[Router::class]['setPluginManager'] = $this->di->lazyGet('pluginManager');;
 
         /* Fetch objects from DI Container */
         $this->hooks          = $this->di->get('hooks');
         $this->router         = $this->di->get('router');
         $this->plugin_manager = $this->di->get('pluginManager');
-
-        /* Set plugin manager in router to support making routes dependent on plugins (optional) */
-        $this->router->setPluginManager($this->plugin_manager);
+        $this->pdo            = $this->di->has('pdo') ? $this->di->get('pdo') : -1;
 
         /* Setup the Kernel */
         $this->bootstrap();
@@ -102,20 +130,6 @@ class Kernel
      */
     private function bootstrap(): void
     {
-        /* Connect to database if specified in config */
-        $db_conf = config('database');
-        if ($db_conf['db_type'] === "mysql") {
-            if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-                // TODO: error handling
-                die('not enough database info');
-            }
-            /* Create PdoPlus object with pdo connection inside */
-            /* TODO: use DI Container for this? */
-            $this->pdo = new PdoPlus($db_conf['db_host'], $db_conf['db_user'], $db_conf['db_pass'], $db_conf['db_name']);
-        } else {
-            $this->pdo = -1;
-        }
-
         /* Get and load enabled plugins */
         /* TODO: cache getting plugin info in PluginManager */
         $this->plugin_manager->getAllPlugins($this->pdo);
@@ -151,13 +165,11 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
 
-                // Retrieve the route
-                $route = $this->getRoute($request);
-
+                $route = $this->di->get('route');
                 /* Check if controller class extends the core controller */
                 if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
-                    $this->controller = new $route->controller['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+                    $this->controller = $this->di->get('controller');
                 } else if (class_exists($route->controller['class'])) {
                     printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
                 } else {
@@ -198,14 +210,14 @@ class Kernel
      *
      * @return array
      */
-    private function getRoute(ServerRequestInterface $request): Route
+    public function getRoute(ServerRequestInterface $request): Route
     {
         /* Get route information for the url */
         $route = $this->router->match($request);
         /* Check if page exists */
         if (empty($route->page) || !file_exists($route->page['path'] . $route->page['value'])) {
             $this->response = $this->response->withStatus(404);
-            $route = $this->router->matchUri('404', $request->getMethod());
+            $route          = $this->router->matchUri('404', $request->getMethod());
         }
 
         if (isset($route->controller['file'])) {
@@ -215,7 +227,7 @@ class Kernel
 
         /* If the controller class name does not contain the namespace yet, add it */
         if (strpos($route->controller['class'], "\\") === false && isset($route->controller['plugin'])) {
-            $namespace                    = getNamespace($route->controller['plugin'], "controller");
+            $namespace                  = getNamespace($route->controller['plugin'], "controller");
             $route->controller['class'] = $namespace . $route->controller['class'];
         }
 

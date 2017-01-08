@@ -27,7 +27,7 @@ class Controller
      * @param                        $plugin_manager
      * @param                        $pdo
      */
-    public function __construct($route, $hooks, $plugin_manager, PdoPlus $pdo)
+    public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, ?PdoPlus $pdo)
     {
         $this->pdo = $pdo;
         $this->hooks          = $hooks;

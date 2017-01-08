@@ -12,7 +12,7 @@ return [
     ],
 
     'database' => [
-        'db_type' => 'mysql',
+        'db_type' => 'none',
         'db_name' => 'leap',
         'db_user' => 'leap',
         'db_pass' => 'password',
