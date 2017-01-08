@@ -1,5 +1,6 @@
 <?php
 namespace Leap\Core;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class Router
@@ -115,12 +116,12 @@ class Router
     /**
      * Route a given url based on the added route files
      *
-     * @param $uri
-     * @param $httpMethod
+     * @param string $uri
+     * @param string $method
      *
-     * @return array
+     * @return \Leap\Core\Route
      */
-    public function routeUrl($uri, $httpMethod = 'GET'): Route
+    public function matchUri(string $uri, string $method = 'GET'): Route
     {
         $uri = trim($uri, "/");
 
@@ -131,6 +132,7 @@ class Router
 
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $pattern => $options) {
+            $orginalPattern = $pattern;
             $include_slash = (isset($options['include_slash']) && $options['include_slash']);
             $pattern       = $this->getPregPattern($pattern, $include_slash);
             $wildcard_args = [];
@@ -147,14 +149,26 @@ class Router
             }
 
             if (preg_match($pattern, $uri)) {
-                if (!isset($options['method']) || in_array($httpMethod, $options['method'])) {
+                if (!isset($options['method']) || in_array($method, $options['method'])) {
                     /* We found at least one valid route */
-                    $this->parseRoute($options, $uri, $wildcard_args, $parsedRoute);
+                    $this->parseRoute($options, $uri, $wildcard_args, $parsedRoute, $orginalPattern);
                 }
             }
         }
 
         return $parsedRoute;
+    }
+
+    /**
+     * Route a PSR-7 Request based on the added route files
+     *
+     * @param ServerRequestInterface $request
+     *
+     * @return Route
+     */
+    public function match(ServerRequestInterface $request): Route
+    {
+        return $this->matchUri($request->getUri()->getPath(), $request->getMethod());
     }
 
     /**
@@ -215,8 +229,9 @@ class Router
      * @param $url
      * @param $wildcard_args
      */
-    private function parseRoute($route, $url, $wildcard_args, Route $parsedRoute): void
+    private function parseRoute($route, $url, $wildcard_args, Route $parsedRoute, string $pattern): void
     {
+        $parsedRoute->mathedRoutes[$pattern] = $route;
         $parsedRoute->base_path = $route['path'];
 
         if (isset($route['clear'])) {
@@ -234,25 +249,6 @@ class Router
 
                     $this->replaceWildcardArgs[":" . $wildcard_args['args'][$key - 1]] = $arg[0];
                     $wildcards_from_url[$wildcard_args['args'][$key - 1]]              = $arg[0];
-                }
-            }
-        }
-        /* TODO: switch to switch statement */
-        if (isset($route['model'])) {
-            $parsedRoute->model          = [];
-            $parsedRoute->model['class'] = $this->replaceWildcardArgs($route['model']);
-            if (isset($route['modelFile'])) {
-                if ($route['modelFile'][0] == "/") {
-                    $parsedRoute->model['file'] = ROOT . substr($route['modelFile'], 1);
-                } else {
-                    $parsedRoute->model['file'] = $route['path'] . $route['modelFile'];
-                }
-            }
-            if (isset($route['modelPlugin'])) {
-                $parsedRoute->model['plugin'] = $route['modelPlugin'];
-            } else {
-                if (isset($route['plugin'])) {
-                    $parsedRoute->model['plugin'] = $route['plugin'];
                 }
             }
         }

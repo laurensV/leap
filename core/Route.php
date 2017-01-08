@@ -8,7 +8,6 @@ namespace Leap\Core;
  */
 class Route
 {
-    public $model;
     public $base_path;
     public $action;
     public $controller;
@@ -17,10 +16,12 @@ class Route
     public $stylesheets;
     public $scripts;
     public $title;
+
+    public $mathedRoutes = [];
     /**
      * @var array
      */
-    private $defaultValues;
+    private $defaultValues = [];
 
 
     /**
@@ -29,8 +30,6 @@ class Route
     public function __construct()
     {
         /* initialize default values once */
-        $this->defaultValues   = [];
-        $this->defaultValues['model']       = ['class' => 'Model', 'plugin' => 'core'];
         $this->defaultValues['base_path']   = null;
         $this->defaultValues['action']      = null;
         $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
@@ -39,6 +38,7 @@ class Route
         $this->defaultValues['stylesheets'] = [];
         $this->defaultValues['scripts']     = [];
         $this->defaultValues['title']       = null;
+
         $this->defaultRouteValues();
     }
 

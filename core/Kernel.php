@@ -93,10 +93,6 @@ class Kernel
         /* Set plugin manager in router to support making routes dependent on plugins (optional) */
         $this->router->setPluginManager($this->plugin_manager);
 
-        /* Get path parameter from request */
-        $params     = $this->request->getQueryParams();
-        $this->path = $params['path'] ?? "";
-
         /* Setup the Kernel */
         $this->bootstrap();
     }
@@ -153,9 +149,11 @@ class Kernel
         $this->middlewares[] =
             function (ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
-                $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
+                $this->hooks->fire("hook_preRouteUrl", []);
+
                 // Retrieve the route
-                $route = $this->getRoute($this->path);
+                $route = $this->getRoute($request);
+
                 /* Check if controller class extends the core controller */
                 if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
@@ -200,18 +198,16 @@ class Kernel
      *
      * @return array
      */
-    private function getRoute(string $path): Route
+    private function getRoute(ServerRequestInterface $request): Route
     {
         /* Get route information for the url */
-        $route = $this->router->routeUrl($path, $this->request->getMethod());
+        $route = $this->router->match($request);
+        /* Check if page exists */
         if (empty($route->page) || !file_exists($route->page['path'] . $route->page['value'])) {
-            $route = $this->pageNotFound($path);
+            $this->response = $this->response->withStatus(404);
+            $route = $this->router->matchUri('404', $request->getMethod());
         }
 
-        if (isset($route->model['file'])) {
-            global $autoloader;
-            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->model['plugin']) . "\\Models\\" . $route->model['class'] => $route->model['file']]);
-        }
         if (isset($route->controller['file'])) {
             global $autoloader;
             $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->controller['plugin']) . "\\Controllers\\" . $route->controller['class'] => $route->controller['file']]);
@@ -222,27 +218,8 @@ class Kernel
             $namespace                    = getNamespace($route->controller['plugin'], "controller");
             $route->controller['class'] = $namespace . $route->controller['class'];
         }
-        /* If the model name does not contain the namespace yet, add it */
-        if (strpos($route->model['class'], "\\") === false && isset($route->model['plugin'])) {
-            $namespace               = getNamespace($route->model['plugin'], "model");
-            $route->model['class'] = $namespace . $route->model['class'];
-        }
+
         return $route;
-    }
-
-    /**
-     * @param string $uri
-     *
-     * @return array
-     */
-    private function pageNotFound(string $uri = ""): array
-    {
-        $this->response = $this->response->withStatus(404);
-
-        if ($uri == '404') {
-            printr("Page not found and no valid route found for 404 page", true);
-        }
-        return $this->getRoute('404');
     }
 
     /**

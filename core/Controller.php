@@ -20,7 +20,7 @@ class Controller
     public    $access;
 
     /**
-     * Whenever controller is created, load the model and the template.
+     * Whenever controller is created, load the template.
      *
      * @param                        $route
      * @param                        $hooks
