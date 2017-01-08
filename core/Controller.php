@@ -35,11 +35,11 @@ class Controller
         if ($this->grantAccess()) {
             /* TODO: pass whole route variable */
             $this->template = new Template($route, $hooks);
-            $this->page     = $route['page'];
+            $this->page     = $route->page;
             $this->init();
             $this->access = true;
-            if (isset($route['title'])) {
-                $this->set('title', $route['title']);
+            if (isset($route->title)) {
+                $this->set('title', $route->title);
             } else {
                 $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
                 $this->set('title', ucfirst(end($tmp_page)));

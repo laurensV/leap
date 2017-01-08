@@ -19,10 +19,6 @@ class Router
     /**
      * @var array
      */
-    private $parsedRoute;
-    /**
-     * @var array
-     */
     private $defaultValues;
     /**
      * @var array
@@ -35,44 +31,9 @@ class Router
     public function __construct()
     {
         $this->routeCollection = [];
-        $this->parsedRoute     = [];
         $this->defaultValues   = [];
     }
 
-    /**
-     * Set default values for the route
-     *
-     * @param array $properties
-     */
-    private function defaultRouteValues($properties = null): void
-    {
-        /* initialize default values once */
-        if (empty($this->defaultValues)) {
-            $this->defaultValues['model']       = ['class' => 'Model', 'plugin' => 'core'];
-            $this->defaultValues['base_path']   = null;
-            $this->defaultValues['action']      = null;
-            $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
-            $this->defaultValues['template']    = ['path' => ROOT . 'site/templates/', 'value' => "default_template.php"];
-            $this->defaultValues['page']        = [];
-            $this->defaultValues['stylesheets'] = [];
-            $this->defaultValues['scripts']     = [];
-            $this->defaultValues['title']       = null;
-        }
-
-        if (isset($properties) && !in_array("all", $properties)) {
-            /* set array of properties to their default values */
-            foreach ($properties as $property) {
-                if (isset($defaultValues[$property])) {
-                    $this->parsedRoute[$property] = $defaultValues[$property];
-                }
-            }
-        } else {
-            /* set all properties to their default values */
-            foreach ($this->defaultValues as $property => $value) {
-                $this->parsedRoute[$property] = $value;
-            }
-        }
-    }
 
     /**
      * Setter injection for a plugin manager instance
@@ -159,14 +120,14 @@ class Router
      *
      * @return array
      */
-    public function routeUrl($uri, $httpMethod = 'GET'): array
+    public function routeUrl($uri, $httpMethod = 'GET'): Route
     {
         $uri = trim($uri, "/");
 
-        $this->defaultRouteValues();
-
         // Sort route array
         $this->routeCollection = $this->sortRoutes($this->routeCollection);
+
+        $parsedRoute = new Route();
 
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $pattern => $options) {
@@ -188,12 +149,12 @@ class Router
             if (preg_match($pattern, $uri)) {
                 if (!isset($options['method']) || in_array($httpMethod, $options['method'])) {
                     /* We found at least one valid route */
-                    $this->parseRoute($options, $uri, $wildcard_args);
+                    $this->parseRoute($options, $uri, $wildcard_args, $parsedRoute);
                 }
             }
         }
 
-        return $this->parsedRoute;
+        return $parsedRoute;
     }
 
     /**
@@ -254,9 +215,9 @@ class Router
      * @param $url
      * @param $wildcard_args
      */
-    private function parseRoute($route, $url, $wildcard_args): void
+    private function parseRoute($route, $url, $wildcard_args, Route $parsedRoute): void
     {
-        $this->parsedRoute['base_path'] = $route['path'];
+        $parsedRoute->base_path = $route['path'];
 
         if (isset($route['clear'])) {
             $this->defaultRouteValues($route['clear']);
@@ -278,72 +239,72 @@ class Router
         }
         /* TODO: switch to switch statement */
         if (isset($route['model'])) {
-            $this->parsedRoute['model']          = [];
-            $this->parsedRoute['model']['class'] = $this->replaceWildcardArgs($route['model']);
+            $parsedRoute->model          = [];
+            $parsedRoute->model['class'] = $this->replaceWildcardArgs($route['model']);
             if (isset($route['modelFile'])) {
                 if ($route['modelFile'][0] == "/") {
-                    $this->parsedRoute['model']['file'] = ROOT . substr($route['modelFile'], 1);
+                    $parsedRoute->model['file'] = ROOT . substr($route['modelFile'], 1);
                 } else {
-                    $this->parsedRoute['model']['file'] = $route['path'] . $route['modelFile'];
+                    $parsedRoute->model['file'] = $route['path'] . $route['modelFile'];
                 }
             }
             if (isset($route['modelPlugin'])) {
-                $this->parsedRoute['model']['plugin'] = $route['modelPlugin'];
+                $parsedRoute->model['plugin'] = $route['modelPlugin'];
             } else {
                 if (isset($route['plugin'])) {
-                    $this->parsedRoute['model']['plugin'] = $route['plugin'];
+                    $parsedRoute->model['plugin'] = $route['plugin'];
                 }
             }
         }
         if (isset($route['controller'])) {
-            $this->parsedRoute['controller']          = [];
-            $this->parsedRoute['controller']['class'] = $this->replaceWildcardArgs($route['controller']);
+            $parsedRoute->controller          = [];
+            $parsedRoute->controller['class'] = $this->replaceWildcardArgs($route['controller']);
             if (isset($route['controllerFile'])) {
                 if ($route['controllerFile'][0] == "/") {
-                    $this->parsedRoute['controller']['file'] = ROOT . substr($route['controllerFile'], 1);
+                    $parsedRoute->controller['file'] = ROOT . substr($route['controllerFile'], 1);
                 } else {
-                    $this->parsedRoute['controller']['file'] = $route['path'] . $route['controllerFile'];
+                    $parsedRoute->controller['file'] = $route['path'] . $route['controllerFile'];
                 }
             }
             if (isset($route['controllerPlugin'])) {
-                $this->parsedRoute['controller']['plugin'] = $route['controllerPlugin'];
+                $parsedRoute->controller['plugin'] = $route['controllerPlugin'];
             } else {
                 if (isset($route['plugin'])) {
-                    $this->parsedRoute['controller']['plugin'] = $route['plugin'];
+                    $parsedRoute->controller['plugin'] = $route['plugin'];
                 }
             }
         }
         if (isset($route['page'])) {
-            $this->parsedRoute['page']          = [];
-            $this->parsedRoute['page']['value'] = $this->replaceWildcardArgs($route['page']);
-            if ($this->parsedRoute['page']['value'][0] == "/") {
-                $this->parsedRoute['page']['value'] = substr($this->parsedRoute['page']['value'], 1);
-                $this->parsedRoute['page']['path']  = ROOT;
+            $parsedRoute->page          = [];
+            $parsedRoute->page['value'] = $this->replaceWildcardArgs($route['page']);
+            if ($parsedRoute->page['value'][0] == "/") {
+                $parsedRoute->page['value'] = substr($parsedRoute->page['value'], 1);
+                $parsedRoute->page['path']  = ROOT;
             } else {
-                $this->parsedRoute['page']['path'] = $route['path'];
+                $parsedRoute->page['path'] = $route['path'];
             }
         }
         if (isset($route['template'])) {
-            $this->parsedRoute['template']          = [];
-            $this->parsedRoute['template']['value'] = $this->replaceWildcardArgs($route['template']);
-            if ($this->parsedRoute['template']['value'][0] == "/") {
-                $this->parsedRoute['template']['value'] = substr($this->parsedRoute['template']['value'], 1);
-                $this->parsedRoute['template']['path']  = ROOT;
+            $parsedRoute->template          = [];
+            $parsedRoute->template['value'] = $this->replaceWildcardArgs($route['template']);
+            if ($parsedRoute->template['value'][0] == "/") {
+                $parsedRoute->template['value'] = substr($parsedRoute->template['value'], 1);
+                $parsedRoute->template['path']  = ROOT;
             } else {
-                $this->parsedRoute['template']['path'] = $route['path'];
+                $parsedRoute->template['path'] = $route['path'];
             }
         }
         if (isset($route['action'])) {
-            $this->parsedRoute['action'] = $this->replaceWildcardArgs($route['action']);
+            $parsedRoute->action = $this->replaceWildcardArgs($route['action']);
         }
         if (isset($route['title'])) {
-            $this->parsedRoute['title'] = $this->replaceWildcardArgs($route['title']);
+            $parsedRoute->title = $this->replaceWildcardArgs($route['title']);
         }
         if (isset($route['stylesheets'])) {
-            $this->parsedRoute['stylesheets'][] = ["value" => $route['stylesheets'], "path" => $route['path']];
+            $parsedRoute->stylesheets[] = ["value" => $route['stylesheets'], "path" => $route['path']];
         }
         if (isset($route['scripts'])) {
-            $this->parsedRoute['scripts'][] = ["value" => $route['scripts'], "path" => $route['path']];
+            $parsedRoute->scripts[] = ["value" => $route['scripts'], "path" => $route['path']];
         }
     }
 

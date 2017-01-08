@@ -80,8 +80,6 @@ class Kernel
         $this->di->set('hooks', $this->di->lazyNew(Hooks::class));
         $this->di->set('router', $this->di->lazyNew(Router::class));
         $this->di->set('pluginManager', $this->di->lazyNew(PluginManager::class));
-//        $this->di->params(Controller::class)['request'] = $this->response;
-//        $this->di->params(Controller::class)['response'] = $this->response;
 //        $this->di->params(Controller::class)['route'] = $this->response;
 //        $this->di->params(Controller::class)['hooks'] = $this->response;
 //        $this->di->params(Controller::class)['plugin_manager'] = $this->response;
@@ -116,6 +114,7 @@ class Kernel
                 die('not enough database info');
             }
             /* Create PdoPlus object with pdo connection inside */
+            /* TODO: use DI Container for this? */
             $this->pdo = new PdoPlus($db_conf['db_host'], $db_conf['db_user'], $db_conf['db_pass'], $db_conf['db_name']);
         } else {
             $this->pdo = -1;
@@ -158,13 +157,13 @@ class Kernel
                 // Retrieve the route
                 $route = $this->getRoute($this->path);
                 /* Check if controller class extends the core controller */
-                if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
+                if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
-                    $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
-                } else if (class_exists($route['controller']['class'])) {
-                    printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+                    $this->controller = new $route->controller['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
+                } else if (class_exists($route->controller['class'])) {
+                    printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
                 } else {
-                    printr("Controller class '" . $route['controller']['class'] . "' not found", true);
+                    printr("Controller class '" . $route->controller['class'] . "' not found", true);
                 }
                 if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
@@ -172,8 +171,8 @@ class Kernel
                     //return $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
-                    if (method_exists($this->controller, $route['action'])) {
-                        $this->controller->{$route['action']}();
+                    if (method_exists($this->controller, $route->action)) {
+                        $this->controller->{$route->action}();
                     } else {
                         $this->controller->defaultAction();
                     }
@@ -201,32 +200,32 @@ class Kernel
      *
      * @return array
      */
-    private function getRoute(string $path): array
+    private function getRoute(string $path): Route
     {
         /* Get route information for the url */
         $route = $this->router->routeUrl($path, $this->request->getMethod());
-        if (empty($route['page']) || !file_exists($route['page']['path'] . $route['page']['value'])) {
+        if (empty($route->page) || !file_exists($route->page['path'] . $route->page['value'])) {
             $route = $this->pageNotFound($path);
         }
 
-        if (isset($route['model']['file'])) {
+        if (isset($route->model['file'])) {
             global $autoloader;
-            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['model']['plugin']) . "\\Models\\" . $route['model']['class'] => $route['model']['file']]);
+            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->model['plugin']) . "\\Models\\" . $route->model['class'] => $route->model['file']]);
         }
-        if (isset($route['controller']['file'])) {
+        if (isset($route->controller['file'])) {
             global $autoloader;
-            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route['controller']['plugin']) . "\\Controllers\\" . $route['controller']['class'] => $route['controller']['file']]);
+            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->controller['plugin']) . "\\Controllers\\" . $route->controller['class'] => $route->controller['file']]);
         }
 
         /* If the controller class name does not contain the namespace yet, add it */
-        if (strpos($route['controller']['class'], "\\") === false && isset($route['controller']['plugin'])) {
-            $namespace                    = getNamespace($route['controller']['plugin'], "controller");
-            $route['controller']['class'] = $namespace . $route['controller']['class'];
+        if (strpos($route->controller['class'], "\\") === false && isset($route->controller['plugin'])) {
+            $namespace                    = getNamespace($route->controller['plugin'], "controller");
+            $route->controller['class'] = $namespace . $route->controller['class'];
         }
         /* If the model name does not contain the namespace yet, add it */
-        if (strpos($route['model']['class'], "\\") === false && isset($route['model']['plugin'])) {
-            $namespace               = getNamespace($route['model']['plugin'], "model");
-            $route['model']['class'] = $namespace . $route['model']['class'];
+        if (strpos($route->model['class'], "\\") === false && isset($route->model['plugin'])) {
+            $namespace               = getNamespace($route->model['plugin'], "model");
+            $route->model['class'] = $namespace . $route->model['class'];
         }
         return $route;
     }

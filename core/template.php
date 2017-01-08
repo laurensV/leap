@@ -15,11 +15,11 @@ class Template
 
     public function __construct($route, $hooks)
     {
-        $this->template          = $route['template'];
-        $this->page              = $route['page'];
+        $this->template          = $route->template;
+        $this->page              = $route->page;
         $this->hooks             = $hooks;
-        $this->stylesheets_route = $route['stylesheets'];
-        $this->scripts_route     = $route['scripts'];
+        $this->stylesheets_route = $route->stylesheets;
+        $this->scripts_route     = $route->scripts;
         $this->initVars();
     }
 
