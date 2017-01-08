@@ -15,7 +15,7 @@ class BasicController extends Controller
     {
         return array(ROOT . "site/pages/include/menu.php");
     }
-    public function grantAccess()
+    public function grantAccess(): bool
     {
         return false;
     }

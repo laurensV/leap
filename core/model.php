@@ -1,11 +1,12 @@
 <?php
 namespace Leap\Core;
 
-class Model extends SQLHandler
+class Model
 {
-    public function __construct($pdo)
+    public $pdo;
+
+    public function __construct(PdoPlus $pdo = null)
     {
-        $this->setDb($pdo);
         $this->init();
     }
 

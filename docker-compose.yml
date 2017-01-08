@@ -31,6 +31,7 @@ services:
     mysql:
         image: mysql:latest
         volumes:
+            - ./other_files:/usr/local/data
             - database_data:/var/lib/mysql
         environment:
             MYSQL_ROOT_PASSWORD: secret

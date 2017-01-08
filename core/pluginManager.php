@@ -3,15 +3,8 @@ namespace Leap\Core;
 
 class PluginManager
 {
-    private $router;
-    private $hooks;
     public $all_plugins;
     public $enabled_plugins;
-    public function __construct(Router $router, Hooks $hooks)
-    {
-        $this->router = $router;
-        $this->hooks  = $hooks;
-    }
 
     public function getAllPlugins($pdo)
     {
@@ -143,21 +136,9 @@ class PluginManager
                 chdir($this->all_plugins[$pid]['path']);
                 if (file_exists($pid . ".plugin.php")) {
                     include $pid . ".plugin.php";
-                    // evil hack that can be used to auto define namespace:
-                    /*eval('namespace hooks\\' . $pid . ' {?>' . file_get_contents($pid . ".hooks.php") .  '}');*/
                 }
                 global $autoloader;
                 $autoloader->setPsr4("Leap\\Plugins\\" . ucfirst($pid) . "\\", $this->all_plugins[$pid]['path']);
-                $this->router->addRouteFile($this->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
-            }
-        }
-        $functions = get_defined_functions();
-        foreach ($functions['user'] as $function) {
-            $parts = explode("\\", $function);
-            if ($parts[0] == "leap" && $parts[1] == "hooks") {
-                if (isset($parts[3])) {
-                    $this->hooks->add($parts[3], $parts[2]);
-                }
             }
         }
     }

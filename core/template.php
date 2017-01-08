@@ -1,6 +1,8 @@
 <?php
 namespace Leap\Core;
 
+use Psr\Http\Message\ServerRequestInterface;
+
 class Template
 {
     private $template;
@@ -10,16 +12,14 @@ class Template
     private $stylesheets_route;
     private $scripts_route;
     private $hooks;
-    private $plugins;
 
-    public function __construct($template, $page, $hooks, $plugins, $stylesheets_route, $scripts_route)
+    public function __construct($route, $hooks)
     {
-        $this->template          = $template;
-        $this->page              = $page;
+        $this->template          = $route['template'];
+        $this->page              = $route['page'];
         $this->hooks             = $hooks;
-        $this->plugins           = $plugins;
-        $this->stylesheets_route = $stylesheets_route;
-        $this->scripts_route     = $scripts_route;
+        $this->stylesheets_route = $route['stylesheets'];
+        $this->scripts_route     = $route['scripts'];
         $this->initVars();
     }
 
@@ -118,14 +118,13 @@ class Template
     }
 
     /**
-     * Display Template *
+     * Display Template
      *
      * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface      $response
      *
-     * @return mixed
+     * @return string
      */
-    public function render($request, $response)
+    public function render(ServerRequestInterface $request): string
     {
         if (!empty($this->variables)) {
             extract($this->variables);
@@ -165,7 +164,7 @@ class Template
         require_once ROOT . "core/include/end_page.php";
         $html = ob_get_contents();
         ob_end_clean();
-        return $response->getBody()->write($html);
+        return $html;
     }
 
 }

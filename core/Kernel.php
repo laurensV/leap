@@ -2,125 +2,165 @@
 namespace Leap\Core;
 
 use mindplay\middleman\Dispatcher;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\{
+    ServerRequestInterface, ResponseInterface
+};
 use Zend\Diactoros\{
     Response, Response\SapiStreamEmitter, ServerRequestFactory
 };
 use Aura\Di\ContainerBuilder;
+use Interop\Container\ContainerInterface;
 
 /**
- * Leap Application
+ * Leap Kernel
  *
  * @package Leap\Core
  */
 class Kernel
 {
     /**
-     * @var \Leap\Core\Router
+     * @var Router
      */
     private $router;
     /**
-     * @var \Leap\Core\Controller
+     * @var Controller
      */
     private $controller;
+    /**
+     * @var string
+     */
     private $path;
+    /**
+     * @var Hooks
+     */
     private $hooks;
     /**
-     * @var \Leap\Core\PluginManager
+     * @var PluginManager
      */
     private $plugin_manager;
+    /**
+     * @var PdoPlus
+     */
     private $pdo;
     /**
-     * @var \Psr\Http\Message\ServerRequestInterface
+     * @var ServerRequestInterface
      */
     private $request;
     /**
-     * @var \Psr\Http\Message\ResponseInterface
+     * @var ResponseInterface
      */
     private $response;
 
     /**
-     * LeApp constructor.
+     * @var ContainerInterface
+     */
+    private $di;
+
+    /**
+     * @var array
+     */
+    private $middlewares;
+
+    /**
+     * Kernel constructor.
      */
     public function __construct()
     {
         /* Set the error reporting level based on the environment variable */
+        /* Q: is this the right place to call this function? Maybe configHandler.php is better.. */
         $this->setReporting();
 
-        /* Create PSR7 request and response */
+        /* Create PSR7 Request and Response */
         $this->request  = ServerRequestFactory::fromGlobals();
         $this->response = new Response();
 
-        $builder = new ContainerBuilder();
-        $di = $builder->newInstance();
-        $di->set('hooks', $di->lazyNew('Leap\Core\Hooks'));
-        $di->set('router', $di->lazyNew('Leap\Core\Router'));
-        $di->set('pluginManager', $di->lazyNew('Leap\Core\PluginManager'));
-        $di->params['Leap\Core\PluginManager']['router'] = $di->lazyGet('router');
-        $di->params['Leap\Core\PluginManager']['hooks'] = $di->lazyGet('hooks');
-        $this->hooks = $di->get('hooks');
-        $this->router = $di->get('router');
-        $this->plugin_manager = $di->get('pluginManager');
+        /* Create and config Dependency Injector Container */
+        $builder  = new ContainerBuilder();
+        $this->di = $builder->newInstance();
+        $this->di->set('hooks', $this->di->lazyNew(Hooks::class));
+        $this->di->set('router', $this->di->lazyNew(Router::class));
+        $this->di->set('pluginManager', $this->di->lazyNew(PluginManager::class));
+//        $this->di->params(Controller::class)['request'] = $this->response;
+//        $this->di->params(Controller::class)['response'] = $this->response;
+//        $this->di->params(Controller::class)['route'] = $this->response;
+//        $this->di->params(Controller::class)['hooks'] = $this->response;
+//        $this->di->params(Controller::class)['plugin_manager'] = $this->response;
+//        $this->di->params(Controller::class)['pdo'] = $this->response;
 
-        /* - Object creation - */
-        //$this->hooks = new Hooks();
-        /* TODO: consider singleton for plugin_manager and router. Bad practice or allowed in this situation? */
-//        $this->router         = new Router();
-//        $this->plugin_manager = new PluginManager($this->router, $this->hooks);
-        /* TODO: Can we get rid of this setter injection? */
+        /* Fetch objects from DI Container */
+        $this->hooks          = $this->di->get('hooks');
+        $this->router         = $this->di->get('router');
+        $this->plugin_manager = $this->di->get('pluginManager');
+
+        /* Set plugin manager in router to support making routes dependent on plugins (optional) */
         $this->router->setPluginManager($this->plugin_manager);
 
-        /* - Variable values - */
-        $params = $this->request->getQueryParams();
-
+        /* Get path parameter from request */
+        $params     = $this->request->getQueryParams();
         $this->path = $params['path'] ?? "";
 
-        /* Setup the application */
+        /* Setup the Kernel */
         $this->bootstrap();
     }
 
     /**
-     * Boot up the application
-     *
+     * Setup the Kernel
      */
     private function bootstrap(): void
     {
-        session_start();
+        /* Connect to database if specified in config */
+        $db_conf = config('database');
+        if ($db_conf['db_type'] === "mysql") {
+            if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
+                // TODO: error handling
+                die('not enough database info');
+            }
+            /* Create PdoPlus object with pdo connection inside */
+            $this->pdo = new PdoPlus($db_conf['db_host'], $db_conf['db_user'], $db_conf['db_pass'], $db_conf['db_name']);
+        } else {
+            $this->pdo = -1;
+        }
 
-        /* Try to connect to a database. Returns -1 when no database is used */
-        $this->pdo = SQLHandler::connect();
-        /* TODO: cache getting plugin info */
+        /* Get and load enabled plugins */
+        /* TODO: cache getting plugin info in PluginManager */
         $this->plugin_manager->getAllPlugins($this->pdo);
         $plugins_to_enable = $this->plugin_manager->getEnabledPlugins($this->pdo);
         $this->plugin_manager->loadPlugins($plugins_to_enable);
 
+        /* Add hooks from plugins */
+        $functions = get_defined_functions();
+        foreach ($functions['user'] as $function) {
+            $parts = explode("\\", $function);
+            if ($parts[0] == "leap" && $parts[1] == "hooks") {
+                if (isset($parts[3])) {
+                    $this->hooks->add($parts[3], $parts[2]);
+                }
+            }
+        }
         /* ########################################################
          * # Plugins are loaded, so from now on we can fire hooks #
          * ######################################################## */
 
+        /* add routes from plugins */
+        foreach ($this->plugin_manager->enabled_plugins as $pid) {
+            $this->router->addRouteFile($this->plugin_manager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
+        }
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
         $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
 
-        /* Fire the hook preRouteUrl */
-        $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
-    }
-
-    /**
-     * Boot up the application
-     *
-     */
-    public function run(): void
-    {
-        $middlewares   = require "middlewares.php";
-        $middlewares[] =
-            function (ServerRequestInterface $request) {
+        /* retrieve middleware and add last framework middleware */
+        $this->middlewares   = require "middlewares.php";
+        $this->middlewares[] =
+            function (ServerRequestInterface $request): ResponseInterface {
+                /* Fire the hook preRouteUrl */
+                $this->hooks->fire("hook_preRouteUrl", [&$this->path]);
                 // Retrieve the route
                 $route = $this->getRoute($this->path);
                 /* Check if controller class extends the core controller */
                 if ($route['controller']['class'] == 'Leap\Core\Controller' || is_subclass_of($route['controller']['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
-                    $this->controller = new $route['controller']['class']($this->request, $this->response, $route, $this->hooks, $this->plugin_manager, $this->pdo);
+                    $this->controller = new $route['controller']['class']($route, $this->hooks, $this->plugin_manager, $this->pdo);
                 } else if (class_exists($route['controller']['class'])) {
                     printr("Controller class '" . $route['controller']['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
                 } else {
@@ -138,12 +178,20 @@ class Kernel
                         $this->controller->defaultAction();
                     }
                     /* Render the templates */
-                    $this->controller->render();
+                    $html = $this->controller->render($this->request);
+                    $this->response->getBody()->write($html);
                 }
                 return $this->response;
             };
-        $dispatcher    = new Dispatcher($middlewares);
-        $response      = $dispatcher->dispatch($this->request);
+    }
+
+    /**
+     * Boot up the application
+     */
+    public function run(): void
+    {
+        $dispatcher = new Dispatcher($this->middlewares);
+        $response   = $dispatcher->dispatch($this->request);
 
         (new SapiStreamEmitter())->emit($response);
     }
@@ -153,7 +201,7 @@ class Kernel
      *
      * @return array
      */
-    public function getRoute(string $path): array
+    private function getRoute(string $path): array
     {
         /* Get route information for the url */
         $route = $this->router->routeUrl($path, $this->request->getMethod());

@@ -1,6 +1,10 @@
 <?php
 namespace Leap\Core;
 
+use Psr\Http\Message\{
+    ResponseInterface, ServerRequestInterface
+};
+
 /**
  * Class Controller
  *
@@ -8,44 +12,29 @@ namespace Leap\Core;
  */
 class Controller
 {
-    protected $model;
     protected $page;
     protected $template;
     protected $hooks;
     protected $plugin_manager;
+    protected $pdo;
     public    $access;
-    private   $request;
-    private   $response;
 
     /**
      * Whenever controller is created, load the model and the template.
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface      $response
-     * @param                                          $route
-     * @param                                          $hooks
-     * @param                                          $plugin_manager
-     * @param                                          $pdo
+     * @param                        $route
+     * @param                        $hooks
+     * @param                        $plugin_manager
+     * @param                        $pdo
      */
-    public function __construct($request, $response, $route, $hooks, $plugin_manager, $pdo)
+    public function __construct($route, $hooks, $plugin_manager, PdoPlus $pdo)
     {
-        $this->request = $request;
-        $this->response = $response;
+        $this->pdo = $pdo;
+        $this->hooks          = $hooks;
+        $this->plugin_manager = $plugin_manager;
         if ($this->grantAccess()) {
-            $model = $route['model']['class'];
-            /* Check if model class extends the core model */
-            if ($model == 'Leap\Core\Model' || is_subclass_of($model, "Leap\\Core\\Model")) {
-                /* Create the model instance */
-                $this->model = new $model($pdo);
-            } else if (class_exists($route['model']['class'])) {
-                printr("Model class '" . $model . "' does not extend the base 'Leap\\Core\\Model' class");
-            } else {
-                printr("Model class '" . $model . "' not found");
-            }
-            $this->hooks          = $hooks;
-            $this->plugin_manager = $plugin_manager;
             /* TODO: pass whole route variable */
-            $this->template = new Template($route['template'], $route['page'], $hooks, $this->plugin_manager->enabled_plugins, $route['stylesheets'], $route['scripts']);
+            $this->template = new Template($route, $hooks);
             $this->page     = $route['page'];
             $this->init();
             $this->access = true;
@@ -58,6 +47,11 @@ class Controller
         } else {
             $this->access = false;
         }
+    }
+
+    public function hasConnection(): bool
+    {
+        return ($this->pdo instanceof PdoPlus && $this->pdo->hasConnection());
     }
 
     /**
@@ -96,7 +90,7 @@ class Controller
      * @param $name
      * @param $value
      */
-    public function set($name, $value)
+    public function set($name, $value): void
     {
         $this->template->set($name, $value);
     }
@@ -106,7 +100,7 @@ class Controller
      *
      * @return bool
      */
-    public function grantAccess()
+    public function grantAccess(): bool
     {
         /* this core controller has to return true as access to be able to access core pages */
         return true;
@@ -114,9 +108,13 @@ class Controller
 
     /**
      * Render the template
+     *
+     * @param ServerRequestInterface $request
+     *
+     * @return string
      */
-    public function render()
+    public function render(ServerRequestInterface $request): string
     {
-        $this->template->render($this->request, $this->response);
+        return $this->template->render($request);
     }
 }

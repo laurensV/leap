@@ -29,10 +29,10 @@ $autoloader = require 'vendor/autoload.php';
 |--------------------------------------------------------------------------
 |
 | Include the configuration handler.
-| Configurations can be filled in in the file `config.ini` or
-| config.local.ini`.
+| Configurations can be filled in in the file `configHandler.php` or
+| config.local.php`.
 */
-require 'core/config.php';
+require 'core/configHandler.php';
 
 /*
 |--------------------------------------------------------------------------
@@ -50,7 +50,7 @@ require 'core/include/helpers.php';
 |--------------------------------------------------------------------------
 |
 | This bootstraps the Leap framework and gets it ready for use.
-| (core/kernel.php)
+| (core/Kernel.php)
 |
 */
 $kernel = new Leap\Core\Kernel();
