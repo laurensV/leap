@@ -1,10 +1,7 @@
 <?php
 namespace Leap\Core;
 
-use Leap\Core\Middleware\TestMiddleware;
-use mindplay\middleman\{
-    ContainerResolver, Dispatcher
-};
+use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
 };
@@ -42,10 +39,6 @@ class Kernel
      */
     private $plugin_manager;
     /**
-     * @var PdoPlus
-     */
-    private $pdo;
-    /**
      * @var ServerRequestInterface
      */
     private $request;
@@ -53,12 +46,10 @@ class Kernel
      * @var ResponseInterface
      */
     private $response;
-
     /**
      * @var ContainerInterface
      */
     private $di;
-
     /**
      * @var array
      */
@@ -107,6 +98,8 @@ class Kernel
             $this->di->params[PdoPlus::class]['dbName']   = $db_conf['db_name'];
         }
 
+        $this->di->params[PluginManager::class]['pdo']         = $this->di->has('pdo') ? $this->di->lazyGet('pdo') : null;
+
         $this->di->params[Controller::class]['route']          = $this->di->lazyGet('route');
         $this->di->params[Controller::class]['hooks']          = $this->di->lazyGet('hooks');
         $this->di->params[Controller::class]['plugin_manager'] = $this->di->lazyGet('pluginManager');
@@ -119,7 +112,6 @@ class Kernel
         $this->hooks          = $this->di->get('hooks');
         $this->router         = $this->di->get('router');
         $this->plugin_manager = $this->di->get('pluginManager');
-        $this->pdo            = $this->di->has('pdo') ? $this->di->get('pdo') : -1;
 
         /* Setup the Kernel */
         $this->bootstrap();
@@ -132,8 +124,8 @@ class Kernel
     {
         /* Get and load enabled plugins */
         /* TODO: cache getting plugin info in PluginManager */
-        $this->plugin_manager->getAllPlugins($this->pdo);
-        $plugins_to_enable = $this->plugin_manager->getEnabledPlugins($this->pdo);
+        $this->plugin_manager->getAllPlugins();
+        $plugins_to_enable = $this->plugin_manager->getEnabledPlugins();
         $this->plugin_manager->loadPlugins($plugins_to_enable);
 
         /* Add hooks from plugins */
@@ -171,13 +163,16 @@ class Kernel
                     /* Create the controller instance */
                     $this->controller = $this->di->get('controller');
                 } else if (class_exists($route->controller['class'])) {
+                    /* TODO: error handling */
                     printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
                 } else {
+                    /* TODO: error handling */
                     printr("Controller class '" . $route->controller['class'] . "' not found", true);
                 }
                 if (!$this->controller->access) {
                     $this->response = $this->response->withStatus(403);
                     $this->path     = "permission-denied";
+                    /* TODO: permission denied handling handling */
                     //return $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
@@ -206,10 +201,11 @@ class Kernel
     }
 
     /**
-     * @param string $path
+     * @param ServerRequestInterface $request
      *
-     * @return array
+     * @return Route
      */
+    /* TODO: needs to be public for DI Container, maybe not use DI Container? */
     public function getRoute(ServerRequestInterface $request): Route
     {
         /* Get route information for the url */

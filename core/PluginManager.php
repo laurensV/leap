@@ -5,14 +5,18 @@ class PluginManager
 {
     public $all_plugins;
     public $enabled_plugins;
+    private $pdo;
 
-    public function getAllPlugins($pdo)
+    public function __construct(?PdoPlus $pdo) {
+            $this->pdo = $pdo;
+    }
+    public function getAllPlugins()
     {
         $directory = new \RecursiveDirectoryIterator(ROOT . 'plugins');
         $all_files = new \RecursiveIteratorIterator($directory);
 
-        if (is_object($pdo)) {
-            $stmt = $pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
+        if (is_object($this->pdo)) {
+            $stmt = $this->pdo->prepare("INSERT INTO plugins (pid, path, status, name, description, package, configure, source, dependencies)VALUES (:pid,:path,0,:name,:description,:package,:configure,:source,:dependencies) ON DUPLICATE KEY UPDATE path=:path, name=:name, description=:description, package=:package, configure=:configure, source=:source, dependencies=:dependencies");
         }
 
         foreach ($all_files as $file) {
@@ -84,11 +88,11 @@ class PluginManager
         return $this->all_plugins[$pid]['path'];
     }
 
-    public function getEnabledPlugins($pdo)
+    public function getEnabledPlugins()
     {
-        if (is_object($pdo)) {
+        if (is_object($this->pdo)) {
             $plugins = [];
-            $plugins_query = $pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
+            $plugins_query = $this->pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
             if (is_array($plugins_query)) {
                 foreach ($plugins_query as $pid) {
                     if ($this->all_plugins[$pid]['status'] != 0){
@@ -96,11 +100,9 @@ class PluginManager
                     }
                 }
             }
-        } else if ($pdo == -1) {
+        } else {
             /* site is run without database, so use custom function to load plugins */
             $plugins = $this->getEnabledPluginsNoDB();
-        } else {
-            printr("database error");
         }
         return $plugins;
     }
