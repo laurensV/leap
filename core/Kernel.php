@@ -45,7 +45,8 @@ class Kernel
     /**
      * Kernel constructor.
      */
-    public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager, ControllerFactory $controllerFactory, ServerRequestInterface $request)
+    public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager,
+                                ControllerFactory $controllerFactory, ServerRequestInterface $request)
     {
         /* Set the error reporting level based on the environment variable */
         /* Q: is this the right place to call this function? Maybe configHandler.php is better.. */
@@ -68,33 +69,12 @@ class Kernel
      */
     private function bootstrap(): void
     {
-        /* Get and load enabled plugins */
-        /* TODO: cache getting plugin info in PluginManager */
-        $this->pluginManager->getAllPlugins();
-        $plugins_to_enable = $this->pluginManager->getEnabledPlugins();
-        $this->pluginManager->loadPlugins($plugins_to_enable);
-
-        /* Add hooks from plugins */
-        $functions = get_defined_functions();
-        foreach($functions['user'] as $function) {
-            $parts = explode("\\", $function);
-            if($parts[0] == "leap" && $parts[1] == "hooks") {
-                if(isset($parts[3])) {
-                    $this->hooks->add($parts[3], $parts[2]);
-                }
-            }
-        }
+        $this->loadPlugins();
+        $this->loadHooks();
         /* ########################################################
-         * # Plugins are loaded, so from now on we can fire hooks #
+         * # Hooks are loaded, so from now on we can fire hooks   #
          * ######################################################## */
-
-        /* add routes from plugins */
-        foreach($this->pluginManager->enabled_plugins as $pid) {
-            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
-        }
-        /* Add router files from core and site theme */
-        $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
-        $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
+        $this->loadRoutes();
 
         /* retrieve middleware and add last framework middleware */
         $this->middlewares   = require "middlewares.php";
@@ -110,11 +90,11 @@ class Kernel
 
                 $response = new Response();
                 if(!$controller->access) {
-                    $this->response = $response->withStatus(403);
-                    $this->path     = "permission-denied";
-                    /* TODO: permission denied handling handling */
-                    //return $runFunction($request, $this->response, $done);
-                } else {
+                    $response = $response->withStatus(403);
+                    $route = $this->router->matchUri("permission-denied", $this->request->getMethod());
+                    $controller = $this->controllerFactory->make($route);
+                }
+                if($controller) {
                     /* Call the action from the Controller class */
                     if(method_exists($controller, $route->action)) {
                         $controller->{$route->action}();
@@ -122,11 +102,45 @@ class Kernel
                         $controller->defaultAction();
                     }
                     /* Render the templates */
-                    $html = $controller->render($this->request);
-                    $response->getBody()->write($html);
+                    $body = $controller->render($this->request);
+                    $response->getBody()->write($body);
                 }
                 return $response;
             };
+    }
+
+    private function loadPlugins()
+    {
+        /* Get and load enabled plugins */
+        /* TODO: cache getting plugin info in PluginManager */
+        $this->pluginManager->getAllPlugins();
+        $plugins_to_enable = $this->pluginManager->getEnabledPlugins();
+        $this->pluginManager->loadPlugins($plugins_to_enable);
+    }
+
+    private function loadHooks()
+    {
+        /* Add hooks from plugins */
+        $functions = get_defined_functions();
+        foreach($functions['user'] as $function) {
+            $parts = explode("\\", $function);
+            if($parts[0] == "leap" && $parts[1] == "hooks") {
+                if(isset($parts[3])) {
+                    $this->hooks->add($parts[3], $parts[2]);
+                }
+            }
+        }
+    }
+
+    private function loadRoutes()
+    {
+        /* add routes from plugins */
+        foreach($this->pluginManager->enabled_plugins as $pid) {
+            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
+        }
+        /* Add router files from core and site theme */
+        $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
+        $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
     }
 
     /**

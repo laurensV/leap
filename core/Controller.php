@@ -17,7 +17,7 @@ class Controller
     protected $hooks;
     protected $plugin_manager;
     protected $pdo;
-    public    $access;
+    public    $access = false;
 
     /**
      * Whenever controller is created, load the template.
@@ -32,20 +32,18 @@ class Controller
         $this->pdo = $pdo;
         $this->hooks          = $hooks;
         $this->plugin_manager = $plugin_manager;
-        if ($this->grantAccess()) {
-            /* TODO: pass whole route variable */
-            $this->template = new Template($route, $hooks);
-            $this->page     = $route->page;
-            $this->init();
+        if ($this->hasAccess()) {
             $this->access = true;
-            if (isset($route->title)) {
-                $this->set('title', $route->title);
-            } else {
-                $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
-                $this->set('title', ucfirst(end($tmp_page)));
-            }
+        }
+        /* TODO: pass whole route variable */
+        $this->template = new Template($route, $hooks);
+        $this->page     = $route->page;
+        $this->init();
+        if (isset($route->title)) {
+            $this->set('title', $route->title);
         } else {
-            $this->access = false;
+            $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
+            $this->set('title', ucfirst(end($tmp_page)));
         }
     }
 
@@ -100,7 +98,7 @@ class Controller
      *
      * @return bool
      */
-    public function grantAccess(): bool
+    public function hasAccess(): bool
     {
         /* this core controller has to return true as access to be able to access core pages */
         return true;
