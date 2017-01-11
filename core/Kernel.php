@@ -74,7 +74,11 @@ class Kernel
          * # Hooks are loaded, so from now on we can fire hooks   #
          * ######################################################## */
         $this->loadRoutes();
+        $this->loadMiddleware();
+    }
 
+    private function loadMiddleware()
+    {
         /* retrieve middleware and add last framework middleware */
         $this->middlewares   = require "middlewares.php";
         $this->middlewares[] =
@@ -89,8 +93,8 @@ class Kernel
 
                 $response = new Response();
                 if(!$controller->access) {
-                    $response = $response->withStatus(403);
-                    $route = $this->router->matchUri("permission-denied", $this->request->getMethod());
+                    $response   = $response->withStatus(403);
+                    $route      = $this->router->matchUri("permission-denied", $this->request->getMethod());
                     $controller = $this->controllerFactory->make($route);
                 }
                 if($controller) {
