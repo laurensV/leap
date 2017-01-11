@@ -82,7 +82,7 @@ class Kernel
         /* retrieve middleware and add last framework middleware */
         $this->middlewares   = require "middlewares.php";
         $this->middlewares[] =
-            function(ServerRequestInterface $request): ResponseInterface {
+            function (ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
 
@@ -92,15 +92,15 @@ class Kernel
                 $controller = $this->controllerFactory->make($route);
 
                 $response = new Response();
-                if(!$controller->hasAccess()) {
+                if (!$controller->hasAccess()) {
                     $response   = $response->withStatus(403);
                     $route      = $this->router->matchUri("permission-denied", $this->request->getMethod());
                     $controller = $this->controllerFactory->make($route);
                 }
-                if($controller) {
+                if ($controller) {
                     $controller->init();
                     /* Call the action from the Controller class */
-                    if(method_exists($controller, $route->action)) {
+                    if (method_exists($controller, $route->action)) {
                         $controller->{$route->action}();
                     } else {
                         $controller->defaultAction();
@@ -126,10 +126,10 @@ class Kernel
     {
         /* Add hooks from plugins */
         $functions = get_defined_functions();
-        foreach($functions['user'] as $function) {
+        foreach ($functions['user'] as $function) {
             $parts = explode("\\", $function);
-            if($parts[0] == "leap" && $parts[1] == "hooks") {
-                if(isset($parts[3])) {
+            if ($parts[0] == "leap" && $parts[1] == "hooks") {
+                if (isset($parts[3])) {
                     $this->hooks->add($parts[3], $parts[2]);
                 }
             }
@@ -139,7 +139,7 @@ class Kernel
     private function loadRoutes()
     {
         /* add routes from plugins */
-        foreach($this->pluginManager->enabled_plugins as $pid) {
+        foreach ($this->pluginManager->enabled_plugins as $pid) {
             $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
         }
         /* Add router files from core and site theme */
@@ -164,7 +164,7 @@ class Kernel
     private function setReporting(): void
     {
         error_reporting(E_ALL);
-        if(config('general')['dev_env'] == true) {
+        if (config('general')['dev_env'] == true) {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

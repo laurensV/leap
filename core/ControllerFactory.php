@@ -10,11 +10,12 @@ class ControllerFactory
 
     function __construct(Container $di)
     {
-        /* Normally not so oke to inject DI Container into a class,
+        /* Normally it is bad design to inject DI Container into a class,
          * because it can be misused as a service locator. However, for this
          * purpose it is OK, as this is a special case, because the Controller
-         * class can be anything and the DIC is only used to resolve the Controller,
-         * not to retrieve other services. */
+         * class is only known at runtimeand the DIC is only used to resolve
+         * the Controller, not to retrieve other services.
+         */
         $this->di = $di;
     }
 
