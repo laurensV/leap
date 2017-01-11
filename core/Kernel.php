@@ -1,15 +1,14 @@
 <?php
 namespace Leap\Core;
 
+use Composer\DependencyResolver\Request;
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
 };
 use Zend\Diactoros\{
-    Response, Response\SapiStreamEmitter, ServerRequestFactory
+    Response, Response\SapiStreamEmitter
 };
-use Aura\Di\ContainerBuilder;
-use Interop\Container\ContainerInterface;
 
 /**
  * Leap Kernel
@@ -23,13 +22,9 @@ class Kernel
      */
     private $router;
     /**
-     * @var Controller
+     * @var ControllerFactory
      */
-    private $controller;
-    /**
-     * @var string
-     */
-    private $path;
+    private $controllerFactory;
     /**
      * @var Hooks
      */
@@ -37,19 +32,11 @@ class Kernel
     /**
      * @var PluginManager
      */
-    private $plugin_manager;
+    private $pluginManager;
     /**
      * @var ServerRequestInterface
      */
     private $request;
-    /**
-     * @var ResponseInterface
-     */
-    private $response;
-    /**
-     * @var ContainerInterface
-     */
-    private $di;
     /**
      * @var array
      */
@@ -58,63 +45,22 @@ class Kernel
     /**
      * Kernel constructor.
      */
-    public function __construct()
+    public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager, ControllerFactory $controllerFactory, ServerRequestInterface $request)
     {
         /* Set the error reporting level based on the environment variable */
         /* Q: is this the right place to call this function? Maybe configHandler.php is better.. */
         $this->setReporting();
 
-        /* Create PSR7 Request and Response */
-        $this->request  = ServerRequestFactory::fromGlobals();
-        $this->response = new Response();
-
-        /* Create and config Dependency Injector Container */
-        $builder  = new ContainerBuilder();
-        $this->di = $builder->newInstance();
-
-        /* Services */
-        $this->di->set('hooks', $this->di->lazyNew(Hooks::class));
-        $this->di->set('router', $this->di->lazyNew(Router::class));
-        $this->di->set('pluginManager', $this->di->lazyNew(PluginManager::class));
-        $this->di->set('route', $this->di->lazy([$this, 'getRoute'],
-                                                $this->request
-        ));
-        $this->di->set('controller', $this->di->lazy(function () {
-            $route = $this->di->get('route');
-            return $this->di->newInstance($route->controller['class']);
-        }));
-        /* Set database service if specified in config */
-        $db_conf = config('database');
-        if ($db_conf['db_type'] === "mysql") {
-            if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-                // TODO: error handling
-                die('not enough database info');
-            }
-            /* Create PdoPlus object with pdo connection inside */
-            $this->di->set('pdo', $this->di->lazyNew(PdoPlus::class));
-            $this->di->params[PdoPlus::class]['host']     = $db_conf['db_host'];
-            $this->di->params[PdoPlus::class]['username'] = $db_conf['db_user'];
-            $this->di->params[PdoPlus::class]['password'] = $db_conf['db_pass'];
-            $this->di->params[PdoPlus::class]['dbName']   = $db_conf['db_name'];
-        }
-
-        $this->di->params[PluginManager::class]['pdo']         = $this->di->has('pdo') ? $this->di->lazyGet('pdo') : null;
-
-        $this->di->params[Controller::class]['route']          = $this->di->lazyGet('route');
-        $this->di->params[Controller::class]['hooks']          = $this->di->lazyGet('hooks');
-        $this->di->params[Controller::class]['plugin_manager'] = $this->di->lazyGet('pluginManager');
-        $this->di->params[Controller::class]['pdo']            = $this->di->has('pdo') ? $this->di->lazyGet('pdo') : null;
-
-        /* Set plugin manager in router to support making routes dependent on plugins (optional) */
-        $this->di->setters[Router::class]['setPluginManager'] = $this->di->lazyGet('pluginManager');;
-
         /* Fetch objects from DI Container */
-        $this->hooks          = $this->di->get('hooks');
-        $this->router         = $this->di->get('router');
-        $this->plugin_manager = $this->di->get('pluginManager');
+        $this->hooks             = $hooks;
+        $this->router            = $router;
+        $this->pluginManager     = $pluginManager;
+        $this->controllerFactory = $controllerFactory;
+        $this->request           = $request;
 
         /* Setup the Kernel */
         $this->bootstrap();
+
     }
 
     /**
@@ -124,16 +70,16 @@ class Kernel
     {
         /* Get and load enabled plugins */
         /* TODO: cache getting plugin info in PluginManager */
-        $this->plugin_manager->getAllPlugins();
-        $plugins_to_enable = $this->plugin_manager->getEnabledPlugins();
-        $this->plugin_manager->loadPlugins($plugins_to_enable);
+        $this->pluginManager->getAllPlugins();
+        $plugins_to_enable = $this->pluginManager->getEnabledPlugins();
+        $this->pluginManager->loadPlugins($plugins_to_enable);
 
         /* Add hooks from plugins */
         $functions = get_defined_functions();
-        foreach ($functions['user'] as $function) {
+        foreach($functions['user'] as $function) {
             $parts = explode("\\", $function);
-            if ($parts[0] == "leap" && $parts[1] == "hooks") {
-                if (isset($parts[3])) {
+            if($parts[0] == "leap" && $parts[1] == "hooks") {
+                if(isset($parts[3])) {
                     $this->hooks->add($parts[3], $parts[2]);
                 }
             }
@@ -143,8 +89,8 @@ class Kernel
          * ######################################################## */
 
         /* add routes from plugins */
-        foreach ($this->plugin_manager->enabled_plugins as $pid) {
-            $this->router->addRouteFile($this->plugin_manager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
+        foreach($this->pluginManager->enabled_plugins as $pid) {
+            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
         }
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
@@ -153,39 +99,33 @@ class Kernel
         /* retrieve middleware and add last framework middleware */
         $this->middlewares   = require "middlewares.php";
         $this->middlewares[] =
-            function (ServerRequestInterface $request): ResponseInterface {
+            function(ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
 
                 $route = $this->router->match($this->request);
-                /* Check if controller class extends the core controller */
-                if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
-                    /* Create the controller instance */
-                    $this->controller = ControllerFactory::make($route);
-                } else if (class_exists($route->controller['class'])) {
-                    /* TODO: error handling */
-                    printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-                } else {
-                    /* TODO: error handling */
-                    printr("Controller class '" . $route->controller['class'] . "' not found", true);
-                }
-                if (!$this->controller->access) {
-                    $this->response = $this->response->withStatus(403);
+
+                /* Create the controller instance */
+                $controller = $this->controllerFactory->make($route);
+
+                $response = new Response();
+                if(!$controller->access) {
+                    $this->response = $response->withStatus(403);
                     $this->path     = "permission-denied";
                     /* TODO: permission denied handling handling */
                     //return $runFunction($request, $this->response, $done);
                 } else {
                     /* Call the action from the Controller class */
-                    if (method_exists($this->controller, $route->action)) {
-                        $this->controller->{$route->action}();
+                    if(method_exists($controller, $route->action)) {
+                        $controller->{$route->action}();
                     } else {
-                        $this->controller->defaultAction();
+                        $controller->defaultAction();
                     }
                     /* Render the templates */
-                    $html = $this->controller->render($this->request);
-                    $this->response->getBody()->write($html);
+                    $html = $controller->render($this->request);
+                    $response->getBody()->write($html);
                 }
-                return $this->response;
+                return $response;
             };
     }
 
@@ -206,7 +146,7 @@ class Kernel
     private function setReporting(): void
     {
         error_reporting(E_ALL);
-        if (config('general')['dev_env'] == true) {
+        if(config('general')['dev_env'] == true) {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

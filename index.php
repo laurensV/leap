@@ -20,16 +20,6 @@
 | framework. Programmers are far too lazy to manually include all the
 | class files. Simply include it and we'll get autoloading for free.
 */
-
-use Aura\Di\ContainerBuilder;
-use Leap\Core\Controller;
-use Leap\Core\Hooks;
-use Leap\Core\PdoPlus;
-use Leap\Core\PluginManager;
-use Leap\Core\Router;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequestFactory;
-
 $autoloader = require 'vendor/autoload.php';
 
 /*
@@ -62,64 +52,8 @@ require 'core/include/helpers.php';
 | (core/Kernel.php)
 |
 */
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
-/* Create PSR7 Request and Response */
-$request  = ServerRequestFactory::fromGlobals();
-$response = new Response();
-
-/* Create and config Dependency Injector Container */
-$builder  = new ContainerBuilder();
-$di = $builder->newInstance();
-
-$di->set('hooks', $di->lazyNew(Hooks::class));
-$di->set('router', $di->lazyNew(Router::class));
-$di->set('pluginManager', $di->lazyNew(PluginManager::class));
-$di->set('request', $di->lazy(['ServerRequestFactory', 'fromGlobals']));
-$di->set('route', $di->lazyGetCall('router', 'match', $di->lazyGet('request')));
-//$di->set('controller', $di->lazyGetCall('ControllerFactory', 'make', $di->lazyGet('route')));
-
-$di->set('controller', $di->lazy(function () use ($di) {
-    $route = $di->get('route');
-    return $di->newInstance($route->controller['class']);
-}));
-
-/* Set database service if specified in config */
-$db_conf = config('database');
-if ($db_conf['db_type'] === "mysql") {
-    if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-        // TODO: error handling
-        die('not enough database info');
-    }
-    /* Create PdoPlus object with pdo connection inside */
-    $di->set('pdo', $di->lazyNew(PdoPlus::class));
-    $di->params[PdoPlus::class]['host']     = $db_conf['db_host'];
-    $di->params[PdoPlus::class]['username'] = $db_conf['db_user'];
-    $di->params[PdoPlus::class]['password'] = $db_conf['db_pass'];
-    $di->params[PdoPlus::class]['dbName']   = $db_conf['db_name'];
-}
-
-$di->params[PluginManager::class]['pdo']         = $di->has('pdo') ? $di->lazyGet('pdo') : null;
-
-$di->params[Controller::class]['route']          = $di->lazyGet('route');
-$di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
-$di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
-$di->params[Controller::class]['pdo']            = $di->has('pdo') ? $di->lazyGet('pdo') : null;
-
-/* Set plugin manager in router to support making routes dependent on plugins (optional) */
-$di->setters[Router::class]['setPluginManager'] = $di->lazyGet('pluginManager');;
-
-/* Fetch objects from DI Container */
-$di->get('hooks');
-$di->get('router');
-$di->get('pluginManager');
-\Leap\Core\ControllerFactory::make($di->get('router')->match($request), $di);
-die('test');
-
-
-
-$kernel = new Leap\Core\Kernel();
+$di = require 'core/dependencies.php';
+$kernel = $di->get('kernel');
 
 /*
 |--------------------------------------------------------------------------

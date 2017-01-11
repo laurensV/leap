@@ -2,37 +2,62 @@
 namespace Leap\Core;
 
 use Aura\Di\Container;
-use Interop\Container\ContainerInterface;
-use Leap\Plugins\Admin\Controllers\AdminController;
 
 class ControllerFactory
 {
 
-    static public function make(Route $route, Container $di) : Controller {
-        if (isset($route->controller['file'])) {
-            global $autoloader;
-            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->controller['plugin']) . "\\Controllers\\" . $route->controller['class'] => $route->controller['file']]);
-        }
+    private $di;
 
-        /* If the controller class name does not contain the namespace yet, add it */
-        if (strpos($route->controller['class'], "\\") === false && isset($route->controller['plugin'])) {
-            $namespace                  = getNamespace($route->controller['plugin'], "controller");
-            $route->controller['class'] = $namespace . $route->controller['class'];
-        }
-        /* Check if controller class extends the core controller */
-        if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
-            /* Create the controller instance */
-            $di->set('controller', $di->lazyNew($route->controller['class']));
-        } else if (class_exists($route->controller['class'])) {
-            /* TODO: error handling */
-            printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
-        } else {
-            /* TODO: error handling */
-            printr("Controller class '" . $route->controller['class'] . "' not found", true);
-        }
+    function __construct(Container $di)
+    {
+        /* Normally not so oke to inject DI Container into a class,
+         * because it can be misused as a service locator. However, for this
+         * purpose it is OK, as this is a special case, because the Controller
+         * class can be anything and the DIC is only used to resolve the Controller,
+         * not to retrieve other services. */
+        $this->di = $di;
+    }
+
+    public function make(Route $route): Controller
+    {
+        $controllerInfo = $route->controller;
+        $this->loadControllerClass($controllerInfo);
+        $controllerClass = $this->getNamespaceClass($controllerInfo);
 
         /** @var Controller $controller */
-        $controller = $di->get('controller');
+        $controller = null;
+
+        /* Check if controller class extends the core controller */
+        if($controllerClass == 'Leap\Core\Controller' || is_subclass_of($controllerClass, "Leap\\Core\\Controller")) {
+            /* Create the controller instance */
+            $controller = $this->di->newInstance($controllerClass, ['route' => $route]);
+        } else if(class_exists($controllerClass)) {
+            /* TODO: error handling */
+            printr("Controller class '" . $controllerClass . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+        } else {
+            /* TODO: error handling */
+            printr("Controller class '" . $controllerClass . "' not found", true);
+        }
+
         return $controller;
+    }
+
+    private function getNamespaceClass(array $controllerInfo): string
+    {
+        /* If the controller class name does not contain the namespace yet, add it */
+        if(strpos($controllerInfo['class'], "\\") === false && isset($controllerInfo['plugin'])) {
+            $namespace               = getNamespace($controllerInfo['plugin'], "controller");
+            $controllerInfo['class'] = $namespace . $controllerInfo['class'];
+        }
+        return $controllerInfo['class'];
+    }
+
+    private function loadControllerClass(array $controllerInfo): void
+    {
+        /* Add controller class to autoloader if a custom file for controller class is specified */
+        if(isset($controllerInfo['file'])) {
+            global $autoloader;
+            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($controllerInfo['plugin']) . "\\Controllers\\" . $controllerInfo['class'] => $controllerInfo['file']]);
+        }
     }
 }
