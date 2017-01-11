@@ -32,13 +32,9 @@ class Controller
         $this->pdo = $pdo;
         $this->hooks          = $hooks;
         $this->plugin_manager = $plugin_manager;
-        if ($this->hasAccess()) {
-            $this->access = true;
-        }
         /* TODO: pass whole route variable */
         $this->template = new Template($route, $hooks);
         $this->page     = $route->page;
-        $this->init();
         if (isset($route->title)) {
             $this->set('title', $route->title);
         } else {

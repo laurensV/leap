@@ -92,12 +92,13 @@ class Kernel
                 $controller = $this->controllerFactory->make($route);
 
                 $response = new Response();
-                if(!$controller->access) {
+                if(!$controller->hasAccess()) {
                     $response   = $response->withStatus(403);
                     $route      = $this->router->matchUri("permission-denied", $this->request->getMethod());
                     $controller = $this->controllerFactory->make($route);
                 }
                 if($controller) {
+                    $controller->init();
                     /* Call the action from the Controller class */
                     if(method_exists($controller, $route->action)) {
                         $controller->{$route->action}();
