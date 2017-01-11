@@ -1,7 +1,6 @@
 <?php
 namespace Leap\Core;
 
-use Composer\DependencyResolver\Request;
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
