@@ -157,11 +157,11 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
 
-                $route = $this->di->get('route');
+                $route = $this->router->match($this->request);
                 /* Check if controller class extends the core controller */
                 if ($route->controller['class'] == 'Leap\Core\Controller' || is_subclass_of($route->controller['class'], "Leap\\Core\\Controller")) {
                     /* Create the controller instance */
-                    $this->controller = $this->di->get('controller');
+                    $this->controller = ControllerFactory::make($route);
                 } else if (class_exists($route->controller['class'])) {
                     /* TODO: error handling */
                     printr("Controller class '" . $route->controller['class'] . "' does not extend the base 'Leap\\Core\\Controller' class", true);
@@ -198,36 +198,6 @@ class Kernel
         $response   = $dispatcher->dispatch($this->request);
 
         (new SapiStreamEmitter())->emit($response);
-    }
-
-    /**
-     * @param ServerRequestInterface $request
-     *
-     * @return Route
-     */
-    /* TODO: needs to be public for DI Container, maybe not use DI Container? */
-    public function getRoute(ServerRequestInterface $request): Route
-    {
-        /* Get route information for the url */
-        $route = $this->router->match($request);
-        /* Check if page exists */
-        if (empty($route->page) || !file_exists($route->page['path'] . $route->page['value'])) {
-            $this->response = $this->response->withStatus(404);
-            $route          = $this->router->matchUri('404', $request->getMethod());
-        }
-
-        if (isset($route->controller['file'])) {
-            global $autoloader;
-            $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($route->controller['plugin']) . "\\Controllers\\" . $route->controller['class'] => $route->controller['file']]);
-        }
-
-        /* If the controller class name does not contain the namespace yet, add it */
-        if (strpos($route->controller['class'], "\\") === false && isset($route->controller['plugin'])) {
-            $namespace                  = getNamespace($route->controller['plugin'], "controller");
-            $route->controller['class'] = $namespace . $route->controller['class'];
-        }
-
-        return $route;
     }
 
     /**
