@@ -6,7 +6,7 @@ use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
 };
 use Zend\Diactoros\{
-    Response, Response\SapiStreamEmitter
+    Response, Response\SapiStreamEmitter, ServerRequestFactory
 };
 
 /**
@@ -45,7 +45,7 @@ class Kernel
      * Kernel constructor.
      */
     public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager,
-                                ControllerFactory $controllerFactory, ServerRequestInterface $request)
+                                ControllerFactory $controllerFactory)
     {
         /* Set the error reporting level based on the environment variable */
         /* Q: is this the right place to call this function? Maybe configHandler.php is better.. */
@@ -56,11 +56,9 @@ class Kernel
         $this->router            = $router;
         $this->pluginManager     = $pluginManager;
         $this->controllerFactory = $controllerFactory;
-        $this->request           = $request;
 
         /* Setup the Kernel */
         $this->bootstrap();
-
     }
 
     /**
@@ -77,6 +75,12 @@ class Kernel
         $this->loadMiddleware();
     }
 
+    private function addMiddleware($middleware) {
+        if(is_array($middleware)) {
+
+        }
+
+    }
     private function loadMiddleware()
     {
         /* retrieve middleware and add last framework middleware */
@@ -86,7 +90,7 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
 
-                $route = $this->router->match($this->request);
+                $route = $this->router->match($request);
 
                 /* Create the controller instance */
                 $controller = $this->controllerFactory->make($route);
@@ -94,7 +98,7 @@ class Kernel
                 $response = new Response();
                 if (!$controller->hasAccess()) {
                     $response   = $response->withStatus(403);
-                    $route      = $this->router->matchUri("permission-denied", $this->request->getMethod());
+                    $route      = $this->router->matchUri("permission-denied", $request->getMethod());
                     $controller = $this->controllerFactory->make($route);
                 }
                 if ($controller) {
@@ -106,7 +110,7 @@ class Kernel
                         $controller->defaultAction();
                     }
                     /* Render the templates */
-                    $body = $controller->render($this->request);
+                    $body = $controller->render($request);
                     $response->getBody()->write($body);
                 }
                 return $response;
@@ -149,11 +153,16 @@ class Kernel
 
     /**
      * Boot up the application
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      */
-    public function run(): void
+    public function run(ServerRequestInterface $request = null): void
     {
+        /* Get PSR-7 Request */
+        $request    = $request ?? ServerRequestFactory::fromGlobals();
+        /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
-        $response   = $dispatcher->dispatch($this->request);
+        $response   = $dispatcher->dispatch($request);
 
         (new SapiStreamEmitter())->emit($response);
     }

@@ -19,9 +19,9 @@ $di->set('request', $di->lazy([ServerRequestFactory::class, 'fromGlobals']));
 
 /* Set database service if specified in config */
 $db_conf = config('database');
-if($db_conf['db_type'] === "mysql") {
-    if(!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-// TODO: error handling
+if ($db_conf['db_type'] === "mysql") {
+    if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
+        // TODO: error handling
         die('not enough database info');
     }
     /* Create PdoPlus object with pdo connection inside */
@@ -36,7 +36,6 @@ $di->params[PluginManager::class]['pdo'] = $di->has('pdo') ? $di->lazyGet('pdo')
 
 $di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
 $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
-$di->params[Kernel::class]['request']           = $di->lazyGet('request');
 $di->params[Kernel::class]['router']            = $di->lazyGet('router');
 $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
 
