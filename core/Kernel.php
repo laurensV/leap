@@ -1,6 +1,7 @@
 <?php
 namespace Leap\Core;
 
+use Interop\Http\Middleware\MiddlewareInterface;
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\{
     ServerRequestInterface, ResponseInterface
@@ -39,7 +40,7 @@ class Kernel
     /**
      * @var array
      */
-    private $middlewares;
+    private $middlewares = [];
 
     /**
      * Kernel constructor.
@@ -48,7 +49,7 @@ class Kernel
                                 ControllerFactory $controllerFactory)
     {
         /* Set the error reporting level based on the environment variable */
-        /* Q: is this the right place to call this function? Maybe configHandler.php is better.. */
+        /* TODO: is this the right place to call this function? Maybe configHandler.php is better.. */
         $this->setReporting();
 
         /* Fetch objects from DI Container */
@@ -75,17 +76,22 @@ class Kernel
         $this->loadMiddleware();
     }
 
-    private function addMiddleware($middleware) {
-        if(is_array($middleware)) {
-
+    /**
+     * @param array|MiddlewareInterface|callable $middleware
+     */
+    public function addMiddleware($middleware): void
+    {
+        if (is_array($middleware)) {
+            $this->middlewares = array_merge($this->middlewares, $middleware);
+        } else {
+            $this->middlewares[] = $middleware;
         }
 
     }
-    private function loadMiddleware()
+
+    private function getRunFunction(): callable
     {
-        /* retrieve middleware and add last framework middleware */
-        $this->middlewares   = require "middlewares.php";
-        $this->middlewares[] =
+        return
             function (ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
@@ -115,6 +121,14 @@ class Kernel
                 }
                 return $response;
             };
+    }
+
+    private function loadMiddleware(): void
+    {
+        /* retrieve middleware and add last framework middleware */
+        $middlewares = require "middlewares.php";
+        $this->addMiddleware($middlewares);
+        $this->addMiddleware($this->getRunFunction());
     }
 
     private function loadPlugins()
@@ -159,7 +173,7 @@ class Kernel
     public function run(ServerRequestInterface $request = null): void
     {
         /* Get PSR-7 Request */
-        $request    = $request ?? ServerRequestFactory::fromGlobals();
+        $request = $request ?? ServerRequestFactory::fromGlobals();
         /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
         $response   = $dispatcher->dispatch($request);

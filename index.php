@@ -70,6 +70,5 @@ $kernel->run();
 /* TODO: composer: repo maken voor plugins */
 /* TODO: composer: eigen custom installer maken */
 /* TODO: move file directory */
-/* TODO: move autoloader to core folder */
 /* TODO: namespace function for plugins */
 /* TODO: find out differences between hooks and events and pick one */

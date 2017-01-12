@@ -3,7 +3,7 @@
  * @param      $data
  * @param bool $exit
  */
-function printr($data, $exit = false)
+function pre($data, $exit = false)
 {
     print '<pre>';
     print_r($data);

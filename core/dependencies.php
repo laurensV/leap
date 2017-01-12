@@ -13,8 +13,6 @@ $di->set('router', $di->lazyNew(Router::class));
 $di->set('pluginManager', $di->lazyNew(PluginManager::class));
 $di->set('controllerFactory', $di->lazyNew(ControllerFactory::class));
 $di->set('kernel', $di->lazyNew(Kernel::class));
-
-/* Create PSR7 Request */
 $di->set('request', $di->lazy([ServerRequestFactory::class, 'fromGlobals']));
 
 /* Set database service if specified in config */
@@ -39,13 +37,13 @@ $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
 $di->params[Kernel::class]['router']            = $di->lazyGet('router');
 $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
 
-$di->params[ControllerFactory::class]['di'] = $di;
-
 /* Normally not so oke to inject DI Container into a class,
 * because it can be misused as a service locator. However, for this
 * purpose it is OK, as this is a special case, because the Controller
 * class can be anything and the DIC is only used to resolve the Controller,
 * not to retrieve other services. */
+$di->params[ControllerFactory::class]['di'] = $di;
+
 $di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
 $di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
 $di->params[Controller::class]['pdo']            = $di->has('pdo') ? $di->lazyGet('pdo') : null;
