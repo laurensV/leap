@@ -34,10 +34,6 @@ class Kernel
      */
     private $pluginManager;
     /**
-     * @var ServerRequestInterface
-     */
-    private $request;
-    /**
      * @var array
      */
     private $middlewares = [];
@@ -89,6 +85,9 @@ class Kernel
 
     }
 
+    /**
+     * @return callable
+     */
     private function getRunFunction(): callable
     {
         return
