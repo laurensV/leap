@@ -6,6 +6,7 @@ define('ROOT', call_user_func(function () {
     return $root;
 }));
 
+
 $config = require(ROOT . "config.php");
 
 /* check for local settings */
@@ -36,7 +37,7 @@ define('URL', call_user_func(function () {
     if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
         $http = "https";
     }
-    return $http . "://" . $_SERVER['SERVER_NAME'] . $port . BASE_URL;
+    return $http . "://" . $_SERVER['HTTP_HOST'] . $port . BASE_URL;
 }));
 
 define('LIBRARIES', ROOT . "vendor/");
