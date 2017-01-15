@@ -23,12 +23,5 @@ class Config
             $localConfig = require $localConfigFile;
             self::$config      = array_replace_recursive(self::$config, $localConfig);
         }
-        if (!isset(self::$config['database']['db_type'])) {
-            self::$config['database']['db_type'] = "";
-        }
-        if (!isset(self::$config['database']['plugins_from_db'])) {
-            self::$config['general']['plugins_from_db'] = true;
-        }
     }
-
 }

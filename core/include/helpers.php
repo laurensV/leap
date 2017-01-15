@@ -1,5 +1,7 @@
 <?php
 /* Where am I? */
+use Leap\Core\Config;
+
 define('ROOT', call_user_func(function () {
     $root = str_replace("\\", "/", dirname(dirname(dirname(__FILE__))));
     $root .= (substr($root, -1) == '/' ? '' : '/');
@@ -143,9 +145,7 @@ function l($name, $link, $attributes = array(), $relative = false)
  */
 function config($name, $default = null)
 {
-    global $config;
-
-    return isset($config[$name]) ? $config[$name] : $default;
+    return isset(Config::$config[$name]) ? Config::$config[$name] : $default;
 }
 
 /**
