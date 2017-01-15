@@ -41,6 +41,6 @@ define('URL', call_user_func(function () {
 }));
 
 define('LIBRARIES', ROOT . "vendor/");
+define('FILES', ROOT . "public/files/");
 
 $args_raw = isset($_GET['args']) ? $_GET['args'] : "";
-
