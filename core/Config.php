@@ -14,13 +14,11 @@ class Config
 
     static function load($configFile) {
         self::$config = require(ROOT . $configFile);
-
-        /* check for local settings */
-//        $parts = split('.', $configFile);
-//        $extension = $parts[-1];
-//        array_pop($parts);
-//        $localConfigFile = ('.', ;
-        $localConfigFile = ROOT . 'config/config.local.php';
+        /* check for local config file with same name as main config file */
+        $parts = explode('.', $configFile);
+        $extension = array_pop($parts);
+        $localConfigFile = implode(".", $parts) . '.local.' . $extension;
+        $localConfigFile = ROOT . $localConfigFile;
         if (file_exists($localConfigFile)) {
             $localConfig = require $localConfigFile;
             self::$config      = array_replace_recursive(self::$config, $localConfig);
