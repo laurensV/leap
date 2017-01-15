@@ -1,5 +1,5 @@
 files/*
-config.local.php
+config/config.local.php
 *.log
 vendor
 composer.lock
