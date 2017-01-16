@@ -27,7 +27,7 @@ $autoloader = require '../vendor/autoload.php';
 | Setup the Leap application
 |--------------------------------------------------------------------------
 |
-| (optional) Wrapper to start the Leap Framework:
+| (optional) Wrapper for the Leap Framework that executes the following:
 |   1.  include helpers (constants and functions)
 |   2.  specify config (file)
 |   3.  setup dependencies (in DIC)
@@ -41,7 +41,7 @@ $app = new Leap\Core\Application();
 | Run The Application
 |--------------------------------------------------------------------------
 |
-| Time to run our bootstrapped Leap application!
+| One small step for man, one giant leap for mankind!
 */
 $app->run();
 
