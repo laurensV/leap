@@ -11,7 +11,7 @@ $di      = $builder->newInstance();
  *       Configuration       *
  *****************************/
 $di->set('config', $di->lazyNew(Config::class));
-$config = $configFileOrArray ?? 'config/config.php';
+$config = $configuration ?? 'config/config.php';
 $di->params[Config::class]['config'] = $config;
 
 /*****************************

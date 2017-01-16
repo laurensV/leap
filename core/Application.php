@@ -1,6 +1,8 @@
 <?php
 namespace Leap\Core;
 
+use Psr\Http\Message\ServerRequestInterface;
+
 /**
  * (optional) Wrapper to start the Leap Framework:
  *   1.  include helpers
@@ -13,9 +15,13 @@ namespace Leap\Core;
  */
 class Application
 {
+
+    /**
+     * @var Kernel
+     */
     private $kernel;
 
-    function __construct($configFileOrArray = 'config/config.php')
+    function __construct($configuration = 'config/config.php')
     {
         /*
         |--------------------------------------------------------------------------
@@ -35,7 +41,7 @@ class Application
         | Create the Dependency Injection Container and resolve the
         | kernel (core/Kernel.php) of the Leap framework from the DIC.
         */
-        $di           = require 'dependencies.php';
+        $di = require 'dependencies.php';
 
         global $config;
         $config = $di->get('config');
@@ -43,9 +49,13 @@ class Application
         $this->kernel = $di->get('kernel');
     }
 
-    public function run(): void
+    /**
+     * Run the Leap Application
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     */
+    public function run(ServerRequestInterface $request = null): void
     {
-        $this->kernel->run();
+        $this->kernel->run($request);
     }
-
 }

@@ -165,7 +165,7 @@ class Kernel
     }
 
     /**
-     * Boot up the application
+     * Run the Leap Application
      *
      * @param \Psr\Http\Message\ServerRequestInterface $request
      */
