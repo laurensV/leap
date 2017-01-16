@@ -24,37 +24,17 @@ $autoloader = require '../vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
-| Include Global helper functions and Constants
-|--------------------------------------------------------------------------
-|
-| Include useful helper functions and constants that can be used throughout
-| the whole Leap framework.
-*/
-require '../core/include/helpers.php';
-
-
-/*
-|--------------------------------------------------------------------------
-| Load the configuration into the configuration handler
-|--------------------------------------------------------------------------
-|
-| Load the configuration into the configuration handler.
-| Configurations can be filled in in the specified file
-| (e.g. `config/config.php`) and that same filename extended with .local
-| (e.g. `config/config.local.php`).
-*/
-$config = new Leap\Core\Config('config/config.php');
-
-/*
-|--------------------------------------------------------------------------
 | Setup the Leap application
 |--------------------------------------------------------------------------
 |
-| Create the Dependency Injection Container and resolve the
-| kernel (core/Kernel.php) of the Leap framework from the DIC.
+| (optional) Wrapper to start the Leap Framework:
+|   1.  include helpers (constants and functions)
+|   2.  specify config (file)
+|   3.  setup dependencies (in DIC)
+|   4.  resolve kernel from DIC
+|   5.  run kernel
 */
-$di = require '../core/dependencies.php';
-$kernel = $di->get('kernel');
+$app = new Leap\Core\Application();
 
 /*
 |--------------------------------------------------------------------------
@@ -63,7 +43,7 @@ $kernel = $di->get('kernel');
 |
 | Time to run our bootstrapped Leap application!
 */
-$kernel->run();
+$app->run();
 
 /* TODO: implement unit testing with PHPUnit */
 /* TODO: error handling */

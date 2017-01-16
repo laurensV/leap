@@ -3,18 +3,62 @@ namespace Leap\Core;
 
 /* Create and config Dependency Injector Container */
 use Aura\Di\ContainerBuilder;
-use Zend\Diactoros\ServerRequestFactory;
 
 $builder = new ContainerBuilder();
 $di      = $builder->newInstance();
 
-$di->set('hooks', $di->lazyNew(Hooks::class));
-$di->set('router', $di->lazyNew(Router::class));
-$di->set('pluginManager', $di->lazyNew(PluginManager::class));
-$di->set('controllerFactory', $di->lazyNew(ControllerFactory::class));
-$di->set('kernel', $di->lazyNew(Kernel::class));
-$di->set('request', $di->lazy([ServerRequestFactory::class, 'fromGlobals']));
+/*****************************
+ *       Configuration       *
+ *****************************/
+$di->set('config', $di->lazyNew(Config::class));
+$config = $configFileOrArray ?? 'config/config.php';
+$di->params[Config::class]['config'] = $config;
 
+/*****************************
+ *       Hook System         *
+ *****************************/
+$di->set('hooks', $di->lazyNew(Hooks::class));
+
+/*****************************
+ *          Router           *
+ *****************************/
+$di->set('router', $di->lazyNew(Router::class));
+/* Set plugin manager in router to support making routes dependent on plugins (optional) */
+$di->setters[Router::class]['setPluginManager'] = $di->lazyGet('pluginManager');
+
+/*****************************
+ *       Plugin Manager      *
+ *****************************/
+$di->set('pluginManager', $di->lazyNew(PluginManager::class));
+$di->params[PluginManager::class]['pdo'] = $di->lazyGet('pdo');
+
+/*****************************
+ *   Controller (Factory)    *
+ *****************************/
+$di->set('controllerFactory', $di->lazyNew(ControllerFactory::class));
+/* Normally not so oke to inject DI Container into a class,
+ * because it can be misused as a service locator. However, for this
+ * purpose it is OK, as this is a special case, because the Controller
+ * class can be anything and the DIC is only used to resolve the Controller,
+ * not to retrieve other services.
+ */
+$di->params[ControllerFactory::class]['di'] = $di;
+$di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
+$di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
+$di->params[Controller::class]['pdo']            = $di->lazyGet('pdo');
+
+/*****************************
+ *       Leap Kernel         *
+ *****************************/
+$di->set('kernel', $di->lazyNew(Kernel::class));
+$di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
+$di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
+$di->params[Kernel::class]['router']            = $di->lazyGet('router');
+$di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
+
+/*****************************
+ *         Database          *
+ *****************************/
 $di->set('pdo', $di->lazy(function () use ($di) {
     /* Set database service if specified in config */
     $db_conf = config('database');
@@ -33,26 +77,5 @@ $di->set('pdo', $di->lazy(function () use ($di) {
     }
     return null;
 }));
-
-$di->params[PluginManager::class]['pdo'] = $di->lazyGet('pdo');
-
-$di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
-$di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
-$di->params[Kernel::class]['router']            = $di->lazyGet('router');
-$di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
-
-/* Normally not so oke to inject DI Container into a class,
-* because it can be misused as a service locator. However, for this
-* purpose it is OK, as this is a special case, because the Controller
-* class can be anything and the DIC is only used to resolve the Controller,
-* not to retrieve other services. */
-$di->params[ControllerFactory::class]['di'] = $di;
-
-$di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
-$di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
-$di->params[Controller::class]['pdo']            = $di->lazyGet('pdo');
-
-/* Set plugin manager in router to support making routes dependent on plugins (optional) */
-$di->setters[Router::class]['setPluginManager'] = $di->lazyGet('pluginManager');
 
 return $di;

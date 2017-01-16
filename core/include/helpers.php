@@ -1,7 +1,5 @@
 <?php
 /* Where am I? */
-use Leap\Core\Config;
-
 define('ROOT', call_user_func(function () {
     $root = str_replace("\\", "/", dirname(dirname(dirname(__FILE__))));
     $root .= (substr($root, -1) == '/' ? '' : '/');
@@ -125,7 +123,7 @@ function arg($id = null, $args_raw = null)
  *
  * @return string
  */
-function l($name, $link, $attributes = array(), $relative = false)
+function l($name, $link, $attributes = [], $relative = false)
 {
     if (!$relative) {
         $link = BASE_URL . $link;
@@ -159,10 +157,10 @@ function set_message($message = null, $type = 'default')
 {
     if ($message) {
         if (!isset($_SESSION['messages'])) {
-            $_SESSION['messages'] = array();
+            $_SESSION['messages'] = [];
         }
         if (!isset($_SESSION['messages'][$type])) {
-            $_SESSION['messages'][$type] = array();
+            $_SESSION['messages'][$type] = [];
         }
 
         $_SESSION['messages'][$type][] = $message;
@@ -185,7 +183,7 @@ function get_messages($type = null, $clear_queue = true)
                 unset($_SESSION['messages'][$type]);
             }
             if (isset($messages[$type])) {
-                return array($type => $messages[$type]);
+                return [$type => $messages[$type]];
             }
         } else {
             if ($clear_queue) {
@@ -194,5 +192,5 @@ function get_messages($type = null, $clear_queue = true)
             return $messages;
         }
     }
-    return array();
+    return [];
 }
