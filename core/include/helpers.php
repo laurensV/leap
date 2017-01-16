@@ -145,7 +145,8 @@ function l($name, $link, $attributes = array(), $relative = false)
  */
 function config($name, $default = null)
 {
-    return isset(Config::$config[$name]) ? Config::$config[$name] : $default;
+    global $config;
+    return $config->get($name, $default);
 }
 
 /**

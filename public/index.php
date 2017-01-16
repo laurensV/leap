@@ -43,7 +43,7 @@ require '../core/include/helpers.php';
 | (e.g. `config/config.php`) and that same filename extended with .local
 | (e.g. `config/config.local.php`).
 */
-Leap\Core\Config::load('config/config.php');
+$config = new Leap\Core\Config('config/config.php');
 
 /*
 |--------------------------------------------------------------------------
