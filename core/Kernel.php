@@ -56,9 +56,7 @@ class Kernel
         $this->router            = $router;
         $this->pluginManager     = $pluginManager;
         $this->controllerFactory = $controllerFactory;
-
-
-
+        $this->config            = $config;
 
         /* Setup the Kernel */
         $this->bootstrap();
