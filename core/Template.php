@@ -27,7 +27,7 @@ class Template
 
     private function initVars()
     {
-        $this->set('site_title', $this->config->application['site_name']);
+        $this->set('site_title', $this->config->application['name']);
         $this->set('messages', $this->render_messages(get_messages()));
     }
 
