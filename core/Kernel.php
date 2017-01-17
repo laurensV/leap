@@ -77,19 +77,6 @@ class Kernel
     }
 
     /**
-     * @param array|MiddlewareInterface|callable $middleware
-     */
-    public function addMiddleware($middleware): void
-    {
-        if (is_array($middleware)) {
-            $this->middlewares = array_merge($this->middlewares, $middleware);
-        } else {
-            $this->middlewares[] = $middleware;
-        }
-
-    }
-
-    /**
      * @return callable
      */
     private function getRunFunction(): callable
@@ -126,6 +113,9 @@ class Kernel
             };
     }
 
+    /**
+     * Load PSR-15 middlewares into the Middelware Stack
+     */
     private function loadMiddleware(): void
     {
         /* retrieve middleware and add last framework middleware */
@@ -134,6 +124,22 @@ class Kernel
         $this->addMiddleware($this->getRunFunction());
     }
 
+    /**
+     * @param array|MiddlewareInterface|callable $middleware
+     */
+    public function addMiddleware($middleware): void
+    {
+        if (is_array($middleware)) {
+            $this->middlewares = array_merge($this->middlewares, $middleware);
+        } else {
+            $this->middlewares[] = $middleware;
+        }
+
+    }
+
+    /**
+     * Load all plugins into the application
+     */
     private function loadPlugins(): void
     {
         /* Get and load enabled plugins */
@@ -143,6 +149,9 @@ class Kernel
         $this->pluginManager->loadPlugins($plugins_to_enable);
     }
 
+    /**
+     * Load all defined hook functions (core + plugins) in hooking system
+     */
     private function loadHooks(): void
     {
         /* Add hooks from plugins */
@@ -157,6 +166,9 @@ class Kernel
         }
     }
 
+    /**
+     * Load Files with routes into router
+     */
     private function loadRoutes(): void
     {
         /* add routes from plugins */
@@ -186,6 +198,8 @@ class Kernel
 
     /**
      * Set error level based on environment
+     *
+     * @param null $environment
      */
     private function setReporting($environment = null): void
     {
