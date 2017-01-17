@@ -134,7 +134,7 @@ class Kernel
         $this->addMiddleware($this->getRunFunction());
     }
 
-    private function loadPlugins()
+    private function loadPlugins(): void
     {
         /* Get and load enabled plugins */
         /* TODO: cache getting plugin info in PluginManager */
@@ -143,7 +143,7 @@ class Kernel
         $this->pluginManager->loadPlugins($plugins_to_enable);
     }
 
-    private function loadHooks()
+    private function loadHooks(): void
     {
         /* Add hooks from plugins */
         $functions = get_defined_functions();
@@ -157,7 +157,7 @@ class Kernel
         }
     }
 
-    private function loadRoutes()
+    private function loadRoutes(): void
     {
         /* add routes from plugins */
         foreach ($this->pluginManager->enabled_plugins as $pid) {
