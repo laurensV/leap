@@ -21,6 +21,11 @@ class Application
      */
     private $kernel;
 
+    /**
+     * Application constructor.
+     *
+     * @param string $configuration
+     */
     function __construct($configuration = 'config/config.php')
     {
         /*
