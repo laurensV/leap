@@ -17,6 +17,7 @@ class Controller
     protected $hooks;
     protected $plugin_manager;
     protected $pdo;
+    protected $config;
     public    $access = false;
 
     /**
@@ -27,13 +28,14 @@ class Controller
      * @param                        $plugin_manager
      * @param                        $pdo
      */
-    public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, ?PdoPlus $pdo)
+    public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, Config $config, ?PdoPlus $pdo)
     {
         $this->pdo = $pdo;
+        $this->config = $config;
         $this->hooks          = $hooks;
         $this->plugin_manager = $plugin_manager;
         /* TODO: pass whole route variable */
-        $this->template = new Template($route, $hooks);
+        $this->template = new Template($route, $hooks, $config);
         $this->page     = $route->page;
         if (isset($route->title)) {
             $this->set('title', $route->title);

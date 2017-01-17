@@ -12,23 +12,27 @@ class Template
     private $stylesheets_route;
     private $scripts_route;
     private $hooks;
+    private $config;
 
-    public function __construct($route, $hooks)
+    public function __construct(Route $route, Hooks $hooks, Config $config)
     {
         $this->template          = $route->template;
         $this->page              = $route->page;
         $this->hooks             = $hooks;
         $this->stylesheets_route = $route->stylesheets;
         $this->scripts_route     = $route->scripts;
+        $this->config            = $config;
         $this->initVars();
     }
 
-    private function initVars() {
-        $this->set('site_title', config('application')['site_name']);
+    private function initVars()
+    {
+        $this->set('site_title', $this->config->application['site_name']);
         $this->set('messages', $this->render_messages(get_messages()));
     }
 
-    private function render_messages($messages_array) {
+    private function render_messages($messages_array)
+    {
         $messages = "";
         foreach ($messages_array as $type => $messages_of_type) {
             switch ($type) {
@@ -39,8 +43,8 @@ class Template
                     $class = $type;
                     break;
             }
-            foreach ($messages_of_type as  $message_of_type) {
-                $messages .= '<div class="alert alert-'.$class.' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'.$message_of_type.'</div>';
+            foreach ($messages_of_type as $message_of_type) {
+                $messages .= '<div class="alert alert-' . $class . ' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' . $message_of_type . '</div>';
             }
 
         }
@@ -60,7 +64,7 @@ class Template
 
     public function parseStylesheet($style, $base_path)
     {
-        $this->hooks->fire("hook_parseStylesheet", array(&$style, $base_path));
+        $this->hooks->fire("hook_parseStylesheet", [&$style, $base_path]);
 
         if (!filter_var($style, FILTER_VALIDATE_URL)) {
             if ($style[0] != "/") {
@@ -144,7 +148,7 @@ class Template
                 extract($this->variables);
             }
             /* no need to check if file exists, as we already did that in the router */
-            require_once ($this->page['value']);
+            require_once($this->page['value']);
         });
         $page = ob_get_contents();
         ob_end_clean();
@@ -155,7 +159,7 @@ class Template
             /* call anonymous function to hide variables */
             call_user_func(function () {
                 extract($this->variables);
-                require_once ($this->template['value']);
+                require_once($this->template['value']);
             });
         } else {
             echo $page;

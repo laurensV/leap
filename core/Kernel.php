@@ -34,6 +34,10 @@ class Kernel
      */
     private $pluginManager;
     /**
+     * $var Config
+     */
+    private $config;
+    /**
      * @var array
      */
     private $middlewares = [];
@@ -42,17 +46,18 @@ class Kernel
      * Kernel constructor.
      */
     public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager,
-                                ControllerFactory $controllerFactory)
+                                ControllerFactory $controllerFactory, Config $config)
     {
-        /* Set the error reporting level based on the environment variable */
-        /* TODO: is this the right place to call this function? Maybe configHandler.php is better.. */
-        $this->setReporting();
-
-        /* Fetch objects from DI Container */
+        /* Store dependency objects as properties */
         $this->hooks             = $hooks;
         $this->router            = $router;
         $this->pluginManager     = $pluginManager;
         $this->controllerFactory = $controllerFactory;
+        $this->config            = $config;
+
+        /* Set the error reporting level based on the environment variable */
+        /* TODO: is this the right place to call this function? Maybe configHandler.php is better.. */
+        $this->setReporting();
 
         /* Setup the Kernel */
         $this->bootstrap();
@@ -186,7 +191,7 @@ class Kernel
     private function setReporting(): void
     {
         error_reporting(E_ALL);
-        if (config('general')['dev_env'] == true) {
+        if ($this->config->general['dev_env'] == true) {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

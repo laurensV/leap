@@ -11,7 +11,7 @@ $di      = $builder->newInstance();
  *       Configuration       *
  *****************************/
 $di->set('config', $di->lazyNew(Config::class));
-$config = $configuration ?? 'config/config.php';
+$config                              = $configuration ?? 'config/config.php';
 $di->params[Config::class]['config'] = $config;
 
 /*****************************
@@ -42,9 +42,10 @@ $di->set('controllerFactory', $di->lazyNew(ControllerFactory::class));
  * class can be anything and the DIC is only used to resolve the Controller,
  * not to retrieve other services.
  */
-$di->params[ControllerFactory::class]['di'] = $di;
+$di->params[ControllerFactory::class]['di']      = $di;
 $di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
 $di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
+$di->params[Controller::class]['config']         = $di->lazyGet('config');
 $di->params[Controller::class]['pdo']            = $di->lazyGet('pdo');
 
 /*****************************
@@ -55,13 +56,14 @@ $di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
 $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
 $di->params[Kernel::class]['router']            = $di->lazyGet('router');
 $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
+$di->params[Kernel::class]['config']            = $di->lazyGet('config');
 
 /*****************************
  *         Database          *
  *****************************/
 $di->set('pdo', $di->lazy(function () use ($di) {
     /* Set database service if specified in config */
-    $db_conf = config('database');
+    $db_conf = $di->get('config')->database;
     if ($db_conf['db_type'] === "mysql") {
         if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
             // TODO: error handling

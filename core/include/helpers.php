@@ -135,17 +135,17 @@ function l($name, $link, $attributes = [], $relative = false)
     return "<a" . $attributes_string . "href='" . $link . "'>" . $name . "</a>";
 }
 
-/**
- * @param      $name
- * @param null $default
- *
- * @return null
- */
-function config($name, $default = null)
-{
-    global $config;
-    return $config->get($name, $default);
-}
+///**
+// * @param      $name
+// * @param null $default
+// *
+// * @return null
+// */
+//function config($name, $default = null)
+//{
+//    global $config;
+//    return $config->get($name, $default);
+//}
 
 /**
  * @param null   $message

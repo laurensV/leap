@@ -43,9 +43,6 @@ class Application
         */
         $di = require 'dependencies.php';
 
-        global $config;
-        $config = $di->get('config');
-
         $this->kernel = $di->get('kernel');
     }
 
