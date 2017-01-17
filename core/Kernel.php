@@ -119,7 +119,7 @@ class Kernel
     private function loadMiddleware(): void
     {
         /* retrieve middleware and add last framework middleware */
-        $middlewares = require "middlewares.php";
+        $middlewares = require "middleware/middlewares.php";
         $this->addMiddleware($middlewares);
         $this->addMiddleware($this->getRunFunction());
     }

@@ -15,7 +15,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Application
 {
-
     /**
      * @var Kernel
      */
