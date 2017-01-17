@@ -64,15 +64,15 @@ $di->params[Kernel::class]['config']            = $di->lazyGet('config');
 $di->set('pdo', $di->lazy(function () use ($di) {
     /* Set database service if specified in config */
     $db_conf = $di->get('config')->database;
-    if ($db_conf['db_type'] === "mysql") {
+    if ($db_conf['type'] == 'mysql') {
         if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
             // TODO: error handling
             die('not enough database info');
         }
-        $di->params[PdoPlus::class]['host']     = $db_conf['db_host'];
-        $di->params[PdoPlus::class]['username'] = $db_conf['db_user'];
-        $di->params[PdoPlus::class]['password'] = $db_conf['db_pass'];
-        $di->params[PdoPlus::class]['dbName']   = $db_conf['db_name'];
+        $di->params[PdoPlus::class]['host']     = $db_conf['host'];
+        $di->params[PdoPlus::class]['username'] = $db_conf['username'];
+        $di->params[PdoPlus::class]['password'] = $db_conf['password'];
+        $di->params[PdoPlus::class]['database']   = $db_conf['database'];
 
         /* Create PdoPlus object with pdo connection inside */
         return $di->lazyNew(PdoPlus::class);

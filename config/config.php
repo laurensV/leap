@@ -1,7 +1,7 @@
 <?php
 return [
     'general' => [
-        'dev_env' => true,
+        'environment' => 'development',
     ],
 
     'application' => [
@@ -12,11 +12,11 @@ return [
     ],
 
     'database' => [
-        'db_type' => 'none',
-        'db_name' => 'leap',
-        'db_user' => 'root',
-        'db_pass' => '',
-        'db_host' => 'localhost',
+        'type' => 'none',
+        'database' => 'leap',
+        'username' => 'root',
+        'password' => '',
+        'host' => 'localhost',
     ],
 
 ];

@@ -48,16 +48,17 @@ class Kernel
     public function __construct(Hooks $hooks, Router $router, PluginManager $pluginManager,
                                 ControllerFactory $controllerFactory, Config $config)
     {
+        /* Set the error reporting level based on the config environment variable */
+        $this->setReporting($config->general['environment']);
+
         /* Store dependency objects as properties */
         $this->hooks             = $hooks;
         $this->router            = $router;
         $this->pluginManager     = $pluginManager;
         $this->controllerFactory = $controllerFactory;
-        $this->config            = $config;
 
-        /* Set the error reporting level based on the environment variable */
-        /* TODO: is this the right place to call this function? Maybe configHandler.php is better.. */
-        $this->setReporting();
+
+
 
         /* Setup the Kernel */
         $this->bootstrap();
@@ -188,10 +189,10 @@ class Kernel
     /**
      * Set error level based on environment
      */
-    private function setReporting(): void
+    private function setReporting($environment = null): void
     {
         error_reporting(E_ALL);
-        if ($this->config->general['dev_env'] == true) {
+        if ($environment == 'development' || $environment == 'dev') {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

@@ -43,7 +43,7 @@ class PdoPlus
      */
     public $result;
 
-    public function __construct($host, string $username = null, string $password = null, string $dbName = null, array $attributes = [])
+    public function __construct($host, string $username = null, string $password = null, string $database = null, array $attributes = [])
     {
         if ($host instanceof PDO) {
             /* use existing PDO object */
@@ -54,7 +54,7 @@ class PdoPlus
             $this->host       = $host;
             $this->username   = $username;
             $this->password   = $password;
-            $this->dbName     = $dbName;
+            $this->dbName     = $database;
             $this->attributes = array_replace($this->attributes, $attributes);
         }
     }
