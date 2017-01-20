@@ -10,9 +10,26 @@ $di      = $builder->newInstance();
 /*****************************
  *       Configuration       *
  *****************************/
-$di->set('config', $di->lazyNew(Config::class));
-$config                              = $configuration ?? 'config/config.php';
-$di->params[Config::class]['config'] = $config;
+$configuration = $configuration ?? 'config/config.php';
+$config = new Config($configuration);
+
+/*****************************
+ *         Database          *
+ *****************************/
+$db_conf = $config->database;
+if ($db_conf['type'] == 'mysql') {
+    if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
+        // TODO: error handling
+        die('not enough database info');
+    }
+    $di->params[PdoPlus::class]['host']     = $db_conf['host'];
+    $di->params[PdoPlus::class]['username'] = $db_conf['username'];
+    $di->params[PdoPlus::class]['password'] = $db_conf['password'];
+    $di->params[PdoPlus::class]['database'] = $db_conf['database'];
+
+    /* Create PdoPlus object with pdo connection inside */
+    $di->set('pdo',$di->lazyNew(PdoPlus::class));
+}
 
 /*****************************
  *       Hook System         *
@@ -30,7 +47,7 @@ $di->setters[Router::class]['setPluginManager'] = $di->lazyGet('pluginManager');
  *       Plugin Manager      *
  *****************************/
 $di->set('pluginManager', $di->lazyNew(PluginManager::class));
-$di->params[PluginManager::class]['pdo'] = $di->lazyGet('pdo');
+$di->params[PluginManager::class]['pdo'] = $di->has('pdo') ? $di->lazyGet('pdo') : null;
 
 /*****************************
  *   Controller (Factory)    *
@@ -45,8 +62,8 @@ $di->set('controllerFactory', $di->lazyNew(ControllerFactory::class));
 $di->params[ControllerFactory::class]['di']      = $di;
 $di->params[Controller::class]['hooks']          = $di->lazyGet('hooks');
 $di->params[Controller::class]['plugin_manager'] = $di->lazyGet('pluginManager');
-$di->params[Controller::class]['config']         = $di->lazyGet('config');
-$di->params[Controller::class]['pdo']            = $di->lazyGet('pdo');
+$di->params[Controller::class]['config']         = $config;
+$di->params[Controller::class]['pdo']            = $di->has('pdo') ? $di->lazyGet('pdo') : null;
 
 /*****************************
  *       Leap Kernel         *
@@ -56,28 +73,6 @@ $di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
 $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
 $di->params[Kernel::class]['router']            = $di->lazyGet('router');
 $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
-$di->params[Kernel::class]['config']            = $di->lazyGet('config');
-
-/*****************************
- *         Database          *
- *****************************/
-$di->set('pdo', $di->lazy(function () use ($di) {
-    /* Set database service if specified in config */
-    $db_conf = $di->get('config')->database;
-    if ($db_conf['type'] == 'mysql') {
-        if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
-            // TODO: error handling
-            die('not enough database info');
-        }
-        $di->params[PdoPlus::class]['host']     = $db_conf['host'];
-        $di->params[PdoPlus::class]['username'] = $db_conf['username'];
-        $di->params[PdoPlus::class]['password'] = $db_conf['password'];
-        $di->params[PdoPlus::class]['database']   = $db_conf['database'];
-
-        /* Create PdoPlus object with pdo connection inside */
-        return $di->lazyNew(PdoPlus::class);
-    }
-    return null;
-}));
+$di->params[Kernel::class]['config']            = $config;
 
 return $di;
