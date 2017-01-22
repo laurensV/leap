@@ -14,9 +14,9 @@ class Router
      */
     public $routeCollection;
     /**
-     * @var PluginManager
+     * @var \Leap\Core\PluginManager
      */
-    private $plugin_manager;
+    private $pluginManager;
     /**
      * @var array
      */
@@ -35,24 +35,23 @@ class Router
         $this->defaultValues   = [];
     }
 
-
     /**
-     * Setter injection for a plugin manager instance
+     * Setter injection for a Leap plugin manager instance
      *
-     * @param $plugin_manager
+     * @param \Leap\Core\PluginManager $pluginManager
      */
-    public function setPluginManager(PluginManager $plugin_manager): void
+    public function setPluginManager(PluginManager $pluginManager): void
     {
-        $this->plugin_manager = $plugin_manager;
+        $this->pluginManager = $pluginManager;
     }
 
     /**
      * Add a new file with routes
      *
-     * @param $file
-     * @param $pluginForClass
+     * @param string $file
+     * @param string $pluginForNamespace
      */
-    public function addRouteFile($file, $pluginForNamespace): void
+    public function addRouteFile(string $file, string $pluginForNamespace): void
     {
         if (file_exists($file)) {
             $routes = parse_ini_file($file, true);
@@ -75,13 +74,13 @@ class Router
      * @param      $pluginForNamespace
      * @param      $path
      */
-    public function addRoute($route, $options, $path = ROOT, $pluginForNamespace = NULL): void
+    public function addRoute(string $route, array $options, string $path = ROOT, string $pluginForNamespace = NULL): void
     {
         $route = trim($route, "/");
-        if (isset($options['dependencies']) && isset($this->plugin_manager)) {
+        if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = "";
             foreach ($options['dependencies'] as $plugin) {
-                if (!$this->plugin_manager->isEnabled($plugin)) {
+                if (!$this->pluginManager->isEnabled($plugin)) {
                     $error .= "need plugin " . $plugin . " for route \n";
                 }
             }
@@ -178,7 +177,7 @@ class Router
      *
      * @return array
      */
-    private function sortRoutes($routes): array
+    private function sortRoutes(array $routes): array
     {
         $weight      = [];
         $routeLength = [];
@@ -204,7 +203,7 @@ class Router
      *
      * @return string
      */
-    private function getPregPattern($pattern, $include_slash = false): string
+    private function getPregPattern(string $pattern, bool $include_slash = false): string
     {
         $transforms = [
             '\*'   => '[^/]*',
@@ -229,14 +228,10 @@ class Router
      * @param $url
      * @param $wildcard_args
      */
-    private function parseRoute($route, $url, $wildcard_args, Route $parsedRoute, string $pattern): void
+    private function parseRoute(array $route, string $url, array $wildcard_args, Route $parsedRoute, string $pattern): void
     {
         $parsedRoute->mathedRoutes[$pattern] = $route;
         $parsedRoute->base_path = $route['path'];
-
-        if (isset($route['clear'])) {
-            $this->defaultRouteValues($route['clear']);
-        }
 
         if (!empty($wildcard_args)) {
             if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
@@ -252,6 +247,10 @@ class Router
                 }
             }
         }
+        if (isset($route['clear'])) {
+            $this->defaultRouteValues($route['clear']);
+        }
+
         if (isset($route['controller'])) {
             $parsedRoute->controller          = [];
             $parsedRoute->controller['class'] = $this->replaceWildcardArgs($route['controller']);

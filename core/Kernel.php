@@ -175,8 +175,8 @@ class Kernel
             $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
         }
         /* Add router files from core and site theme */
-        $this->router->addRouteFile(ROOT . "core/routes.ini", "core");
-        $this->router->addRouteFile(ROOT . "site/routes.ini", "site");
+        $this->router->addRouteFile(ROOT . "core/routes.php", "core");
+        $this->router->addRouteFile(ROOT . "site/routes.php", "site");
     }
 
     /**
