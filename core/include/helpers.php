@@ -2,13 +2,13 @@
 /* Where am I? */
 define('ROOT', call_user_func(function () {
     $root = str_replace("\\", "/", dirname(dirname(dirname(__FILE__))));
-    $root .= (substr($root, -1) == '/' ? '' : '/');
+    $root .= (substr($root, -1) === '/' ? '' : '/');
     return $root;
 }));
 
 define('BASE_URL', call_user_func(function () {
     $sub_dir = str_replace("\\", "/", dirname($_SERVER['PHP_SELF']));
-    $sub_dir .= (substr($sub_dir, -1) == '/' ? '' : '/');
+    $sub_dir .= (substr($sub_dir, -1) === '/' ? '' : '/');
     return $sub_dir;
 }));
 
@@ -16,11 +16,11 @@ define('URL', call_user_func(function () {
     $port = ":" . $_SERVER['SERVER_PORT'];
     $http = "http";
 
-    if ($port == ":80") {
+    if ($port === ":80") {
         $port = "";
     }
 
-    if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] == "on") {
+    if (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on") {
         $http = "https";
     }
     return $http . "://" . $_SERVER['HTTP_HOST'] . $port . BASE_URL;

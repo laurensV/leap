@@ -157,7 +157,7 @@ class Kernel
         $functions = get_defined_functions();
         foreach ($functions['user'] as $function) {
             $parts = explode("\\", $function);
-            if ($parts[0] == "leap" && $parts[1] == "hooks") {
+            if ($parts[0] === "leap" && $parts[1] === "hooks") {
                 if (isset($parts[3])) {
                     $this->hooks->add($parts[3], $parts[2]);
                 }
@@ -204,7 +204,7 @@ class Kernel
     private function setReporting($environment = null): void
     {
         error_reporting(E_ALL);
-        if ($environment == 'development' || $environment == 'dev') {
+        if ($environment === 'development' || $environment === 'dev') {
             ini_set('display_errors', 1);
         } else {
             ini_set('display_errors', 0);

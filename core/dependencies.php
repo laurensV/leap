@@ -17,7 +17,7 @@ $config = new Config($configuration);
  *         Database          *
  *****************************/
 $db_conf = $config->database;
-if ($db_conf['type'] == 'mysql') {
+if ($db_conf['type'] === 'mysql') {
     if (!isset($db_conf['db_host']) || !isset($db_conf['db_user']) || !isset($db_conf['db_pass']) || !isset($db_conf['db_name'])) {
         // TODO: error handling
         die('not enough database info');
