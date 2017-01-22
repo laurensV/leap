@@ -121,7 +121,6 @@ class Kernel
         /* retrieve middleware and add last framework middleware */
         $middlewares = require "middleware/middlewares.php";
         $this->addMiddleware($middlewares);
-        $this->addMiddleware($this->getRunFunction());
     }
 
     /**
@@ -187,6 +186,7 @@ class Kernel
      */
     public function run(ServerRequestInterface $request = null): void
     {
+        $this->addMiddleware($this->getRunFunction());
         /* Get PSR-7 Request */
         $request = $request ?? ServerRequestFactory::fromGlobals();
         /* PSR-7 / PSR-15 middleware dispatcher */
