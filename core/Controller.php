@@ -1,9 +1,7 @@
 <?php
 namespace Leap\Core;
 
-use Psr\Http\Message\{
-    ResponseInterface, ServerRequestInterface
-};
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class Controller

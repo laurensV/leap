@@ -33,7 +33,7 @@ class Route
         $this->defaultValues['base_path']   = null;
         $this->defaultValues['action']      = null;
         $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
-        $this->defaultValues['template']    = ['path' => ROOT . 'site/templates/', 'value' => "default_template.php"];
+        $this->defaultValues['template']    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
         $this->defaultValues['page']        = [];
         $this->defaultValues['stylesheets'] = [];
         $this->defaultValues['scripts']     = [];

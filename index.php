@@ -20,7 +20,7 @@
 | framework. Programmers are far too lazy to manually include all the
 | class files. Simply include it and we'll get autoloading for free.
 */
-$autoloader = require '../vendor/autoload.php';
+$autoloader = require 'vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------

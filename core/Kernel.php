@@ -172,11 +172,11 @@ class Kernel
     {
         /* add routes from plugins */
         foreach ($this->pluginManager->enabled_plugins as $pid) {
-            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes", $pid);
+            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
         }
         /* Add router files from core and site theme */
-        $this->router->addRouteFile(ROOT . "core/routes.php", "core");
-        $this->router->addRouteFile(ROOT . "site/routes.php", "site");
+        $this->router->addRouteFile(ROOT . "core/core.routes.php", "core");
+        $this->router->addRouteFile(ROOT . "app/app.routes.php", "app");
     }
 
     /**

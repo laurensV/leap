@@ -27,7 +27,7 @@ define('URL', call_user_func(function () {
 }));
 
 define('LIBRARIES', ROOT . "vendor/");
-define('FILES', ROOT . "public/files/");
+define('FILES', ROOT . "files/");
 
 /**
  * @param      $data
@@ -71,7 +71,7 @@ function getNamespace($plugin = "", $type = "")
 {
     $namespace = "Leap\\";
     if (!empty($plugin)) {
-        if ($plugin != "core" && $plugin != "site") {
+        if ($plugin != "core" && $plugin != "app") {
             $namespace .= "Plugins\\";
         }
         $namespace .= ucfirst($plugin) . "\\";

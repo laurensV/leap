@@ -54,7 +54,7 @@ class Router
     public function addRouteFile(string $file, string $pluginForNamespace): void
     {
         if (file_exists($file)) {
-            $routes = parse_ini_file($file, true);
+            $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
             foreach ($routes as $route => $options) {
                 // Multi-value keys seperation
@@ -248,7 +248,7 @@ class Router
             }
         }
         if (isset($route['clear'])) {
-            $this->defaultRouteValues($route['clear']);
+            $parsedRoute->defaultRouteValues($route['clear']);
         }
 
         if (isset($route['controller'])) {
