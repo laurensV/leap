@@ -37,6 +37,12 @@ class Application
         */
         require 'include/helpers.php';
 
+        /*****************************
+         *       Configuration       *
+         *****************************/
+        $configuration = $configuration ?? 'config/config.php';
+        $config = new Config($configuration);
+
         /*
         |--------------------------------------------------------------------------
         | Setup the Leap Kernel

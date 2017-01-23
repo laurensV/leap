@@ -26,9 +26,3 @@ return [
         'page' => 'pages/:p.php',
     ]
 ];
-
-
-
-
-
-

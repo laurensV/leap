@@ -7,11 +7,10 @@ use Aura\Di\ContainerBuilder;
 $builder = new ContainerBuilder();
 $di      = $builder->newInstance();
 
-/*****************************
- *       Configuration       *
- *****************************/
-$configuration = $configuration ?? 'config/config.php';
-$config = new Config($configuration);
+/**
+ * @var Config $config;
+ */
+$config = $config ?? null;
 
 /*****************************
  *         Database          *
