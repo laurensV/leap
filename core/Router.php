@@ -251,22 +251,15 @@ class Router
             $parsedRoute->defaultRouteValues($route['clear']);
         }
 
-        if (isset($route['controller'])) {
-            $parsedRoute->controller          = [];
-            $parsedRoute->controller['class'] = $this->replaceWildcardArgs($route['controller']);
-            if (isset($route['controllerFile'])) {
-                if ($route['controllerFile'][0] == "/") {
-                    $parsedRoute->controller['file'] = ROOT . substr($route['controllerFile'], 1);
-                } else {
-                    $parsedRoute->controller['file'] = $route['path'] . $route['controllerFile'];
-                }
-            }
-            if (isset($route['controllerPlugin'])) {
-                $parsedRoute->controller['plugin'] = $route['controllerPlugin'];
+        if (isset($route['callback'])) {
+            if(is_callable($route['callback'])){
+                $parsedRoute->callback = $route['callback'];
             } else {
-                if (isset($route['plugin'])) {
-                    $parsedRoute->controller['plugin'] = $route['plugin'];
-                }
+                $parsedRoute->callback = [];
+                $parts                 = explode('@', $route['callback']);
+
+                $parsedRoute->callback['class']  = $this->replaceWildcardArgs($parts[0]);
+                $parsedRoute->callback['action'] = $parts[1] ?? null;
             }
         }
         if (isset($route['page'])) {
@@ -289,9 +282,7 @@ class Router
                 $parsedRoute->template['path'] = $route['path'];
             }
         }
-        if (isset($route['action'])) {
-            $parsedRoute->action = $this->replaceWildcardArgs($route['action']);
-        }
+
         if (isset($route['title'])) {
             $parsedRoute->title = $this->replaceWildcardArgs($route['title']);
         }

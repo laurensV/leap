@@ -117,18 +117,20 @@ class Template
             $this->addScript($scriptArray['value'], $scriptArray['path']);
         }
         /* remove duplicates */
-        $this->stylesheets = array_unique($this->stylesheets);
-        $this->scripts     = array_unique($this->scripts);
+        if (is_array($this->stylesheets)) {
+            $this->stylesheets = array_unique($this->stylesheets);
+        }
+        if (is_array($this->scripts)) {
+            $this->scripts = array_unique($this->scripts);
+        }
     }
 
     /**
      * Display Template
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     *
      * @return string
      */
-    public function render(ServerRequestInterface $request): string
+    public function render(): string
     {
         if (!empty($this->variables)) {
             extract($this->variables);

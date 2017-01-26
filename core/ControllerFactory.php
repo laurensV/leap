@@ -21,7 +21,7 @@ class ControllerFactory
 
     public function make(Route $route): Controller
     {
-        $controllerInfo = $route->controller;
+        $controllerInfo = $route->callback;
         $this->loadControllerClass($controllerInfo);
         $controllerClass = $this->getNamespaceClass($controllerInfo);
 

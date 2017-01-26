@@ -15,5 +15,8 @@ if (isset($this->scripts)) {
     }
 }
 ?>
+    <style id="dynamic-css">
+
+    </style>
 </head>
 <body>

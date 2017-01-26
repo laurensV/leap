@@ -56,10 +56,13 @@ class Controller
     }
 
     /**
-     * @param $params
+     * @param \Psr\Http\Message\ServerRequestInterface|null $request
+     *
+     * @return string
      */
-    public function defaultAction()
+    public function __invoke(ServerRequestInterface $request = null): string
     {
+        return $this->template->render();
     }
 
     /**
@@ -98,17 +101,5 @@ class Controller
     {
         /* this core controller has to return true as access to be able to access core pages */
         return true;
-    }
-
-    /**
-     * Render the template
-     *
-     * @param ServerRequestInterface $request
-     *
-     * @return string
-     */
-    public function render(ServerRequestInterface $request): string
-    {
-        return $this->template->render($request);
     }
 }

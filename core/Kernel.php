@@ -85,30 +85,40 @@ class Kernel
             function (ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
-
-                $route = $this->router->match($request);
-
-                /* Create the controller instance */
-                $controller = $this->controllerFactory->make($route);
-
                 $response = new Response();
-                if (!$controller->hasAccess()) {
-                    $response   = $response->withStatus(403);
-                    $route      = $this->router->matchUri("permission-denied", $request->getMethod());
+                $route    = $this->router->match($request);
+                $body = null;
+
+                if (is_callable($route->callback)) {
+                    $body = call_user_func($route->callback);
+                } else if(is_array($route->callback)) {
+                    /* Create the controller instance */
                     $controller = $this->controllerFactory->make($route);
-                }
-                if ($controller) {
-                    $controller->init();
-                    /* Call the action from the Controller class */
-                    if (method_exists($controller, $route->action)) {
-                        $controller->{$route->action}();
-                    } else {
-                        $controller->defaultAction();
+
+                    if (!$controller->hasAccess()) {
+                        $response   = $response->withStatus(403);
+                        $route      = $this->router->matchUri("permission-denied", $request->getMethod());
+                        $controller = $this->controllerFactory->make($route);
                     }
-                    /* Render the templates */
-                    $body = $controller->render($request);
-                    $response->getBody()->write($body);
+                    if ($controller) {
+                        $controller->init();
+                        /* Call the action from the Controller class */
+                        if (isset($route->callback['action'])) {
+                            if(!method_exists($controller, $route->callback['action'])) {
+                                // TODO: error handling
+                                die($route->callback['action'] . " method not found");
+                            }
+                            $body = $controller->{$route->callback['action']}($request);
+                        } else {
+                            $body = $controller($request);
+                        }
+                    }
+                } else {
+                    die("not a valid callback");
                 }
+
+                $response->getBody()->write($body);
+
                 return $response;
             };
     }

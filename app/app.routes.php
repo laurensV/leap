@@ -19,6 +19,7 @@ return [
     ''   => [
         'title' => '',
         'page'  => 'pages/home.php',
+        'callback' => \Leap\Core\Controller::class . '@init'
     ],
 
     // Page from url

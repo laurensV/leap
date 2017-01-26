@@ -6,6 +6,7 @@ return [
         'weight' => 10
     ],
     'permission-denied' => [
+        'callback'  => \Leap\Core\Controller::class . "@render",
         'title'  => 'Permission denied',
         'page'   => 'pages/permission-denied.php',
         'weight' => 10,

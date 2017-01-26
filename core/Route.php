@@ -10,7 +10,7 @@ class Route
 {
     public $base_path;
     public $action;
-    public $controller;
+    public $callback;
     public $template;
     public $page;
     public $stylesheets;
@@ -32,7 +32,7 @@ class Route
         /* initialize default values once */
         $this->defaultValues['base_path']   = null;
         $this->defaultValues['action']      = null;
-        $this->defaultValues['controller']  = ['class' => 'Controller', 'plugin' => 'core'];
+        $this->defaultValues['callback']  = ['class' => Controller::class];
         $this->defaultValues['template']    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
         $this->defaultValues['page']        = [];
         $this->defaultValues['stylesheets'] = [];
