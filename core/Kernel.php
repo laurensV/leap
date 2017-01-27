@@ -44,7 +44,7 @@ class Kernel
     /**
      * @var Route
      */
-    private $routeForNextRun;
+    private $routeForRunFunction;
 
     /**
      * Kernel constructor.
@@ -90,7 +90,8 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
                 $response = new Response();
-                $route    = $routeForNextRun ?? $this->router->match($request);
+                $route    = $this->routeForRunFunction ?? $this->router->match($request);
+                $this->routeForRunFunction = null;
                 $body     = null;
                 if (!$route->routeFound) {
                     $response = $response->withStatus(404);
@@ -212,11 +213,15 @@ class Kernel
         /* Get PSR-7 Request */
         $request = $request ?? ServerRequestFactory::fromGlobals();
 
-        $this->routeForNextRun = $route;
+        /* Set (optional) Route for this run. If this Route is null,
+         * the Route will be created from the PSR-7 Request object. */
+        $this->routeForRunFunction = $route;
+
         /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
         $response   = $dispatcher->dispatch($request);
 
+        /* Output the PSR-7 Response object */
         (new SapiStreamEmitter())->emit($response);
     }
 
