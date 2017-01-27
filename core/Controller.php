@@ -28,8 +28,8 @@ class Controller
      */
     public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, Config $config, ?PdoPlus $pdo)
     {
-        $this->pdo = $pdo;
-        $this->config = $config;
+        $this->pdo            = $pdo;
+        $this->config         = $config;
         $this->hooks          = $hooks;
         $this->plugin_manager = $plugin_manager;
         /* TODO: pass whole route variable */

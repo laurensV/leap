@@ -89,10 +89,10 @@ class Kernel
             function (ServerRequestInterface $request): ResponseInterface {
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
-                $response = new Response();
-                $route    = $this->routeForRunFunction ?? $this->router->match($request);
+                $response                  = new Response();
+                $route                     = $this->routeForRunFunction ?? $this->router->match($request);
                 $this->routeForRunFunction = null;
-                $body     = null;
+                $body                      = null;
                 if (!$route->routeFound) {
                     $response = $response->withStatus(404);
                     $route    = $this->router->matchUri("404", $request->getMethod());
@@ -156,7 +156,6 @@ class Kernel
         } else {
             $this->middlewares[] = $middleware;
         }
-
     }
 
     /**

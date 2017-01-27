@@ -41,7 +41,7 @@ class Application
          *       Configuration       *
          *****************************/
         $configuration = $configuration ?? 'config/config.php';
-        $config = new Config($configuration);
+        $config        = new Config($configuration);
 
         /*
         |--------------------------------------------------------------------------

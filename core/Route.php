@@ -24,7 +24,6 @@ class Route
      */
     private $defaultValues = [];
 
-
     /**
      * Router constructor.
      */
@@ -33,7 +32,7 @@ class Route
         /* initialize default values once */
         $this->defaultValues['base_path']   = null;
         $this->defaultValues['action']      = null;
-        $this->defaultValues['callback']  = ['class' => Controller::class];
+        $this->defaultValues['callback']    = ['class' => Controller::class];
         $this->defaultValues['template']    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
         $this->defaultValues['page']        = [];
         $this->defaultValues['stylesheets'] = [];

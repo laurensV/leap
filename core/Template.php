@@ -178,5 +178,4 @@ class Template
         ob_end_clean();
         return $html;
     }
-
 }
