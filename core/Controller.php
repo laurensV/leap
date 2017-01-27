@@ -53,7 +53,7 @@ class Controller
      */
     public function __invoke(ServerRequestInterface $request = null, $parameters)
     {
-        return 'Base Controller';
+        return;
     }
 
 

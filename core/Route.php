@@ -11,16 +11,9 @@ class Route
     public $base_path;
     public $action;
     public $callback;
-    public $template;
-    public $page;
-    public $stylesheets;
-    public $scripts;
-    public $title;
-    public $routeFound = false;
-
-    public $mathedRoutes = [];
-
-    public $parameters = [];
+    public $routeFound;
+    public $mathedRoutes;
+    public $parameters;
 
     /**
      * @var array
@@ -33,9 +26,12 @@ class Route
     public function __construct()
     {
         /* initialize default values once */
-        $this->defaultValues['base_path']   = null;
-        $this->defaultValues['action']      = null;
-        $this->defaultValues['callback']    = ['class' => Controller::class];
+        $this->defaultValues['base_path']     = null;
+        $this->defaultValues['action']        = null;
+        $this->defaultValues['callback']      = ['class' => Controller::class];
+        $this->defaultValues['routeFound']    = false;
+        $this->defaultValues['matchedRoutes'] = [];
+        $this->defaultValues['parameters']    = [];
 
         $this->defaultRouteValues();
     }

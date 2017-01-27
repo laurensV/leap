@@ -16,8 +16,6 @@ class Template
 
     public function __construct(Route $route, Hooks $hooks, Config $config)
     {
-        $this->template          = $route->template;
-        $this->page              = $route->page;
         $this->hooks             = $hooks;
         $this->stylesheets_route = $route->parameters['stylesheets'] ?? [];
         $this->scripts_route     = $route->parameters['scripts'] ?? [];
