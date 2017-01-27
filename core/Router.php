@@ -133,7 +133,6 @@ class Router
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $pattern => $options) {
             $orginalPattern = $pattern;
-            $include_slash  = (isset($options['include_slash']) && $options['include_slash']);
 
             $wildcard_args = [];
             // Search for wildcard arguments
@@ -146,7 +145,7 @@ class Router
                     }
                 }
             }
-            $pattern = $this->getPregPattern($pattern, $include_slash);
+            $pattern = $this->getPregPattern($pattern);
             if (preg_match($pattern, $uri)) {
                 if (!isset($options['method']) || in_array($method, $options['method'])) {
                     /* We found at least one valid route */
@@ -199,25 +198,20 @@ class Router
      * Get regex pattern for preg* functions based on fnmatch function pattern
      *
      * @param      $pattern
-     * @param bool $include_slash
      *
      * @return string
      */
-    private function getPregPattern(string $pattern, bool $include_slash = false): string
+    private function getPregPattern(string $pattern): string
     {
         $transforms = [
             '\*'   => '[^/]*',
+            '\*\*'   => '.*',
             '\+'   => '[^/]+',
             '\?'   => '.',
             '\[\!' => '[^',
             '\['   => '[',
             '\]'   => ']'
         ];
-
-        // Forward slash in string must be in pattern:
-        if ($include_slash) {
-            $transforms['\*'] = '.*';
-        }
 
         return '#^' . strtr(preg_quote(trim($pattern), '#'), $transforms) . '$#i';
     }
@@ -272,36 +266,25 @@ class Router
                 $parsedRoute->callback['action'] = $action;
             }
         }
-        if (isset($route['page'])) {
-            $parsedRoute->page          = [];
-            $parsedRoute->page['value'] = $this->replaceWildcardArgs($route['page']);
-            if ($parsedRoute->page['value'][0] == "/") {
-                $parsedRoute->page['value'] = substr($parsedRoute->page['value'], 1);
-                $parsedRoute->page['path']  = ROOT;
-            } else {
-                $parsedRoute->page['path'] = $route['path'];
+        if (isset($route['parameters']) && is_array($route['parameters'])) {
+            foreach ($route['parameters'] as $param => $value) {
+                if (substr($param, -2) === '[]') {
+                    $parsedRoute->parameters[substr($param, 0, -2)][] = $this->replaceWildcardArgs($value);
+                } else {
+                    $parsedRoute->parameters[$param] = $this->replaceWildcardArgs($value);
+                }
             }
         }
-        if (isset($route['template'])) {
-            $parsedRoute->template          = [];
-            $parsedRoute->template['value'] = $this->replaceWildcardArgs($route['template']);
-            if ($parsedRoute->template['value'][0] == "/") {
-                $parsedRoute->template['value'] = substr($parsedRoute->template['value'], 1);
-                $parsedRoute->template['path']  = ROOT;
-            } else {
-                $parsedRoute->template['path'] = $route['path'];
-            }
-        }
-
-        if (isset($route['title'])) {
-            $parsedRoute->title = $this->replaceWildcardArgs($route['title']);
-        }
-        if (isset($route['stylesheets'])) {
-            $parsedRoute->stylesheets[] = ["value" => $route['stylesheets'], "path" => $route['path']];
-        }
-        if (isset($route['scripts'])) {
-            $parsedRoute->scripts[] = ["value" => $route['scripts'], "path" => $route['path']];
-        }
+//        if (isset($route['page'])) {
+//            $parsedRoute->page          = [];
+//            $parsedRoute->page['value'] = $this->replaceWildcardArgs($route['page']);
+//            if ($parsedRoute->page['value'][0] == "/") {
+//                $parsedRoute->page['value'] = substr($parsedRoute->page['value'], 1);
+//                $parsedRoute->page['path']  = ROOT;
+//            } else {
+//                $parsedRoute->page['path'] = $route['path'];
+//            }
+//        }
     }
 
     /**
@@ -309,12 +292,12 @@ class Router
      *
      * @return string
      */
-    private function replaceWildcardArgs(?string $string): ?string
+    private function replaceWildcardArgs($var)
     {
-        if (!empty($this->replaceWildcardArgs)) {
-            return strtr($string, $this->replaceWildcardArgs);
+        if (is_string($var) && !empty($this->replaceWildcardArgs)) {
+            return strtr($var, $this->replaceWildcardArgs);
         } else {
-            return $string;
+            return $var;
         }
     }
 }

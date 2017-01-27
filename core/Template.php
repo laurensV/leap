@@ -7,7 +7,6 @@ use Zend\Diactoros\Response;
 class Template
 {
     private $template;
-    private $page;
     private $stylesheets;
     private $scripts;
     private $stylesheets_route;
@@ -20,8 +19,8 @@ class Template
         $this->template          = $route->template;
         $this->page              = $route->page;
         $this->hooks             = $hooks;
-        $this->stylesheets_route = $route->stylesheets;
-        $this->scripts_route     = $route->scripts;
+        $this->stylesheets_route = $route->parameters['stylesheets'] ?? [];
+        $this->scripts_route     = $route->parameters['scripts'] ?? [];
         $this->config            = $config;
         $this->initVars();
     }
@@ -112,10 +111,10 @@ class Template
     public function includeScriptsCss()
     {
         foreach ($this->stylesheets_route as $styleArray) {
-            $this->addStylesheet($styleArray['value'], $styleArray['path']);
+            $this->addStylesheet($styleArray, ROOT);
         }
         foreach ($this->scripts_route as $scriptArray) {
-            $this->addScript($scriptArray['value'], $scriptArray['path']);
+            $this->addScript($scriptArray, ROOT);
         }
         /* remove duplicates */
         if (is_array($this->stylesheets)) {
@@ -131,7 +130,7 @@ class Template
      *
      * @return mixed
      */
-    public function render()
+    public function render($page)
     {
         if (!empty($this->variables)) {
             extract($this->variables);
@@ -139,11 +138,28 @@ class Template
 
         /* get all javascript and css files to be included */
         $this->includeScriptsCss();
+        $path = ROOT;
+        if ($page[0] === "/") {
+            $page         = substr($page, 1);
+        } else {
+            $parts = explode(":", $page);
+            if (isset($parts[1])) {
+                $page = $parts[1];
+                switch ($parts[0]) {
+                    case 'app':
+                        $path = ROOT . 'app';
+                        break;
+                    case 'core':
+                        $path = ROOT . 'core';
+                        break;
+                }
+            }
+        }
 
-        chdir($this->page['path']);
-        if (!file_exists($this->page['value'])) {
+        chdir($path);
+        if (!file_exists($page)) {
             $response = new Response();
-            $response->getBody()->write("page " . $this->page['value'] . " not found");
+            $response->getBody()->write("page " . $page . " not found");
             $response->withStatus(404);
             return $response;
         }
@@ -152,15 +168,16 @@ class Template
         require_once ROOT . "core/include/start_page.php";
 
         ob_start();
-        call_user_func(function () {
+        call_user_func(function () use ($page) {
             if (!empty($this->variables)) {
                 extract($this->variables);
             }
-            require_once($this->page['value']);
+            require_once $page;
         });
         $page = ob_get_contents();
         ob_end_clean();
         $this->set('page', $page);
+        $this->template    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
 
         chdir($this->template['path']);
         if (file_exists($this->template['value'])) {

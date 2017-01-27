@@ -19,6 +19,9 @@ class Route
     public $routeFound = false;
 
     public $mathedRoutes = [];
+
+    public $parameters = [];
+
     /**
      * @var array
      */
@@ -33,11 +36,6 @@ class Route
         $this->defaultValues['base_path']   = null;
         $this->defaultValues['action']      = null;
         $this->defaultValues['callback']    = ['class' => Controller::class];
-        $this->defaultValues['template']    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
-        $this->defaultValues['page']        = [];
-        $this->defaultValues['stylesheets'] = [];
-        $this->defaultValues['scripts']     = [];
-        $this->defaultValues['title']       = null;
 
         $this->defaultRouteValues();
     }

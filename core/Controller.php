@@ -10,9 +10,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Controller
 {
-    protected $page;
-    protected $template;
     protected $hooks;
+    protected $route;
     protected $plugin_manager;
     protected $pdo;
     protected $config;
@@ -30,17 +29,9 @@ class Controller
     {
         $this->pdo            = $pdo;
         $this->config         = $config;
+        $this->route          = $route;
         $this->hooks          = $hooks;
         $this->plugin_manager = $plugin_manager;
-        /* TODO: pass whole route variable */
-        $this->template = new Template($route, $hooks, $config);
-        $this->page     = $route->page;
-        if (isset($route->title)) {
-            $this->set('title', $route->title);
-        } else {
-            $tmp_page = explode("/", explode(".", $this->page['value'])[0]);
-            $this->set('title', ucfirst(end($tmp_page)));
-        }
     }
 
     public function hasConnection(): bool
@@ -60,37 +51,11 @@ class Controller
      *
      * @return mixed
      */
-    public function __invoke(ServerRequestInterface $request = null)
+    public function __invoke(ServerRequestInterface $request = null, $parameters)
     {
-        return $this->template->render();
+        return 'Base Controller';
     }
 
-    /**
-     * @return array
-     */
-    public function includeHeaderHook()
-    {
-        return [];
-    }
-
-    /**
-     * @return array
-     */
-    public function includeFooterHook()
-    {
-        return [];
-    }
-
-    /**
-     * Set Variables
-     *
-     * @param $name
-     * @param $value
-     */
-    public function set($name, $value): void
-    {
-        $this->template->set($name, $value);
-    }
 
     /**
      * Function to check whether the user has access to the page

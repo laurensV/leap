@@ -117,9 +117,9 @@ class Kernel
                                 // TODO: error handling
                                 die($route->callback['action'] . " method not found");
                             }
-                            $body = $controller->{$route->callback['action']}($request);
+                            $body = $controller->{$route->callback['action']}($request, $route->parameters);
                         } else {
-                            $body = $controller($request);
+                            $body = $controller($request, $route->parameters);
                         }
                     }
                 } else {

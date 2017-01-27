@@ -5,7 +5,8 @@
 <title><?php echo $site_title; ?></title>
 <?php
 if (isset($this->stylesheets)) {
-    foreach ($this->stylesheets as $css_file) {
+    $iterator = new RecursiveIteratorIterator(new RecursiveArrayIterator($this->stylesheets));
+    foreach($iterator as  $css_file) {
         echo '<link rel="stylesheet" type="text/css" href="' . $css_file . '">';
     }
 }
