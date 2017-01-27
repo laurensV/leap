@@ -2,6 +2,7 @@
 namespace Leap\Core;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response;
 
 class Template
 {
@@ -128,9 +129,9 @@ class Template
     /**
      * Display Template
      *
-     * @return string
+     * @return mixed
      */
-    public function render(): string
+    public function render()
     {
         if (!empty($this->variables)) {
             extract($this->variables);
@@ -139,17 +140,22 @@ class Template
         /* get all javascript and css files to be included */
         $this->includeScriptsCss();
 
+        chdir($this->page['path']);
+        if (!file_exists($this->page['value'])) {
+            $response = new Response();
+            $response->getBody()->write("page " . $this->page['value'] . " not found");
+            $response->withStatus(404);
+            return $response;
+        }
         ob_start();
         /* include the start of the html page */
         require_once ROOT . "core/include/start_page.php";
 
-        chdir($this->page['path']);
         ob_start();
         call_user_func(function () {
             if (!empty($this->variables)) {
                 extract($this->variables);
             }
-            /* no need to check if file exists, as we already did that in the router */
             require_once($this->page['value']);
         });
         $page = ob_get_contents();

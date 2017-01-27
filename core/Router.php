@@ -247,6 +247,12 @@ class Router
             }
         }
 
+        /* Check for at least one Route that is NOT abstract */
+        $abstractRoute = $route['abstract'] ?? false;
+        if(!$parsedRoute->routeFound){
+            $parsedRoute->routeFound = !$abstractRoute;
+        }
+
         if (isset($route['clear'])) {
             $parsedRoute->defaultRouteValues($route['clear']);
         }

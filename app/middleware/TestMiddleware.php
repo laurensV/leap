@@ -1,5 +1,5 @@
 <?php
-namespace Leap\Core\Middleware;
+namespace Leap\App\Middleware;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

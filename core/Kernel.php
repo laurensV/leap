@@ -41,6 +41,10 @@ class Kernel
      * @var array
      */
     private $middlewares = [];
+    /**
+     * @var Route
+     */
+    private $routeForNextRun;
 
     /**
      * Kernel constructor.
@@ -86,12 +90,16 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
                 $response = new Response();
-                $route    = $this->router->match($request);
-                $body = null;
+                $route    = $routeForNextRun ?? $this->router->match($request);
+                $body     = null;
+                if (!$route->routeFound) {
+                    $response = $response->withStatus(404);
+                    $route    = $this->router->matchUri("404", $request->getMethod());
+                }
 
                 if (is_callable($route->callback)) {
                     $body = call_user_func($route->callback);
-                } else if(is_array($route->callback)) {
+                } else if (is_array($route->callback)) {
                     /* Create the controller instance */
                     $controller = $this->controllerFactory->make($route);
 
@@ -104,7 +112,7 @@ class Kernel
                         $controller->init();
                         /* Call the action from the Controller class */
                         if (isset($route->callback['action'])) {
-                            if(!method_exists($controller, $route->callback['action'])) {
+                            if (!method_exists($controller, $route->callback['action'])) {
                                 // TODO: error handling
                                 die($route->callback['action'] . " method not found");
                             }
@@ -116,8 +124,11 @@ class Kernel
                 } else {
                     die("not a valid callback");
                 }
-
-                $response->getBody()->write($body);
+                if ($body instanceof ResponseInterface) {
+                    $response = $body;
+                } else {
+                    $response->getBody()->write($body);
+                }
 
                 return $response;
             };
@@ -129,14 +140,15 @@ class Kernel
     private function loadMiddleware(): void
     {
         /* retrieve middleware and add last framework middleware */
-        $middlewares = require "middleware/middlewares.php";
+        $middlewares = require ROOT . "app/middleware/middlewares.php";
         $this->addMiddleware($middlewares);
+        $this->addMiddleware($this->getRunFunction());
     }
 
     /**
      * @param array|MiddlewareInterface|callable $middleware
      */
-    public function addMiddleware($middleware): void
+    private function addMiddleware($middleware): void
     {
         if (is_array($middleware)) {
             $this->middlewares = array_merge($this->middlewares, $middleware);
@@ -193,12 +205,14 @@ class Kernel
      * Run the Leap Application
      *
      * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Leap\Core\Route                         $route
      */
-    public function run(ServerRequestInterface $request = null): void
+    public function run(ServerRequestInterface $request = null, Route $route = null): void
     {
-        $this->addMiddleware($this->getRunFunction());
         /* Get PSR-7 Request */
         $request = $request ?? ServerRequestFactory::fromGlobals();
+
+        $this->routeForNextRun = $route;
         /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
         $response   = $dispatcher->dispatch($request);

@@ -16,6 +16,7 @@ class Route
     public $stylesheets;
     public $scripts;
     public $title;
+    public $routeFound = false;
 
     public $mathedRoutes = [];
     /**

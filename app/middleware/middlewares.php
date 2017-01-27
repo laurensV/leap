@@ -1,7 +1,7 @@
 <?php
 /* TODO: convert to middleware class? */
 use Interop\Http\Middleware\DelegateInterface;
-use Leap\Core\Middleware\TestMiddleware;
+use Leap\App\Middleware\TestMiddleware;
 use Psr\Http\Message\ServerRequestInterface;
 
 return [

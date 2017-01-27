@@ -58,9 +58,9 @@ class Controller
     /**
      * @param \Psr\Http\Message\ServerRequestInterface|null $request
      *
-     * @return string
+     * @return mixed
      */
-    public function __invoke(ServerRequestInterface $request = null): string
+    public function __invoke(ServerRequestInterface $request = null)
     {
         return $this->template->render();
     }
