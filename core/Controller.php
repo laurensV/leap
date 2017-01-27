@@ -51,7 +51,7 @@ class Controller
      *
      * @return mixed
      */
-    public function __invoke(ServerRequestInterface $request = null, $parameters)
+    public function __invoke($parameters, ServerRequestInterface $request = null)
     {
         return;
     }

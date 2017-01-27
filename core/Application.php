@@ -21,6 +21,11 @@ class Application
     private $kernel;
 
     /**
+     * @var Router
+     */
+    private $router;
+
+    /**
      * Application constructor.
      *
      * @param string $configuration
@@ -54,6 +59,15 @@ class Application
         $di = require 'dependencies.php';
 
         $this->kernel = $di->get('kernel');
+
+        /**
+         * Load PSR-15 middlewares into the Middelware Stack
+         */
+        $middlewares = require ROOT . "app/middleware/middlewares.php";
+        $this->kernel->addMiddleware($middlewares);
+
+        $this->router = $di->get('router');
+        $this->router->addRouteFile(ROOT . "app/app.routes.php", "app");
     }
 
     /**

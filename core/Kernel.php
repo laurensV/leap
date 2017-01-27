@@ -77,7 +77,6 @@ class Kernel
          * # Hooks are loaded, so from now on we can fire hooks   #
          * ######################################################## */
         $this->loadRoutes();
-        $this->loadMiddleware();
     }
 
     /**
@@ -107,7 +106,12 @@ class Kernel
                     if (!$controller->hasAccess()) {
                         $response   = $response->withStatus(403);
                         $route      = $this->router->matchUri("permission-denied", $request->getMethod());
-                        $controller = $this->controllerFactory->make($route);
+                        if (is_callable($route->callback)) {
+                            $body = call_user_func($route->callback);
+                            $controller = null;
+                        } else {
+                            $controller = $this->controllerFactory->make($route);
+                        }
                     }
                     if ($controller) {
                         $controller->init();
@@ -135,21 +139,11 @@ class Kernel
             };
     }
 
-    /**
-     * Load PSR-15 middlewares into the Middelware Stack
-     */
-    private function loadMiddleware(): void
-    {
-        /* retrieve middleware and add last framework middleware */
-        $middlewares = require ROOT . "app/middleware/middlewares.php";
-        $this->addMiddleware($middlewares);
-        $this->addMiddleware($this->getRunFunction());
-    }
 
     /**
      * @param array|MiddlewareInterface|callable $middleware
      */
-    private function addMiddleware($middleware): void
+    public function addMiddleware($middleware): void
     {
         if (is_array($middleware)) {
             $this->middlewares = array_merge($this->middlewares, $middleware);
@@ -198,7 +192,6 @@ class Kernel
         }
         /* Add router files from core and site theme */
         $this->router->addRouteFile(ROOT . "core/core.routes.php", "core");
-        $this->router->addRouteFile(ROOT . "app/app.routes.php", "app");
     }
 
     /**
@@ -216,6 +209,7 @@ class Kernel
          * the Route will be created from the PSR-7 Request object. */
         $this->routeForRunFunction = $route;
 
+        $this->middlewares[] = $this->getRunFunction();
         /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
         $response   = $dispatcher->dispatch($request);

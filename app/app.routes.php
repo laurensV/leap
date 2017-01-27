@@ -30,10 +30,23 @@ return [
 
     // Page from url
     '{p}' => [
-        'page'       => 'pages/{p}.php',
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
             'page' => 'app:pages/{p}.php',
-        ]
-    ]
+        ],
+        'weight' => 0,
+    ],
+
+    '404' => [
+        'callback'   => BasicController::class . '@renderPage',
+        'parameters' => [
+            'page' => 'app:pages/404.php',
+        ],
+    ],
+    'permission-denied' => [
+        'callback'   => BasicController::class . '@renderPage',
+        'parameters' => [
+            'page' => 'app:pages/permission-denied.php',
+        ],
+    ],
 ];
