@@ -1,5 +1,6 @@
 <?php
 namespace Leap\Core;
+
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -132,21 +133,20 @@ class Router
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $pattern => $options) {
             $orginalPattern = $pattern;
-            $include_slash = (isset($options['include_slash']) && $options['include_slash']);
-            $pattern       = $this->getPregPattern($pattern, $include_slash);
+            $include_slash  = (isset($options['include_slash']) && $options['include_slash']);
+
             $wildcard_args = [];
             // Search for wildcard arguments
-            if (strpos($pattern, ":") !== false) {
-                if (preg_match_all("/:(\w+)/", $pattern, $matches)) {
-                    $wildcard_args['pattern'] = $pattern;
+            if (strpos($pattern, "{") !== false) {
+                if (preg_match_all("/{(.*?)}/", $pattern, $matches)) {
                     foreach ($matches[0] as $key => $whole_match) {
-                        $pattern                  = str_replace('\\' . $whole_match, "[^/]+", $pattern);
-                        $wildcard_args['pattern'] = str_replace('\\' . $whole_match, "([^/]+)", $wildcard_args['pattern']);
+                        $wildcard_args['pattern'] = str_replace('\{' . $matches[1][$key] . '\}', "([^/]+)", '#^' . preg_quote(trim($pattern), '#') . '$#i');
+                        $pattern                  = str_replace($whole_match, "+", $pattern);
                         $wildcard_args['args'][]  = $matches[1][$key];
                     }
                 }
             }
-
+            $pattern = $this->getPregPattern($pattern, $include_slash);
             if (preg_match($pattern, $uri)) {
                 if (!isset($options['method']) || in_array($method, $options['method'])) {
                     /* We found at least one valid route */
@@ -207,6 +207,7 @@ class Router
     {
         $transforms = [
             '\*'   => '[^/]*',
+            '\+'   => '[^/]+',
             '\?'   => '.',
             '\[\!' => '[^',
             '\['   => '[',
@@ -231,8 +232,7 @@ class Router
     private function parseRoute(array $route, string $url, array $wildcard_args, Route $parsedRoute, string $pattern): void
     {
         $parsedRoute->mathedRoutes[$pattern] = $route;
-        $parsedRoute->base_path = $route['path'];
-
+        $parsedRoute->base_path              = $route['path'];
         if (!empty($wildcard_args)) {
             if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
                 $this->replaceWildcardArgs = [];
@@ -241,25 +241,29 @@ class Router
                     if (!$key) {
                         continue;
                     }
-
-                    $this->replaceWildcardArgs[":" . $wildcard_args['args'][$key - 1]] = $arg[0];
-                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]              = $arg[0];
+                    $this->replaceWildcardArgs["{" . $wildcard_args['args'][$key - 1] . "}"] = $arg[0];
+                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]                    = $arg[0];
                 }
             }
         }
+
         if (isset($route['clear'])) {
             $parsedRoute->defaultRouteValues($route['clear']);
         }
 
         if (isset($route['callback'])) {
-            if(is_callable($route['callback'])){
+            if (is_callable($route['callback'])) {
                 $parsedRoute->callback = $route['callback'];
             } else {
                 $parsedRoute->callback = [];
                 $parts                 = explode('@', $route['callback']);
 
-                $parsedRoute->callback['class']  = $this->replaceWildcardArgs($parts[0]);
-                $parsedRoute->callback['action'] = $parts[1] ?? null;
+                $parsedRoute->callback['class'] = $this->replaceWildcardArgs($parts[0]);
+                $action                         = null;
+                if (isset($parts[1])) {
+                    $action = $this->replaceWildcardArgs($parts[1]);
+                }
+                $parsedRoute->callback['action'] = $action;
             }
         }
         if (isset($route['page'])) {
@@ -299,7 +303,7 @@ class Router
      *
      * @return string
      */
-    private function replaceWildcardArgs(string $string): string
+    private function replaceWildcardArgs(?string $string): ?string
     {
         if (!empty($this->replaceWildcardArgs)) {
             return strtr($string, $this->replaceWildcardArgs);

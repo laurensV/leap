@@ -2,7 +2,8 @@
 return [
     // Settings applied to all routes
     '*'  => [
-        'include_slash' => 'true',
+        'abstract' => true,
+        'include_slash' => true,
         'stylesheets'   => [
             'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
             'stylesheets/always.less'
@@ -19,11 +20,12 @@ return [
     ''   => [
         'title' => '',
         'page'  => 'pages/home.php',
-        'callback' => \Leap\Core\Controller::class . '@init'
+        'callback' => \Leap\Core\Controller::class
     ],
 
     // Page from url
-    ':p' => [
-        'page' => 'pages/:p.php',
+    '{p}' => [
+        'page' => 'pages/{p}.php',
+        'callback' => \Leap\Core\Controller::class
     ]
 ];
