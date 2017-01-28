@@ -26,9 +26,6 @@ define('URL', call_user_func(function () {
     return $http . "://" . $_SERVER['HTTP_HOST'] . $port . BASE_URL;
 }));
 
-define('LIBRARIES', ROOT . "vendor/");
-define('FILES', ROOT . "files/");
-
 /**
  * @param      $data
  * @param bool $exit

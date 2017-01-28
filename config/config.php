@@ -1,7 +1,10 @@
 <?php
 return [
-    'general' => [
-        'environment' => 'development',
+    'environment' => 'development',
+
+    'paths' => [
+        'libraries' => 'vendor/',
+        'files' => 'files/',
     ],
 
     'application' => [

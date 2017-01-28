@@ -53,7 +53,7 @@ class Kernel
                                 ControllerFactory $controllerFactory, Config $config)
     {
         /* Set the error reporting level based on the config environment variable */
-        $this->setReporting($config->general['environment']);
+        $this->setReporting($config->environment);
 
         /* Store dependency objects as properties */
         $this->hooks             = $hooks;
@@ -71,12 +71,23 @@ class Kernel
      */
     private function bootstrap(): void
     {
+        $this->helpersFromConfig();
         $this->loadPlugins();
         $this->loadHooks();
         /* ########################################################
          * # Hooks are loaded, so from now on we can fire hooks   #
          * ######################################################## */
         $this->loadRoutes();
+    }
+
+    /**
+     * Parse config
+     */
+    private function helpersFromConfig(): void
+    {
+        $paths = $this->config->paths;
+        define('LIBRARIES', $paths['libraries']);
+        define('FILES', $paths['files']);
     }
 
     /**
@@ -104,10 +115,10 @@ class Kernel
                     $controller = $this->controllerFactory->make($route);
 
                     if (!$controller->hasAccess()) {
-                        $response   = $response->withStatus(403);
-                        $route      = $this->router->matchUri("permission-denied", $request->getMethod());
+                        $response = $response->withStatus(403);
+                        $route    = $this->router->matchUri("permission-denied", $request->getMethod());
                         if (is_callable($route->callback)) {
-                            $body = call_user_func($route->callback);
+                            $body       = call_user_func($route->callback);
                             $controller = null;
                         } else {
                             $controller = $this->controllerFactory->make($route);
@@ -138,7 +149,6 @@ class Kernel
                 return $response;
             };
     }
-
 
     /**
      * @param array|MiddlewareInterface|callable $middleware

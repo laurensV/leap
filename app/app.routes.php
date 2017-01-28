@@ -8,7 +8,7 @@ return [
         'parameters' => [
             'stylesheets[]' => [
                 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
-                'stylesheets/always.less'
+                '/app/stylesheets/always.less'
             ],
             'scripts[]'     => [
                 '//code.jquery.com/jquery-1.12.0.min.js',
