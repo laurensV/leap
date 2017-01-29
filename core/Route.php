@@ -9,10 +9,9 @@ namespace Leap\Core;
 class Route
 {
     public $base_path;
-    public $action;
     public $callback;
     public $routeFound;
-    public $mathedRoutes;
+    public $mathedPatterns;
     public $parameters;
 
     /**
@@ -26,12 +25,11 @@ class Route
     public function __construct()
     {
         /* initialize default values once */
-        $this->defaultValues['base_path']     = null;
-        $this->defaultValues['action']        = null;
-        $this->defaultValues['callback']      = ['class' => Controller::class];
-        $this->defaultValues['routeFound']    = false;
-        $this->defaultValues['matchedRoutes'] = [];
-        $this->defaultValues['parameters']    = [];
+        $this->defaultValues['base_path']       = null;
+        $this->defaultValues['callback']        = ['class' => Controller::class];
+        $this->defaultValues['routeFound']      = false;
+        $this->defaultValues['matchedPatterns'] = [];
+        $this->defaultValues['parameters']      = [];
 
         $this->defaultRouteValues();
     }
@@ -43,17 +41,15 @@ class Route
      */
     public function defaultRouteValues($properties = null): void
     {
-        if (isset($properties) && !in_array("all", $properties)) {
-            /* set array of properties to their default values */
-            foreach ($properties as $property) {
-                if (isset($defaultValues[$property])) {
-                    $this->{$property} = $defaultValues[$property];
-                }
-            }
-        } else {
+        if (!isset($properties) || $properties === true || $properties === 'all') {
             /* set all properties to their default values */
             foreach ($this->defaultValues as $property => $value) {
                 $this->{$property} = $value;
+            }
+        } else if (is_array($properties)) {
+            /* set array of properties to their default values */
+            foreach ($properties as $property) {
+                $this->{$property} = $this->defaultValues[$property] ?? null;
             }
         }
     }

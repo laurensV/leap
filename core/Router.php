@@ -70,14 +70,14 @@ class Router
     /**
      * Add a new route to the route collection
      *
-     * @param      $route
+     * @param      $pattern
      * @param      $options
      * @param      $pluginForNamespace
      * @param      $path
      */
-    public function addRoute(string $route, array $options, string $path = ROOT, string $pluginForNamespace = NULL): void
+    public function addRoute(string $pattern, array $options, string $path = ROOT, string $pluginForNamespace = NULL): void
     {
-        $route = trim($route, "/");
+        $pattern = trim($pattern, "/");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
             foreach ($options['dependencies'] as $plugin) {
@@ -90,19 +90,25 @@ class Router
             }
         }
 
+        if (isset($options['methods']) && is_string($options['methods'])) {
+            $methods = [];
+            foreach (explode("|", $options['methods']) as $method) {
+                $methods[] = trim(strtoupper($method));
+            }
+            $options['methods'] = $methods;
+        }
+
         if (!isset($options['path'])) {
             $options['path'] = $path;
         }
         if (isset($pluginForNamespace)) {
             $options['plugin'] = $pluginForNamespace;
         }
-        if (isset($this->routeCollection[$route])) {
-            // Merge previous options with the new options
-            $this->routeCollection[$route] = array_replace($this->routeCollection[$route], $options);
-        } else {
-            // New route: simply add the options
-            $this->routeCollection[$route] = $options;
-        }
+
+        $this->routeCollection[] = [
+            'pattern' => $pattern,
+            'options' => $options
+        ];
     }
 
     /**
@@ -118,12 +124,14 @@ class Router
         $uri = trim($uri, "/");
 
         // Sort route array
-        $this->routeCollection = $this->sortRoutes($this->routeCollection);
+        $this->routeCollection = $this->sortRouteCollection($this->routeCollection);
 
         $parsedRoute = new Route();
 
         // Try to match url to one or multiple routes
-        foreach ($this->routeCollection as $pattern => $options) {
+        foreach ($this->routeCollection as $route) {
+            $pattern        = $route['pattern'];
+            $options        = $route['options'];
             $orginalPattern = $pattern;
 
             $wildcard_args = [];
@@ -139,7 +147,7 @@ class Router
             }
             $pattern = $this->getPregPattern($pattern);
             if (preg_match($pattern, $uri)) {
-                if (!isset($options['method']) || in_array($method, $options['method'])) {
+                if (!isset($options['methods']) || in_array($method, $options['methods'])) {
                     /* We found at least one valid route */
                     $this->parseRoute($options, $uri, $wildcard_args, $parsedRoute, $orginalPattern);
                 }
@@ -164,26 +172,28 @@ class Router
     /**
      * Sort route array by weight first, then by length of route (key)
      *
-     * @param array $routes
+     * @param array $routeCollection
      *
      * @return array
      */
-    private function sortRoutes(array $routes): array
+    private function sortRouteCollection(array $routeCollection): array
     {
         $weight      = [];
         $routeLength = [];
-        foreach ($routes as $key => $value) {
-            if (isset($value['weight'])) {
-                $weight[] = $value['weight'];
+        foreach ($routeCollection as $route) {
+            $options = $route['options'];
+            $pattern = $route['pattern'];
+            if (isset($options['weight'])) {
+                $weight[] = $options['weight'];
             } else {
                 $weight[] = 1;
             }
-            $routeLength[] = strlen($key);
+            $routeLength[] = strlen($pattern);
         }
         /* TODO: check overhead for fix for array_multisort who re-indexes numeric keys */
-        $orig_keys = array_keys($routes); // Fix for re-indexing of numeric keys
-        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routes, $orig_keys);
-        return array_combine($orig_keys, $routes); // Fix for re-indexing of numeric keys
+        $orig_keys = array_keys($routeCollection); // Fix for re-indexing of numeric keys
+        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routeCollection, $orig_keys);
+        return array_combine($orig_keys, $routeCollection); // Fix for re-indexing of numeric keys
     }
 
     /**
@@ -211,14 +221,16 @@ class Router
     /**
      * Parse a route from a route file
      *
-     * @param $route
-     * @param $url
-     * @param $wildcard_args
+     * @param array            $route
+     * @param string           $url
+     * @param array            $wildcard_args
+     * @param \Leap\Core\Route $parsedRoute
+     * @param string           $pattern
      */
     private function parseRoute(array $route, string $url, array $wildcard_args, Route $parsedRoute, string $pattern): void
     {
-        $parsedRoute->mathedRoutes[$pattern] = $route;
-        $parsedRoute->base_path              = $route['path'];
+        $parsedRoute->mathedPatterns[] = $pattern;
+        $parsedRoute->base_path        = $route['path'];
         if (!empty($wildcard_args)) {
             if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
                 $this->replaceWildcardArgs = [];
@@ -233,14 +245,14 @@ class Router
             }
         }
 
+        if (isset($route['clear'])) {
+            $parsedRoute->defaultRouteValues($route['clear']);
+        }
+
         /* Check for at least one Route that is NOT abstract */
         $abstractRoute = $route['abstract'] ?? false;
         if (!$parsedRoute->routeFound) {
             $parsedRoute->routeFound = !$abstractRoute;
-        }
-
-        if (isset($route['clear'])) {
-            $parsedRoute->defaultRouteValues($route['clear']);
         }
 
         if (isset($route['callback'])) {
@@ -277,16 +289,6 @@ class Router
                 }
             }
         }
-//        if (isset($route['page'])) {
-//            $parsedRoute->page          = [];
-//            $parsedRoute->page['value'] = $this->replaceWildcardArgs($route['page']);
-//            if ($parsedRoute->page['value'][0] == "/") {
-//                $parsedRoute->page['value'] = substr($parsedRoute->page['value'], 1);
-//                $parsedRoute->page['path']  = ROOT;
-//            } else {
-//                $parsedRoute->page['path'] = $route['path'];
-//            }
-//        }
     }
 
     /**
@@ -328,12 +330,11 @@ class Router
     }
 
     /**
-     * @param string $string
+     * @param $var
      *
-     * @return string
+     * @return mixed
      */
-    private
-    function replaceWildcardArgs($var)
+    private function replaceWildcardArgs($var)
     {
         if (is_string($var) && !empty($this->replaceWildcardArgs)) {
             return strtr($var, $this->replaceWildcardArgs);
