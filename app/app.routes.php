@@ -8,13 +8,13 @@ return [
         'parameters' => [
             'stylesheets[]' => [
                 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
-                '/app/stylesheets/always.less'
+                'url:stylesheets/always.less'
             ],
             'scripts[]'     => [
                 '//code.jquery.com/jquery-1.12.0.min.js',
                 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js',
                 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js',
-                '/app/js/always.js'
+                'url:js/always.js'
             ]
         ]
     ],
@@ -24,7 +24,7 @@ return [
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
             'title' => '',
-            'page'  => 'app:pages/home.php',
+            'page'  => 'file:pages/home.php',
         ]
     ],
 
@@ -32,21 +32,22 @@ return [
     '{p}' => [
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
-            'page' => 'app:pages/{p}.php',
+            'page' => 'file:pages/{p}.php',
         ],
-        'weight' => 0,
+        'weight'     => 0,
     ],
 
     '404' => [
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
-            'page' => 'app:pages/404.php',
+            'page' => 'file:pages/404.php',
         ],
     ],
+
     'permission-denied' => [
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
-            'page' => 'app:pages/permission-denied.php',
+            'page' => 'file:pages/permission-denied.php',
         ],
     ],
 ];

@@ -136,25 +136,7 @@ class Template
 
         /* get all javascript and css files to be included */
         $this->includeScriptsCss();
-        $path = ROOT;
-        if ($page[0] === "/") {
-            $page         = substr($page, 1);
-        } else {
-            $parts = explode(":", $page);
-            if (isset($parts[1])) {
-                $page = $parts[1];
-                switch ($parts[0]) {
-                    case 'app':
-                        $path = ROOT . 'app';
-                        break;
-                    case 'core':
-                        $path = ROOT . 'core';
-                        break;
-                }
-            }
-        }
 
-        chdir($path);
         if (!file_exists($page)) {
             $response = new Response();
             $response->getBody()->write("page " . $page . " not found");

@@ -79,29 +79,21 @@ class Router
     {
         $route = trim($route, "/");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
-            $error = "";
+            $error = [];
             foreach ($options['dependencies'] as $plugin) {
                 if (!$this->pluginManager->isEnabled($plugin)) {
-                    $error .= "need plugin " . $plugin . " for route \n";
+                    $error[] = "need plugin " . $plugin . " for route \n";
                 }
             }
-            if ($error != "") {
+            if (!empty($error)) {
                 return;
             }
         }
-        foreach ($options as $option => $value) {
-            if ($option == "method") {
-                $options[$option] = [];
-                /* TODO: change delimiter to | instead of , (problem: parsed as integer) */
-                foreach (explode(",", $value) as $method) {
-                    $options[$option][] = trim(strtoupper($method));
-                }
-            }
-        }
+
         if (!isset($options['path'])) {
             $options['path'] = $path;
         }
-        if (!isset($options['plugin']) && isset($pluginForNamespace)) {
+        if (isset($pluginForNamespace)) {
             $options['plugin'] = $pluginForNamespace;
         }
         if (isset($this->routeCollection[$route])) {
@@ -205,7 +197,7 @@ class Router
     {
         $transforms = [
             '\*'   => '[^/]*',
-            '\*\*'   => '.*',
+            '\*\*' => '.*',
             '\+'   => '[^/]+',
             '\?'   => '.',
             '\[\!' => '[^',
@@ -268,6 +260,16 @@ class Router
         }
         if (isset($route['parameters']) && is_array($route['parameters'])) {
             foreach ($route['parameters'] as $param => $value) {
+                if (is_array($value)) {
+                    array_walk_recursive($value, function (&$val) use ($route) {
+                        if (is_string($val)) {
+                            $val = $this->parseParamValue($val, $route['path']);
+                        }
+                    });
+                } else if (is_string($value)) {
+                    $value = $this->parseParamValue($value, $route['path']);
+                }
+
                 if (substr($param, -2) === '[]') {
                     $parsedRoute->parameters[substr($param, 0, -2)][] = $this->replaceWildcardArgs($value);
                 } else {
@@ -288,11 +290,50 @@ class Router
     }
 
     /**
+     * @param string $value
+     * @param string $path
+     *
+     * @return string
+     */
+    private function parseParamValue(string $value, string $path): string
+    {
+        if (strpos($value, ':')) {
+            $parts = explode(':', $value);
+            $type  = array_shift($parts);
+            $value = implode(':', $parts);
+
+            switch ($type) {
+                case 'url':
+                    /* add base url if file value is not an URL */
+                    if (!filter_var($value, FILTER_VALIDATE_URL)) {
+                        if ($value[0] === "/") {
+                            $value = BASE_URL . substr($value, 1);
+                        } else {
+                            $value = strReplaceFirst(ROOT, BASE_URL, $path) . $value;
+                        }
+                    }
+                    break;
+                case 'file':
+                    if ($value[0] === "/") {
+                        $value = ROOT . substr($value, 1);
+                    } else {
+                        $value = $path . $value;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        return $value;
+    }
+
+    /**
      * @param string $string
      *
      * @return string
      */
-    private function replaceWildcardArgs($var)
+    private
+    function replaceWildcardArgs($var)
     {
         if (is_string($var) && !empty($this->replaceWildcardArgs)) {
             return strtr($var, $this->replaceWildcardArgs);
