@@ -8,16 +8,15 @@ use Leap\Core\Router;
  */
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * @var \Leap\Core\Router
+     */
     private $router;
 
     protected function setUp()
     {
         if(!defined('ROOT')) {
-            define('ROOT', call_user_func(function () {
-                $root = str_replace("\\", "/", dirname(dirname(__FILE__)));
-                $root .= (substr($root, -1) == '/' ? '' : '/');
-                return $root;
-            }));
+            require dirname(__FILE__).'/../core/include/helpers.php';
         }
         $this->router = new Router();
     }
@@ -30,65 +29,46 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     /**
      * @param $uri
      * @param $route
-     * @param $expectedPage
+     * @param $expectedValue
      *
-     * @dataProvider providerTestRoutePage
+     * @dataProvider providerTestRouteMatching
      */
-    public function testRoutePage($uri, $route, $expectedPage)
+    public function testRouteMatching($uri, $route, $expectedRoute)
     {
-        $this->router->addRoute($route['route'], $route['options']);
-        $parsedRoute = $this->router->routeUrl($uri);
-        $page        = null;
-        $pagePath    = null;
-        if (isset($parsedRoute['page']['value'])) {
-            $page = $parsedRoute['page']['value'];
-        }
-        if (isset($parsedRoute['page']['path'])) {
-            $pagePath = $parsedRoute['page']['path'];
-        }
-        $this->assertSame($expectedPage['value'], $page);
-        $this->assertSame($expectedPage['path'], $pagePath);
+        $this->router->add($route['pattern'], null, $route['options']);
+        $parsedRoute = $this->router->matchUri($uri);
+
+        $this->assertSame($parsedRoute->routeFound, $expectedRoute['routeFound']);
+        $this->assertSame($parsedRoute->mathedPatterns[0], $expectedRoute['pattern']);
+        $this->assertTrue(is_callable($parsedRoute->callback));
     }
 
-    /**
-     * @param       $uri
-     * @param       $route
-     * @param       $expectedPattern
-     *
-     * @dataProvider providerTestRoutePattern
-     */
-    public function testRoutePattern($uri, $route, $expectedPattern)
-    {
-        $this->router->addRoute($route['route'], $route['options']);
-        $parsedRoute = $this->router->routeUrl($uri);
-        $pattern     = null;
-        if (isset($parsedRoute['title'])) {
-            $pattern = $parsedRoute['title'];
-        }
-        $this->assertSame($expectedPattern, $pattern);
-    }
+//    /**
+//     * @param       $uri
+//     * @param       $route
+//     * @param       $expectedPattern
+//     *
+//     * @dataProvider providerTestRoutePattern
+//     */
+//    public function testRoutePattern($uri, $route, $expectedPattern)
+//    {
+//        $this->router->addRoute($route['route'], $route['options']);
+//        $parsedRoute = $this->router->routeUrl($uri);
+//        $pattern     = null;
+//        if (isset($parsedRoute['title'])) {
+//            $pattern = $parsedRoute['title'];
+//        }
+//        $this->assertSame($expectedPattern, $pattern);
+//    }
 
     /**
      * @return array
      */
-    public function providerTestRoutePage()
+    public function providerTestRouteMatching()
     {
-        if(!defined('ROOT')) {
-            define('ROOT', call_user_func(function () {
-                $root = str_replace("\\", "/", dirname(dirname(__FILE__)));
-                $root .= (substr($root, -1) == '/' ? '' : '/');
-                return $root;
-            }));
-        }
         return [
             /* path overwriten by leading slash */
-            ['test', ["route" => "test", "options" => ["page" => "/site/pages/test.php", "path" => "randompath"]], ["value" => "site/pages/test.php", "path" => ROOT]],
-            /* default path is ROOT */
-            ['test', ["route" => "test", "options" => ["page" => "site/pages/test.php"]], ["value" => "site/pages/test.php", "path" => ROOT]],
-            /* path set with path option */
-            ['test', ["route" => "test", "options" => ["page" => "site/pages/test.php", "path" => "randompath"]], ["value" => "site/pages/test.php", "path" => "randompath"]],
-            /* page is a wildcard */
-            ['test', ["route" => ":wildcard", "options" => ["page" => "site/pages/:wildcard.php"]], ["value" => "site/pages/test.php", "path" => ROOT]],
+            ['path', ["pattern" => "path", "options" => ["callback" => function(){return 'test';}]], ["routeFound" => true, "pattern" => "path"]],
         ];
     }
 
@@ -104,7 +84,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
                 return $root;
             }));
         }
-        /* TODO: better titles */
+
         return [
             /* match single route */
             ['test', ["route" => "test", "options" => ["title" => "test"]], "test"],

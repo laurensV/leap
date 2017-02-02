@@ -205,7 +205,6 @@ class Router
             $routeLength[] = strlen($pattern);
         }
         array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routeCollection);
-        pre($routeCollection, true);
         return $routeCollection;
     }
 
