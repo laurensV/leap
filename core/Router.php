@@ -194,10 +194,11 @@ class Router
         foreach ($routeCollection as $route) {
             $pattern   = $route['pattern'];
             $weight[]  = $route['weight'];
-            $wildcards = ['?', '*', '+', ':'];
+            /* set length for homepage route to 1 instead of 0 */
             if (empty($pattern)) {
-                $pattern = '/';
+                $pattern = '1';
             }
+            $wildcards = ['?', '*', '+', ':'];
             $pattern       = str_replace($wildcards, '', $pattern);
             $pattern       = preg_replace("/\{(.*?)\}/", '', $pattern);
             $pattern       = preg_replace("/\[(.*?)\]/", '', $pattern);
