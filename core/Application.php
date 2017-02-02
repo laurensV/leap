@@ -67,7 +67,7 @@ class Application
         $this->kernel->addMiddleware($middlewares);
 
         $this->router = $di->get('router');
-        $this->router->addRouteFile(ROOT . "app/app.routes.php", "app");
+        $this->router->addFile(ROOT . "app/app.routes.php", "app");
     }
 
     /**

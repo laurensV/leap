@@ -198,10 +198,10 @@ class Kernel
     {
         /* add routes from plugins */
         foreach ($this->pluginManager->enabled_plugins as $pid) {
-            $this->router->addRouteFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
+            $this->router->addFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
         }
         /* Add router files from core and site theme */
-        $this->router->addRouteFile(ROOT . "core/core.routes.php", "core");
+        $this->router->addFile(ROOT . "core/core.routes.php", "core");
     }
 
     /**
