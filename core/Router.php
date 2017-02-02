@@ -73,10 +73,10 @@ class Router
     /**
      * Add a new route to the route collection
      *
-     * @param      $pattern
-     * @param      $options
-     * @param      $pluginForNamespace
-     * @param      $path
+     * @param string $pattern
+     * @param        $callback
+     * @param array  $options
+     * @param string $pluginForNamespace
      */
     public function add(string $pattern, $callback, array $options = [], string $pluginForNamespace = null): void
     {
@@ -186,6 +186,7 @@ class Router
      *
      * @return array
      */
+    /* TODO: check overhead for sorting, maybe try to improve performance */
     private function sortRouteCollection(array $routeCollection): array
     {
         $weight      = [];
@@ -202,10 +203,9 @@ class Router
             $pattern       = preg_replace("/\[(.*?)\]/", '', $pattern);
             $routeLength[] = strlen($pattern);
         }
-        /* TODO: check overhead for fix for array_multisort who re-indexes numeric keys */
-        $orig_keys = array_keys($routeCollection); // Fix for re-indexing of numeric keys
-        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routeCollection, $orig_keys);
-        return array_combine($orig_keys, $routeCollection); // Fix for re-indexing of numeric keys
+        array_multisort($weight, SORT_ASC, $routeLength, SORT_ASC, $routeCollection);
+        pre($routeCollection, true);
+        return $routeCollection;
     }
 
     /**
@@ -237,7 +237,6 @@ class Router
      * @param string           $url
      * @param array            $wildcard_args
      * @param \Leap\Core\Route $parsedRoute
-     * @param string           $pattern
      */
     private function parseRoute(array $route, string $url, array $wildcard_args, Route $parsedRoute): void
     {
