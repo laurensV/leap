@@ -84,7 +84,7 @@ class Router
         $callback = $callback            ?? $options['callback'] ?? null;
         $weight   = $options['weight']   ?? 1;
         $path     = $options['path']     ?? ROOT;
-        $pattern  = trim($pattern, "/");
+        $pattern  = trim($pattern, "/ ");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
             foreach ($options['dependencies'] as $plugin) {
