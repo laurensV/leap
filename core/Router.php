@@ -98,18 +98,11 @@ class Router
         }
         $methods = $options['methods'] ?? null;
 
-        $parts = explode(' ', $pattern);
-        if (count($parts) === 2) {
-            $methods = $parts[0];
-            $pattern = $parts[1];
+        if (strpos($pattern, ' ') !== false) {
+            [$methods, $pattern] = explode(' ', trim($pattern), 2);
         }
-
         if (is_string($methods)) {
-            $methodsString = $methods;
-            $methods       = [];
-            foreach (explode("|", $methodsString) as $method) {
-                $methods[] = trim(strtoupper($method));
-            }
+            $methods = explode('|', $methods);
         }
 
         $this->routeCollection[] = [
