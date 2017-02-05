@@ -19,9 +19,6 @@ return [
         ]
     ],
 
-    'GROUP /admin' => [
-    ],
-
     // Homepage
     '/'   => [
         'callback'   => BasicController::class . '@renderPage',

@@ -19,6 +19,9 @@ class Router
      */
     private $pluginManager;
 
+    /**
+     * @var
+     */
     private $groupPrefix;
 
     /**
@@ -51,18 +54,60 @@ class Router
         if (file_exists($file)) {
             $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
-            foreach ($routes as $route => $options) {
+            $routes = $this->addFileOptions($routes, $path, $pluginForNamespace);
+            $this->addArray($routes);
+        }
+    }
+
+    /**
+     * @param array       $routes
+     * @param string      $path
+     * @param string|null $pluginForNamespace
+     *
+     * @return array
+     */
+    private function addFileOptions(array $routes, string $path, string $pluginForNamespace = null): array
+    {
+        foreach ($routes as $pattern => &$options) {
+            if (strtoupper(explode(' ', $pattern)[0]) === 'GROUP') {
+                $options = $this->addFileOptions($options, $path, $pluginForNamespace);
+            } else {
                 /* set the path of the route file */
                 $options['path'] = $path;
                 /* If we have support for Leap plugins, set the plugin for the namespace */
                 if (isset($this->pluginManager)) {
                     $options['plugin'] = $pluginForNamespace;
                 }
-
-                $callback = $options['callback'] ?? null;
-                unset($options['callback']);
-                $this->add($route, $callback, $options);
             }
+        }
+        return $routes;
+    }
+
+    /**
+     * @param array $routes
+     */
+    public function addArray(array $routes): void
+    {
+        foreach ($routes as $pattern => $options) {
+            if (strpos($pattern, ' ') !== false) {
+                [$group, $prefix] = explode(' ', trim($pattern), 2);
+                if (strtoupper($group) === 'GROUP') {
+                    $previousGroupPrefix = $this->groupPrefix;
+                    $this->groupPrefix   = $previousGroupPrefix . $prefix;
+                    //pre($options);
+                    $this->addArray($options);
+                    $this->groupPrefix = $previousGroupPrefix;
+                    return;
+                }
+            }
+
+            $callback = null;
+            if (isset($options['callback'])) {
+                $callback = $options['callback'];
+                unset($options['callback']);
+            }
+
+            $this->add($pattern, $callback, $options);
         }
     }
 
@@ -95,7 +140,6 @@ class Router
         $weight   = $options['weight']   ?? 1;
         $path     = $options['path']     ?? ROOT;
         $plugin   = $options['plugin']   ?? null;
-        $pattern  = trim($this->groupPrefix . $pattern, "/ ");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
             foreach ($options['dependencies'] as $plugin) {
@@ -110,11 +154,13 @@ class Router
         /* Get method(s) from options or from pattern */
         $methods = $options['methods'] ?? null;
         if (strpos($pattern, ' ') !== false) {
-            [$methods, $pattern] = explode(' ', trim($pattern), 2);
+            [$methods, $pattern] = explode(' ', $pattern, 2);
         }
         if (is_string($methods)) {
             $methods = explode('|', $methods);
         }
+
+        $pattern = trim($this->groupPrefix . $pattern, "/ ");
 
         /* Add route to route collection */
         $this->routeCollection[] = [
@@ -207,6 +253,11 @@ class Router
      * @return array
      */
     /* TODO: check overhead for sorting, maybe try to improve performance */
+    /**
+     * @param array $routeCollection
+     *
+     * @return array
+     */
     private function sortRouteCollection(array $routeCollection): array
     {
         $weight      = [];
