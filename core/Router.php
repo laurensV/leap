@@ -19,12 +19,15 @@ class Router
      */
     private $pluginManager;
 
+    private $groupPrefix;
+
     /**
      * Router constructor.
      */
     public function __construct()
     {
-        $this->routeCollection = [];
+        $this->routeCollection    = [];
+        $this->currentGroupPrefix = '';
     }
 
     /**
@@ -64,6 +67,21 @@ class Router
     }
 
     /**
+     * Create a route group with a common prefix.
+     * All routes created in the passed callback will have the given group prefix prepended.
+     *
+     * @param string   $prefix
+     * @param callable $callback
+     */
+    public function addGroup(string $prefix, callable $callback)
+    {
+        $previousGroupPrefix = $this->groupPrefix;
+        $this->groupPrefix   = $previousGroupPrefix . $prefix;
+        $callback($this);
+        $this->groupPrefix = $previousGroupPrefix;
+    }
+
+    /**
      * Add a new route to the route collection
      *
      * @param string $pattern
@@ -77,7 +95,7 @@ class Router
         $weight   = $options['weight']   ?? 1;
         $path     = $options['path']     ?? ROOT;
         $plugin   = $options['plugin']   ?? null;
-        $pattern  = trim($pattern, "/ ");
+        $pattern  = trim($this->groupPrefix . $pattern, "/ ");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
             foreach ($options['dependencies'] as $plugin) {
