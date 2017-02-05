@@ -58,14 +58,10 @@ class Router
             $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
             foreach ($routes as $route => $options) {
-                // Multi-value keys seperation
-                $multi_regex = explode(",", $route);
-                foreach ($multi_regex as $sep_route) {
-                    $options['path'] = $path;
-                    $callback = $options['callback'] ?? null;
-                    unset($options['callback']);
-                    $this->add($sep_route, $callback, $options, $pluginForNamespace);
-                }
+                $options['path'] = $path;
+                $callback        = $options['callback'] ?? null;
+                unset($options['callback']);
+                $this->add($route, $callback, $options, $pluginForNamespace);
             }
         }
     }
@@ -96,8 +92,8 @@ class Router
                 return;
             }
         }
+        /* Get method(s) from options or from pattern */
         $methods = $options['methods'] ?? null;
-
         if (strpos($pattern, ' ') !== false) {
             [$methods, $pattern] = explode(' ', trim($pattern), 2);
         }
@@ -105,6 +101,7 @@ class Router
             $methods = explode('|', $methods);
         }
 
+        /* Add route to route collection */
         $this->routeCollection[] = [
             'pattern'  => $pattern,
             'callback' => $callback,
@@ -135,21 +132,25 @@ class Router
 
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $route) {
-            $pattern = $route['pattern'];
+            $regex = $this->getBetterRegex($route['pattern']);
 
             $wildcard_args = [];
-            // Search for wildcard arguments
-            if (strpos($pattern, "{") !== false) {
-                if (preg_match_all("/{(.*?)}/", $pattern, $matches)) {
+            // Search for named parameters
+            if (strpos($regex, "{") !== false) {
+                if (preg_match_all("#{([a-zA-Z_]+[\w]*)(?::(.+))?}#", $regex, $matches)) {
                     foreach ($matches[0] as $key => $whole_match) {
-                        $wildcard_args['pattern'] = str_replace('\{' . $matches[1][$key] . '\}', "([^/]+)", '#^' . preg_quote(trim($pattern), '#') . '$#i');
-                        $pattern                  = str_replace($whole_match, "+", $pattern);
-                        $wildcard_args['args'][]  = $matches[1][$key];
+                        $param_name   = $matches[1][$key];
+                        $regexReplace = "([^/]+)";
+                        /* check for custom regex for named parameter */
+                        if (!empty($matches[2][$key])) {
+                            $regexReplace = "(" . $matches[2][$key] . ")";
+                        }
+                        $regex                   = $wildcard_args['pattern'] = strReplaceFirst($whole_match, $regexReplace, $regex);
+                        $wildcard_args['args'][] = $param_name;
                     }
                 }
             }
-            $pattern = $this->getPregPattern($pattern);
-            if (preg_match($pattern, $uri)) {
+            if (preg_match($regex, $uri)) {
                 if (!isset($route['methods']) || in_array($method, $route['methods'])) {
                     /* We found at least one valid route */
                     $this->parseRoute($route, $uri, $wildcard_args, $parsedRoute);
@@ -185,13 +186,14 @@ class Router
         $weight      = [];
         $routeLength = [];
         foreach ($routeCollection as $route) {
-            $pattern   = $route['pattern'];
-            $weight[]  = $route['weight'];
+            $pattern  = $route['pattern'];
+            $weight[] = $route['weight'];
             /* set length for homepage route to 1 instead of 0 */
             if (empty($pattern)) {
                 $pattern = '1';
             }
-            $wildcards = ['?', '*', '+', ':'];
+            /* remove regex and wildcards from route so it doesn't count for the length */
+            $wildcards     = ['?', '*', '+', ':'];
             $pattern       = str_replace($wildcards, '', $pattern);
             $pattern       = preg_replace("/\{(.*?)\}/", '', $pattern);
             $pattern       = preg_replace("/\[(.*?)\]/", '', $pattern);
@@ -208,19 +210,20 @@ class Router
      *
      * @return string
      */
-    private function getPregPattern(string $pattern): string
+    private function getBetterRegex(string $pattern): string
     {
         $transforms = [
-            '\*'   => '[^/]*',
-            '\*\*' => '.*',
-            '\+'   => '[^/]+',
-            '\?'   => '.',
-            '\[\!' => '[^',
-            '\['   => '[',
-            '\]'   => ']'
+            '*'  => '[^/]*',
+            '**' => '.*',
+            '+'  => '[^/]+',
+            '++' => '.+',
+            '?'  => '.',
+            '[!' => '[^',
+            '('  => '(?:',
+            ')'  => ')?',
         ];
 
-        return '#^' . strtr(preg_quote(trim($pattern), '#'), $transforms) . '$#i';
+        return '#^' . str_replace('][^/]', ']', strtr(trim($pattern), $transforms)) . '$#i';
     }
 
     /**
@@ -246,7 +249,7 @@ class Router
                         continue;
                     }
                     $this->replaceWildcardArgs["{" . $wildcard_args['args'][$key - 1] . "}"] = $arg[0];
-                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]                    = $arg[0];
+                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]              = $arg[0];
                 }
             }
         }
