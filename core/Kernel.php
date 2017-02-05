@@ -100,12 +100,12 @@ class Kernel
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
                 $response                  = new Response();
-                $route                     = $this->routeForRunFunction ?? $this->router->match($request);
+                $route                     = $this->routeForRunFunction ?? $this->router->route($request);
                 $this->routeForRunFunction = null;
                 $body                      = null;
                 if (!$route->routeFound) {
                     $response = $response->withStatus(404);
-                    $route    = $this->router->matchUri("404", $request->getMethod());
+                    $route    = $this->router->routeUri("404", $request->getMethod());
                 }
 
                 if (is_callable($route->callback)) {
@@ -116,7 +116,7 @@ class Kernel
 
                     if (!$controller->hasAccess()) {
                         $response = $response->withStatus(403);
-                        $route    = $this->router->matchUri("permission-denied", $request->getMethod());
+                        $route    = $this->router->routeUri("permission-denied", $request->getMethod());
                         if (is_callable($route->callback)) {
                             $body       = call_user_func($route->callback);
                             $controller = null;

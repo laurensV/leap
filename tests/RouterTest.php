@@ -36,7 +36,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     public function testRouteMatching($uri, $route, $expectedRoute)
     {
         $this->router->add($route['pattern'], null, $route['options']);
-        $parsedRoute = $this->router->matchUri($uri);
+        $parsedRoute = $this->router->routeUri($uri);
 
         $this->assertSame($parsedRoute->routeFound, $expectedRoute['routeFound']);
         $this->assertSame($parsedRoute->mathedPatterns[0], $expectedRoute['pattern']);
