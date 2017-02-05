@@ -8,10 +8,14 @@ namespace Leap\Core;
  */
 class Route
 {
+    const FOUND              = 1;
+    const NOT_FOUND          = 0;
+    const METHOD_NOT_ALLOWED = -1;
+
     public $base_path;
     public $callback;
-    public $routeFound;
-    public $mathedPatterns;
+    public $status;
+    public $matchedPatterns;
     public $parameters;
 
     /**
@@ -27,7 +31,7 @@ class Route
         /* initialize default values once */
         $this->defaultValues['base_path']       = null;
         $this->defaultValues['callback']        = ['class' => Controller::class];
-        $this->defaultValues['routeFound']      = false;
+        $this->defaultValues['status']          = self::NOT_FOUND;
         $this->defaultValues['matchedPatterns'] = [];
         $this->defaultValues['parameters']      = [];
 

@@ -97,15 +97,26 @@ class Kernel
     {
         return
             function (ServerRequestInterface $request): ResponseInterface {
+                $response                  = new Response();
                 /* Fire the hook preRouteUrl */
                 $this->hooks->fire("hook_preRouteUrl", []);
-                $response                  = new Response();
                 $route                     = $this->routeForRunFunction ?? $this->router->route($request);
                 $this->routeForRunFunction = null;
                 $body                      = null;
-                if (!$route->routeFound) {
-                    $response = $response->withStatus(404);
-                    $route    = $this->router->routeUri("404", $request->getMethod());
+                switch($route->status) {
+                    case Route::NOT_FOUND:
+                        $response = $response->withStatus(404);
+                        $route    = $this->router->routeUri("404", $request->getMethod());
+                        break;
+                    case Route::METHOD_NOT_ALLOWED:
+                        $response = $response->withStatus(405);
+                        $route    = $this->router->routeUri("method-not-allowed", $request->getMethod());
+                        break;
+                    case Route::FOUND:
+                        break;
+                    default:
+                        // TODO: error
+                        break;
                 }
 
                 if (is_callable($route->callback)) {
@@ -138,6 +149,7 @@ class Kernel
                         }
                     }
                 } else {
+                    // TODO: error handling
                     die("not a valid callback");
                 }
                 if ($body instanceof ResponseInterface) {

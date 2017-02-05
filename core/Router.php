@@ -20,7 +20,7 @@ class Router
     private $pluginManager;
 
     /**
-     * @var
+     * @var string
      */
     private $groupPrefix;
 
@@ -73,10 +73,10 @@ class Router
                 $options = $this->addFileOptions($options, $path, $pluginForNamespace);
             } else {
                 /* set the path of the route file */
-                $options['path'] = $path;
+                $options['path'] = $options['path'] ?? $path;
                 /* If we have support for Leap plugins, set the plugin for the namespace */
                 if (isset($this->pluginManager)) {
-                    $options['plugin'] = $pluginForNamespace;
+                    $options['plugin'] = $options['plugin'] ?? $pluginForNamespace;
                 }
             }
         }
@@ -97,7 +97,7 @@ class Router
                     //pre($options);
                     $this->addArray($options);
                     $this->groupPrefix = $previousGroupPrefix;
-                    return;
+                    continue;
                 }
             }
 
@@ -153,6 +153,9 @@ class Router
         }
         /* Get method(s) from options or from pattern */
         $methods = $options['methods'] ?? null;
+        if (strpos($this->groupPrefix, ' ') !== false) {
+            [$methods, $this->groupPrefix] = explode(' ', $this->groupPrefix, 2);
+        }
         if (strpos($pattern, ' ') !== false) {
             [$methods, $pattern] = explode(' ', $pattern, 2);
         }
@@ -226,6 +229,10 @@ class Router
                     }
                     /* We found at least one valid route */
                     $this->parseRoute($route, $parameters, $parsedRoute);
+                } else {
+                    if ($parsedRoute->status === Route::NOT_FOUND) {
+                        $parsedRoute->status = Route::METHOD_NOT_ALLOWED;
+                    }
                 }
             }
         }
@@ -314,7 +321,7 @@ class Router
     {
         $pattern                       = $route['pattern'];
         $options                       = $route['options'];
-        $parsedRoute->mathedPatterns[] = $pattern;
+        $parsedRoute->matchedPatterns[] = $pattern;
         $parsedRoute->base_path        = $route['path'];
 
         if (isset($options['clear'])) {
@@ -323,8 +330,8 @@ class Router
 
         /* Check for at least one Route that is NOT abstract */
         $abstractRoute = $route['abstract'] ?? false;
-        if (!$parsedRoute->routeFound) {
-            $parsedRoute->routeFound = !$abstractRoute;
+        if ($parsedRoute->status !== Route::FOUND && !$abstractRoute) {
+            $parsedRoute->status = Route::FOUND;
         }
 
         if (isset($route['callback'])) {
