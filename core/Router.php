@@ -43,16 +43,22 @@ class Router
      * @param string $file
      * @param string $pluginForNamespace
      */
-    public function addFile(string $file, string $pluginForNamespace): void
+    public function addFile(string $file, string $pluginForNamespace = null): void
     {
         if (file_exists($file)) {
             $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
             foreach ($routes as $route => $options) {
+                /* set the path of the route file */
                 $options['path'] = $path;
-                $callback        = $options['callback'] ?? null;
+                /* If we have support for Leap plugins, set the plugin for the namespace */
+                if (isset($this->pluginManager)) {
+                    $options['plugin'] = $pluginForNamespace;
+                }
+
+                $callback = $options['callback'] ?? null;
                 unset($options['callback']);
-                $this->add($route, $callback, $options, $pluginForNamespace);
+                $this->add($route, $callback, $options);
             }
         }
     }
@@ -63,14 +69,14 @@ class Router
      * @param string $pattern
      * @param        $callback
      * @param array  $options
-     * @param string $pluginForNamespace
      */
-    public function add(string $pattern, $callback, array $options = [], string $pluginForNamespace = null): void
+    public function add(string $pattern, $callback, array $options = []): void
     {
         $abstract = $options['abstract'] ?? false;
         $callback = $callback            ?? $options['callback'] ?? null;
         $weight   = $options['weight']   ?? 1;
         $path     = $options['path']     ?? ROOT;
+        $plugin   = $options['plugin']   ?? null;
         $pattern  = trim($pattern, "/ ");
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
@@ -100,7 +106,7 @@ class Router
             'weight'   => $weight,
             'abstract' => $abstract,
             'path'     => $path,
-            'plugin'   => $pluginForNamespace, // TODO: check if nessecary
+            'plugin'   => $plugin,
             'options'  => $options
         ];
     }
@@ -267,11 +273,14 @@ class Router
                 $parsedRoute->callback['action'] = $action;
             }
         }
-        foreach($parameters as $paramName => $paramValue) {
+        /* retrieve parameters from named parameters */
+        foreach ($parameters as $paramName => $paramValue) {
             $parsedRoute->parameters[substr($paramName, 1, -1)] = $paramValue;
         }
+        /* retrieve parameters from options */
         if (isset($options['parameters']) && is_array($options['parameters'])) {
             foreach ($options['parameters'] as $param => $value) {
+                /* check all parameter values for special paths */
                 if (is_array($value)) {
                     array_walk_recursive($value, function (&$val) use ($route) {
                         if (is_string($val)) {
