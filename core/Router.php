@@ -94,7 +94,6 @@ class Router
                 if (strtoupper($group) === 'GROUP') {
                     $previousGroupPrefix = $this->groupPrefix;
                     $this->groupPrefix   = $previousGroupPrefix . $prefix;
-                    //pre($options);
                     $this->addArray($options);
                     $this->groupPrefix = $previousGroupPrefix;
                     continue;
@@ -216,7 +215,6 @@ class Router
                     }
                 }
             }
-            print $regex ."\n";
             /* Check if uri matches the routes regex */
             if (preg_match($regex, $uri, $paramValues)) {
                 if (!isset($route['methods']) || in_array($method, $route['methods'])) {
