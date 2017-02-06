@@ -13,7 +13,13 @@ define('BASE_URL', call_user_func(function () {
 }));
 
 define('URL', call_user_func(function () {
-    $port = ":" . $_SERVER['SERVER_PORT'];
+    if(!isset($_SERVER['HTTP_HOST'])){
+        return "";
+    }
+    $port = "";
+    if(isset($_SERVER['SERVER_PORT'])) {
+        $port = ":" . $_SERVER['SERVER_PORT'];
+    }
     $http = "http";
 
     if ($port === ":80") {

@@ -120,7 +120,7 @@ class Kernel
                 }
 
                 if (is_callable($route->callback)) {
-                    $body = call_user_func($route->callback);
+                    $body = call_user_func($route->callback, [$route->parameters, $request]);
                 } else if (is_array($route->callback)) {
                     /* Create the controller instance */
                     $controller = $this->controllerFactory->make($route);

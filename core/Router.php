@@ -163,7 +163,7 @@ class Router
             $methods = explode('|', $methods);
         }
 
-        $pattern = trim($this->groupPrefix . $pattern, "/ ");
+        $pattern = trim($this->groupPrefix . $pattern);
 
         /* Add route to route collection */
         $this->routeCollection[] = [
@@ -196,7 +196,7 @@ class Router
 
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $route) {
-            $regex = $this->getBetterRegex($route['pattern']);
+            $regex = $this->getBetterRegex(trim($route['pattern'], '/'));
 
             // Search for named parameters
             $paramNames = [];
@@ -216,7 +216,6 @@ class Router
                     }
                 }
             }
-
             /* Check if uri matches the routes regex */
             if (preg_match($regex, $uri, $paramValues)) {
                 if (!isset($route['methods']) || in_array($method, $route['methods'])) {
@@ -224,7 +223,7 @@ class Router
                     $parameters = [];
                     if (!empty($paramNames)) {
                         foreach ($paramNames as $k => $paramName) {
-                            $parameters['{' . $paramName . '}'] = $paramValues[$k + 1];
+                            $parameters['{' . $paramName . '}'] = $paramValues[$k + 1] ?? null;
                         }
                     }
                     /* We found at least one valid route */
@@ -297,17 +296,15 @@ class Router
     private function getBetterRegex(string $pattern): string
     {
         $transforms = [
-            '*'  => '[^/]*',
-            '**' => '.*',
-            '+'  => '[^/]+',
-            '++' => '.+',
-            '?'  => '.',
+            '/*' => '/[^/]+',
+            '**' => '.+',
+            '/?' => '/.',
             '[!' => '[^',
             '('  => '(?:',
             ')'  => ')?',
         ];
 
-        return '#^' . str_replace('][^/]', ']', strtr(trim($pattern), $transforms)) . '$#i';
+        return '#^' . strtr(trim($pattern), $transforms) . '$#i';
     }
 
     /**
@@ -319,10 +316,10 @@ class Router
      */
     private function parseRoute(array $route, array $parameters, Route $parsedRoute): void
     {
-        $pattern                       = $route['pattern'];
-        $options                       = $route['options'];
+        $pattern                        = $route['pattern'];
+        $options                        = $route['options'];
         $parsedRoute->matchedPatterns[] = $pattern;
-        $parsedRoute->base_path        = $route['path'];
+        $parsedRoute->base_path         = $route['path'];
 
         if (isset($options['clear'])) {
             $parsedRoute->defaultRouteValues($options['clear']);
