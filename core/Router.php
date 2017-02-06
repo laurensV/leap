@@ -216,6 +216,7 @@ class Router
                     }
                 }
             }
+            print $regex ."\n";
             /* Check if uri matches the routes regex */
             if (preg_match($regex, $uri, $paramValues)) {
                 if (!isset($route['methods']) || in_array($method, $route['methods'])) {
@@ -296,9 +297,9 @@ class Router
     private function getBetterRegex(string $pattern): string
     {
         $transforms = [
-            '/*' => '/[^/]+',
+            '*' => '[^/]+',
             '**' => '.+',
-            '/?' => '/.',
+            '?' => '.',
             '[!' => '[^',
             '('  => '(?:',
             ')'  => ')?',

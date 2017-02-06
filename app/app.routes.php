@@ -3,7 +3,7 @@ use Leap\App\Controllers\BasicController;
 
 return [
     // Settings applied to all routes
-    '**'  => [
+    '(**)'  => [
         'abstract'   => true,
         'parameters' => [
             'stylesheets[]' => [

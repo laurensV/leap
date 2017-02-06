@@ -231,7 +231,7 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     public function testComplexRegex()
     {
         $route = [
-            "pattern" => "/i[cd]{1}s?a+/\w/[1-5]{3}/ab*c?d+/",
+            "pattern" => "/i[cd]{1}(s)a+/\w/[1-5]{3}/a(b+)c?d+/",
             "options" => [
                 "callback" => function () {
                     return 'OK';
@@ -246,14 +246,20 @@ class RouterTest extends \PHPUnit_Framework_TestCase
             "matchedPatterns" => [$route['pattern']],
             'body'            => 'OK'
         ];
-        $this->routeMatching('/idsaaaa/u/123/add', $expectedValues);
-        $this->routeMatching('/ica/a/345/acd', $expectedValues);
+        $this->routeMatching('/idsaaaa/u/123/acxd', $expectedValues);
+        $this->routeMatching('/ica/a/345/acxddd', $expectedValues);
 
         /* Non-matching tests */
         $expectedValues = [
             "status" => Route::NOT_FOUND
         ];
         $this->routeMatching('/idsaaaa/u/123/a', $expectedValues);
+        $this->routeMatching('/idsaaaa/u/123/acd', $expectedValues);
+        $this->routeMatching('/idsaaaa/u/12/acd', $expectedValues);
+        $this->routeMatching('/idsaaaa/#/123/acxd', $expectedValues);
+        $this->routeMatching('/iesaaaa/u/123/acxd', $expectedValues);
+        $this->routeMatching('/ids/u/123/acxd', $expectedValues);
+
     }
 
     /* Named Parameter */
