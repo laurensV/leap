@@ -10,20 +10,38 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Controller
 {
+    /**
+     * @var \Leap\Core\Hooks
+     */
     protected $hooks;
+    /**
+     * @var \Leap\Core\Route
+     */
     protected $route;
+    /**
+     * @var \Leap\Core\PluginManager
+     */
     protected $plugin_manager;
+    /**
+     * @var \Leap\Core\PdoPlus|null
+     */
     protected $pdo;
+    /**
+     * @var \Leap\Core\Config
+     */
     protected $config;
-    public    $access = false;
+    /**
+     * @var bool
+     */
+    public $access = false;
 
     /**
-     * Whenever controller is created, load the template.
      *
-     * @param                        $route
-     * @param                        $hooks
-     * @param                        $plugin_manager
-     * @param                        $pdo
+     * @param \Leap\Core\Route         $route
+     * @param \Leap\Core\Hooks         $hooks
+     * @param \Leap\Core\PluginManager $plugin_manager
+     * @param \Leap\Core\Config        $config
+     * @param \Leap\Core\PdoPlus|null  $pdo
      */
     public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, Config $config, ?PdoPlus $pdo)
     {
@@ -34,13 +52,19 @@ class Controller
         $this->plugin_manager = $plugin_manager;
     }
 
+    /**
+     * Check if we have a database connection
+     *
+     * @return bool
+     */
     public function hasConnection(): bool
     {
         return ($this->pdo instanceof PdoPlus && $this->pdo->hasConnection());
     }
 
     /**
-     *
+     * init function called after constructing the controller.
+     * Can be overriden in classes that extend this class
      */
     public function init()
     {
@@ -63,7 +87,7 @@ class Controller
      */
     public function hasAccess(): bool
     {
-        /* this core controller has to return true as access to be able to access core pages */
+        /* this core controller has to return true to be able to access core pages */
         return true;
     }
 }
