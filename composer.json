@@ -20,8 +20,7 @@
         "mindplay/middleman": "^2.0",
         "league/container": "^2.2",
         "oscarotero/psr7-middlewares": "^3.17",
-        "aura/di": "^3.2",
-        "oyejorge/less.php": "v1.7.0.10"
+        "aura/di": "^3.2"
     },
     "extra": {
         "custom-installer": {
@@ -33,9 +32,6 @@
                 "plugins/*/composer.json"
             ]
         }
-    },
-    "config": {
-        "secure-http": false
     },
     "require-dev": {
         "phpunit/phpunit": "5.5.*"
