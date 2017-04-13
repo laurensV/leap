@@ -233,6 +233,7 @@ class Kernel
                     if (!$controller->hasAccess()) {
                         $response = $response->withStatus(403);
                         $route    = $this->router->routeUri("permission-denied", $request->getMethod());
+                        /* recreate controller for permission denied route */
                         if (is_callable($route->callback)) {
                             $body       = call_user_func($route->callback);
                             $controller = null;
@@ -255,7 +256,7 @@ class Kernel
                     }
                 } else {
                     // TODO: error handling
-                    die("not a valid callback");
+                    die("not a valid callback (no Controller and no callable method)");
                 }
                 if ($body instanceof ResponseInterface) {
                     $response = $body;
