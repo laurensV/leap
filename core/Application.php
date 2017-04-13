@@ -51,7 +51,7 @@ class Application
         | Create the Dependency Injection Container and resolve the
         | kernel (core/Kernel.php) of the Leap framework from the DIC.
         */
-        $di = require ROOT . $config->dic;
+        $di = require ROOT . $config->get('dic');
 
         $this->kernel = $di->get('kernel');
     }
