@@ -91,6 +91,110 @@ class Kernel
         define('FILES', $paths['files']);
     }
 
+
+    /**
+     * Load all plugins into the application
+     */
+    private function loadPlugins(): void
+    {
+        /* Get and load enabled plugins */
+        /* TODO: cache getting plugin info in PluginManager */
+        $this->pluginManager->getAllPlugins();
+        $plugins_to_enable = $this->pluginManager->getEnabledPlugins();
+        $this->pluginManager->loadPlugins($plugins_to_enable);
+    }
+
+    /**
+     * Load all defined hook functions (core + plugins) in hooking system
+     */
+    private function loadHooks(): void
+    {
+        /* Add hooks from plugins */
+        $functions = get_defined_functions();
+        foreach ($functions['user'] as $function) {
+            $parts = explode("\\", $function);
+            if ($parts[0] === "leap" && $parts[1] === "hooks") {
+                if (isset($parts[3])) {
+                    $this->hooks->add($parts[3], $parts[2]);
+                }
+            }
+        }
+    }
+
+    private function loadMiddleware(): void
+    {
+        /**
+         * Load PSR-15 middlewares into the Middelware Stack
+         */
+        if ($this->config->has('middleware')) {
+            $middleware = include ROOT . $this->config->get('middleware');
+            if(!$middleware) {
+                // TODO: log middleware file not found warning
+            } else {
+                $this->addMiddleware($middleware);
+            }
+        }
+    }
+
+
+    /**
+     * @param array|MiddlewareInterface|callable $middleware
+     */
+    public function addMiddleware($middleware): void
+    {
+        if (is_array($middleware)) {
+            $this->middlewares = array_merge($this->middlewares, $middleware);
+        } else {
+            $this->middlewares[] = $middleware;
+        }
+    }
+
+    /**
+     * Load Files with routes into router
+     */
+    private function loadRoutes(): void
+    {
+        /* add routes from plugins */
+        foreach ($this->pluginManager->enabled_plugins as $pid) {
+            $this->router->addFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
+        }
+
+        /* add routes from core */
+        $this->router->addFile(ROOT . "core/core.routes.php", "core");
+
+        /* add routes from config */
+        if ($this->config->has('routes')) {
+            foreach($this->config->get('routes') as $route) {
+                $this->router->addFile(ROOT . $route, "app");
+            }
+        }
+    }
+
+    /**
+     * Run the Leap Application
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Leap\Core\Route                         $route
+     */
+    public function run(ServerRequestInterface $request = null, Route $route = null): void
+    {
+        /* Get PSR-7 Request */
+        $request = $request ?? ServerRequestFactory::fromGlobals();
+
+        /* Set (optional) Route for this run. If this Route is null,
+         * the Route will be created from the PSR-7 Request object. */
+        $this->routeForRunFunction = $route;
+
+        $this->middlewares[] = $this->getRunFunction();
+        /* PSR-7 / PSR-15 middleware dispatcher */
+        $dispatcher = new Dispatcher($this->middlewares);
+        $response   = $dispatcher->dispatch($request);
+
+        /* Output the PSR-7 Response object */
+        (new SapiStreamEmitter())->emit($response);
+    }
+
+
     /**
      * @return callable
      */
@@ -163,106 +267,6 @@ class Kernel
             };
     }
 
-    /**
-     * @param array|MiddlewareInterface|callable $middleware
-     */
-    public function addMiddleware($middleware): void
-    {
-        if (is_array($middleware)) {
-            $this->middlewares = array_merge($this->middlewares, $middleware);
-        } else {
-            $this->middlewares[] = $middleware;
-        }
-    }
-
-    /**
-     * Load all plugins into the application
-     */
-    private function loadPlugins(): void
-    {
-        /* Get and load enabled plugins */
-        /* TODO: cache getting plugin info in PluginManager */
-        $this->pluginManager->getAllPlugins();
-        $plugins_to_enable = $this->pluginManager->getEnabledPlugins();
-        $this->pluginManager->loadPlugins($plugins_to_enable);
-    }
-
-    /**
-     * Load all defined hook functions (core + plugins) in hooking system
-     */
-    private function loadHooks(): void
-    {
-        /* Add hooks from plugins */
-        $functions = get_defined_functions();
-        foreach ($functions['user'] as $function) {
-            $parts = explode("\\", $function);
-            if ($parts[0] === "leap" && $parts[1] === "hooks") {
-                if (isset($parts[3])) {
-                    $this->hooks->add($parts[3], $parts[2]);
-                }
-            }
-        }
-    }
-
-    private function loadMiddleware(): void
-    {
-        /**
-         * Load PSR-15 middlewares into the Middelware Stack
-         */
-        if ($this->config->has('middleware')) {
-            $middleware = include ROOT . $this->config->get('middleware');
-            if(!$middleware) {
-                // TODO: log middleware file not found warning
-            } else {
-                $this->addMiddleware($middleware);
-            }
-        }
-    }
-
-    /**
-     * Load Files with routes into router
-     */
-    private function loadRoutes(): void
-    {
-        /* add routes from plugins */
-        foreach ($this->pluginManager->enabled_plugins as $pid) {
-            $this->router->addFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
-        }
-
-        /* add routes from core */
-        $this->router->addFile(ROOT . "core/core.routes.php", "core");
-
-        /* add routes from config */
-        if ($this->config->has('routes')) {
-            foreach($this->config->get('routes') as $route) {
-                $this->router->addFile(ROOT . $route, "app");
-            }
-        }
-    }
-
-    /**
-     * Run the Leap Application
-     *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Leap\Core\Route                         $route
-     */
-    public function run(ServerRequestInterface $request = null, Route $route = null): void
-    {
-        /* Get PSR-7 Request */
-        $request = $request ?? ServerRequestFactory::fromGlobals();
-
-        /* Set (optional) Route for this run. If this Route is null,
-         * the Route will be created from the PSR-7 Request object. */
-        $this->routeForRunFunction = $route;
-
-        $this->middlewares[] = $this->getRunFunction();
-        /* PSR-7 / PSR-15 middleware dispatcher */
-        $dispatcher = new Dispatcher($this->middlewares);
-        $response   = $dispatcher->dispatch($request);
-
-        /* Output the PSR-7 Response object */
-        (new SapiStreamEmitter())->emit($response);
-    }
 
     /**
      * Set error level based on environment
