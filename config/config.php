@@ -1,10 +1,16 @@
 <?php
 return [
     'environment' => 'development',
+    'dic'         => 'core/dependencies.php',
+    'middleware'  => 'app/middleware/middlewares.php',
+
+    'routes'      => [
+        'app/app.routes.php'
+    ],
 
     'paths' => [
         'libraries' => 'vendor/',
-        'files' => 'files/',
+        'files'     => 'files/',
     ],
 
     'application' => [
@@ -15,11 +21,11 @@ return [
     ],
 
     'database' => [
-        'type' => 'none',
+        'type'     => 'none',
         'database' => 'leap',
         'username' => 'root',
         'password' => '',
-        'host' => 'localhost',
+        'host'     => 'localhost',
     ],
 
 ];

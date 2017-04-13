@@ -21,11 +21,6 @@ class Application
     private $kernel;
 
     /**
-     * @var Router
-     */
-    private $router;
-
-    /**
      * Application constructor.
      *
      * @param string $configuration
@@ -56,18 +51,9 @@ class Application
         | Create the Dependency Injection Container and resolve the
         | kernel (core/Kernel.php) of the Leap framework from the DIC.
         */
-        $di = require 'dependencies.php';
+        $di = require ROOT . $config->dic;
 
         $this->kernel = $di->get('kernel');
-
-        /**
-         * Load PSR-15 middlewares into the Middelware Stack
-         */
-        $middlewares = require ROOT . "app/middleware/middlewares.php";
-        $this->kernel->addMiddleware($middlewares);
-
-        $this->router = $di->get('router');
-        $this->router->addFile(ROOT . "app/app.routes.php", "app");
     }
 
     /**

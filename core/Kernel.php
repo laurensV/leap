@@ -53,7 +53,7 @@ class Kernel
                                 ControllerFactory $controllerFactory, Config $config)
     {
         /* Set the error reporting level based on the config environment variable */
-        $this->setReporting($config->environment);
+        $this->setReporting($config->get('environment'));
 
         /* Store dependency objects as properties */
         $this->hooks             = $hooks;
@@ -77,15 +77,16 @@ class Kernel
         /* ########################################################
          * # Hooks are loaded, so from now on we can fire hooks   #
          * ######################################################## */
+        $this->loadMiddleware();
         $this->loadRoutes();
     }
 
     /**
-     * Parse config
+     * Get some global helpers which are depending on config variables
      */
     private function helpersFromConfig(): void
     {
-        $paths = $this->config->paths;
+        $paths = $this->config->get('paths');
         define('LIBRARIES', $paths['libraries']);
         define('FILES', $paths['files']);
     }
@@ -203,6 +204,21 @@ class Kernel
         }
     }
 
+    private function loadMiddleware(): void
+    {
+        /**
+         * Load PSR-15 middlewares into the Middelware Stack
+         */
+        if ($this->config->has('middleware')) {
+            $middleware = include ROOT . $this->config->get('middleware');
+            if(!$middleware) {
+                // TODO: log middleware file not found warning
+            } else {
+                $this->addMiddleware($middleware);
+            }
+        }
+    }
+
     /**
      * Load Files with routes into router
      */
@@ -212,8 +228,16 @@ class Kernel
         foreach ($this->pluginManager->enabled_plugins as $pid) {
             $this->router->addFile($this->pluginManager->all_plugins[$pid]['path'] . $pid . ".routes.php", $pid);
         }
-        /* Add router files from core and site theme */
+
+        /* add routes from core */
         $this->router->addFile(ROOT . "core/core.routes.php", "core");
+
+        /* add routes from config */
+        if ($this->config->has('routes')) {
+            foreach($this->config->get('routes') as $route) {
+                $this->router->addFile(ROOT . $route, "app");
+            }
+        }
     }
 
     /**
