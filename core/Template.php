@@ -1,7 +1,6 @@
 <?php
 namespace Leap\Core;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 
 class Template
@@ -157,7 +156,7 @@ class Template
         $page = ob_get_contents();
         ob_end_clean();
         $this->set('page', $page);
-        $this->template    = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
+        $this->template = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
 
         chdir($this->template['path']);
         if (file_exists($this->template['value'])) {

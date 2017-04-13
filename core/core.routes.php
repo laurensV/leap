@@ -1,12 +1,12 @@
 <?php
 return [
     '404'               => [
-        'callback'   => function () {
+        'callback' => function () {
             return;
         },
     ],
     'permission-denied' => [
-        'callback'   => function () {
+        'callback' => function () {
             return;
         },
     ],

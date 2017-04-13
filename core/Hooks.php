@@ -15,9 +15,9 @@ class Hooks
      *
      * @param array $hooks
      */
-    public function __construct($hooks = array())
+    public function __construct($hooks = [])
     {
-        $this->hooks = array();
+        $this->hooks = [];
         foreach ($hooks as $hook) {
             $this->create($hook);
         }
@@ -60,7 +60,7 @@ class Hooks
      */
     public function getCallbacks($name)
     {
-        return isset($this->hooks[$name]) ? $this->hooks[$name] : array();
+        return isset($this->hooks[$name]) ? $this->hooks[$name] : [];
     }
 
     /**
@@ -70,7 +70,7 @@ class Hooks
      */
     public function create($name)
     {
-        $this->hooks[strtolower($name)] = array();
+        $this->hooks[strtolower($name)] = [];
     }
 
     /**
@@ -79,7 +79,7 @@ class Hooks
      * @param       $name
      * @param array $args
      */
-    public function fire($name, $args = array())
+    public function fire($name, $args = [])
     {
         foreach ($this->getCallbacks(strtolower($name)) as $callback) {
             call_user_func_array($callback, $args);

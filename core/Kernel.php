@@ -4,7 +4,7 @@ namespace Leap\Core;
 use Interop\Http\Middleware\MiddlewareInterface;
 use mindplay\middleman\Dispatcher;
 use Psr\Http\Message\{
-    ServerRequestInterface, ResponseInterface
+    ResponseInterface, ServerRequestInterface
 };
 use Zend\Diactoros\{
     Response, Response\SapiStreamEmitter, ServerRequestFactory

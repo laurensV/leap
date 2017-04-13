@@ -1,5 +1,6 @@
 <?php
 namespace Leap\Core;
+
 use Leap\Core\Interfaces\ConfigInterface;
 
 /**
@@ -70,6 +71,7 @@ class Config implements ConfigInterface
      * Magic function so that $obj->value will work.
      *
      * @param  string $name
+     *
      * @return mixed
      */
     public function __get($name)

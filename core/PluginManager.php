@@ -3,13 +3,15 @@ namespace Leap\Core;
 
 class PluginManager
 {
-    public $all_plugins;
-    public $enabled_plugins;
+    public  $all_plugins;
+    public  $enabled_plugins;
     private $pdo;
 
-    public function __construct(?PdoPlus $pdo) {
-            $this->pdo = $pdo;
+    public function __construct(?PdoPlus $pdo)
+    {
+        $this->pdo = $pdo;
     }
+
     public function getAllPlugins()
     {
         $directory = new \RecursiveDirectoryIterator(ROOT . 'plugins');
@@ -26,7 +28,7 @@ class PluginManager
                 $pid                 = $file->getBasename('.' . $ext);
                 $plugin_info         = $this->parsePluginFile($file);
                 $plugin_info['path'] = $path . "/";
-            
+
                 if ($ext == "disabled") {
                     $plugin_info['status'] = 0;
                 } else {
@@ -36,12 +38,12 @@ class PluginManager
                 $this->all_plugins[$pid] = $plugin_info;
 
                 if (isset($stmt)) {
-                    if(is_array($plugin_info['dependencies'])){
-                    $dependencies = implode(",", $plugin_info['dependencies']);
-                } else {
-                    $dependencies = $plugin_info['dependencies'];
-                }
-                    $data         = array('pid' => $pid, 'path' => $plugin_info['path'], 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies);
+                    if (is_array($plugin_info['dependencies'])) {
+                        $dependencies = implode(",", $plugin_info['dependencies']);
+                    } else {
+                        $dependencies = $plugin_info['dependencies'];
+                    }
+                    $data = ['pid' => $pid, 'path' => $plugin_info['path'], 'name' => $plugin_info['name'], 'description' => $plugin_info['description'], 'package' => $plugin_info['package'], 'configure' => $plugin_info['configure'], 'source' => $plugin_info['source'], 'dependencies' => $dependencies];
                     $stmt->execute($data);
                 }
             }
@@ -91,11 +93,11 @@ class PluginManager
     public function getEnabledPlugins()
     {
         if (is_object($this->pdo)) {
-            $plugins = [];
+            $plugins       = [];
             $plugins_query = $this->pdo->query("SELECT pid FROM plugins WHERE status=1")->fetchAll(\PDO::FETCH_COLUMN);
             if (is_array($plugins_query)) {
                 foreach ($plugins_query as $pid) {
-                    if ($this->all_plugins[$pid]['status'] != 0){
+                    if ($this->all_plugins[$pid]['status'] != 0) {
                         $plugins[] = $pid;
                     }
                 }
@@ -112,7 +114,7 @@ class PluginManager
         $plugins = [];
         if (is_array($this->all_plugins)) {
             foreach ($this->all_plugins as $pid => $plugin) {
-                if ($plugin['status'] == 1){
+                if ($plugin['status'] == 1) {
                     $plugins[] = $pid;
                 }
             }

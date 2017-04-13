@@ -29,10 +29,10 @@ class ControllerFactory
         $controller = null;
 
         /* Check if controller class extends the core controller */
-        if($controllerClass == 'Leap\Core\Controller' || is_subclass_of($controllerClass, "Leap\\Core\\Controller")) {
+        if ($controllerClass == 'Leap\Core\Controller' || is_subclass_of($controllerClass, "Leap\\Core\\Controller")) {
             /* Create the controller instance */
             $controller = $this->di->newInstance($controllerClass, ['route' => $route]);
-        } else if(class_exists($controllerClass)) {
+        } else if (class_exists($controllerClass)) {
             /* TODO: error handling */
             printr("Controller class '" . $controllerClass . "' does not extend the base 'Leap\\Core\\Controller' class", true);
         } else {
@@ -46,7 +46,7 @@ class ControllerFactory
     private function getNamespaceClass(array $controllerInfo): string
     {
         /* If the controller class name does not contain the namespace yet, add it */
-        if(strpos($controllerInfo['class'], "\\") === false && isset($controllerInfo['plugin'])) {
+        if (strpos($controllerInfo['class'], "\\") === false && isset($controllerInfo['plugin'])) {
             $namespace               = getNamespace($controllerInfo['plugin'], "controller");
             $controllerInfo['class'] = $namespace . $controllerInfo['class'];
         }
@@ -56,7 +56,7 @@ class ControllerFactory
     private function loadControllerClass(array $controllerInfo): void
     {
         /* Add controller class to autoloader if a custom file for controller class is specified */
-        if(isset($controllerInfo['file'])) {
+        if (isset($controllerInfo['file'])) {
             global $autoloader;
             $autoloader->addClassMap(["Leap\\Plugins\\" . ucfirst($controllerInfo['plugin']) . "\\Controllers\\" . $controllerInfo['class'] => $controllerInfo['file']]);
         }

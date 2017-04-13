@@ -8,7 +8,7 @@ $builder = new ContainerBuilder();
 $di      = $builder->newInstance();
 
 /**
- * @var Config $config;
+ * @var Config $config
  */
 $config = $config ?? null;
 
@@ -27,7 +27,7 @@ if ($db_conf['type'] === 'mysql') {
     $di->params[PdoPlus::class]['database'] = $db_conf['database'];
 
     /* Create PdoPlus object with pdo connection inside */
-    $di->set('pdo',$di->lazyNew(PdoPlus::class));
+    $di->set('pdo', $di->lazyNew(PdoPlus::class));
 }
 
 /*****************************

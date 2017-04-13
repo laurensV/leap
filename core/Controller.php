@@ -56,7 +56,6 @@ class Controller
         return;
     }
 
-
     /**
      * Function to check whether the user has access to the page
      *

@@ -62,7 +62,7 @@ class Router
                 $multi_regex = explode(",", $route);
                 foreach ($multi_regex as $sep_route) {
                     $options['path'] = $path;
-                    $callback = $options['callback'] ?? null;
+                    $callback        = $options['callback'] ?? null;
                     unset($options['callback']);
                     $this->add($sep_route, $callback, $options, $pluginForNamespace);
                 }
@@ -192,13 +192,13 @@ class Router
         $weight      = [];
         $routeLength = [];
         foreach ($routeCollection as $route) {
-            $pattern   = $route['pattern'];
-            $weight[]  = $route['weight'];
+            $pattern  = $route['pattern'];
+            $weight[] = $route['weight'];
             /* set length for homepage route to 1 instead of 0 */
             if (empty($pattern)) {
                 $pattern = '1';
             }
-            $wildcards = ['?', '*', '+', ':'];
+            $wildcards     = ['?', '*', '+', ':'];
             $pattern       = str_replace($wildcards, '', $pattern);
             $pattern       = preg_replace("/\{(.*?)\}/", '', $pattern);
             $pattern       = preg_replace("/\[(.*?)\]/", '', $pattern);
