@@ -13,7 +13,13 @@ define('BASE_URL', call_user_func(function () {
 }));
 
 define('URL', call_user_func(function () {
-    $port = ":" . $_SERVER['SERVER_PORT'];
+    if(!isset($_SERVER['HTTP_HOST'])){
+        return "";
+    }
+    $port = "";
+    if(isset($_SERVER['SERVER_PORT'])) {
+        $port = ":" . $_SERVER['SERVER_PORT'];
+    }
     $http = "http";
 
     if ($port === ":80") {
@@ -190,4 +196,42 @@ function get_messages($type = null, $clear_queue = true)
         }
     }
     return [];
+}
+
+/**
+ * @param string $value
+ * @param string $path
+ *
+ * @return string
+ */
+function parsePath(string $value, string $path): string
+{
+    if (strpos($value, ':')) {
+        $parts = explode(':', $value);
+        $type  = array_shift($parts);
+        $value = implode(':', $parts);
+
+        switch ($type) {
+            case 'url':
+                /* add base url if file value is not an URL */
+                if (!filter_var($value, FILTER_VALIDATE_URL)) {
+                    if ($value[0] === "/") {
+                        $value = BASE_URL . substr($value, 1);
+                    } else {
+                        $value = strReplaceFirst(ROOT, BASE_URL, $path) . $value;
+                    }
+                }
+                break;
+            case 'file':
+                if ($value[0] === "/") {
+                    $value = ROOT . substr($value, 1);
+                } else {
+                    $value = $path . $value;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return $value;
 }

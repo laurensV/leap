@@ -3,7 +3,7 @@ use Leap\App\Controllers\BasicController;
 
 return [
     // Settings applied to all routes
-    '**'  => [
+    '(**)'  => [
         'abstract'   => true,
         'parameters' => [
             'stylesheets[]' => [
@@ -29,13 +29,12 @@ return [
     ],
 
     // Page from url
-    '{p}' => [
+    '{page}' => [
         'callback'   => BasicController::class . '@renderPage',
         'parameters' => [
-            'page' => 'file:pages/{p}.php',
+            'page' => 'file:pages/{page}.php',
         ],
-        'weight'     => 0,
-    ],
+     ],
 
     '404' => [
         'callback'   => BasicController::class . '@renderPage',

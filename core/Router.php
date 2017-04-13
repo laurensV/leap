@@ -18,22 +18,19 @@ class Router
      * @var \Leap\Core\PluginManager
      */
     private $pluginManager;
+
     /**
-     * @var array
+     * @var string
      */
-    private $defaultValues;
-    /**
-     * @var array
-     */
-    private $replaceWildcardArgs;
+    private $groupPrefix;
 
     /**
      * Router constructor.
      */
     public function __construct()
     {
-        $this->routeCollection = [];
-        $this->defaultValues   = [];
+        $this->routeCollection    = [];
+        $this->currentGroupPrefix = '';
     }
 
     /**
@@ -52,11 +49,12 @@ class Router
      * @param string $file
      * @param string $pluginForNamespace
      */
-    public function addFile(string $file, string $pluginForNamespace): void
+    public function addFile(string $file, string $pluginForNamespace = null): void
     {
         if (file_exists($file)) {
             $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
+<<<<<<< HEAD
             foreach ($routes as $route => $options) {
                 // Multi-value keys seperation
                 $multi_regex = explode(",", $route);
@@ -65,9 +63,77 @@ class Router
                     $callback        = $options['callback'] ?? null;
                     unset($options['callback']);
                     $this->add($sep_route, $callback, $options, $pluginForNamespace);
+=======
+            $routes = $this->addFileOptions($routes, $path, $pluginForNamespace);
+            $this->addArray($routes);
+        }
+    }
+
+    /**
+     * @param array       $routes
+     * @param string      $path
+     * @param string|null $pluginForNamespace
+     *
+     * @return array
+     */
+    private function addFileOptions(array $routes, string $path, string $pluginForNamespace = null): array
+    {
+        foreach ($routes as $pattern => &$options) {
+            if (strtoupper(explode(' ', $pattern)[0]) === 'GROUP') {
+                $options = $this->addFileOptions($options, $path, $pluginForNamespace);
+            } else {
+                /* set the path of the route file */
+                $options['path'] = $options['path'] ?? $path;
+                /* If we have support for Leap plugins, set the plugin for the namespace */
+                if (isset($this->pluginManager)) {
+                    $options['plugin'] = $options['plugin'] ?? $pluginForNamespace;
+>>>>>>> 0eee4f1aaa6f3d328d5fd85aa7aaa687dc47636b
                 }
             }
         }
+        return $routes;
+    }
+
+    /**
+     * @param array $routes
+     */
+    public function addArray(array $routes): void
+    {
+        foreach ($routes as $pattern => $options) {
+            if (strpos($pattern, ' ') !== false) {
+                [$group, $prefix] = explode(' ', trim($pattern), 2);
+                if (strtoupper($group) === 'GROUP') {
+                    $previousGroupPrefix = $this->groupPrefix;
+                    $this->groupPrefix   = $previousGroupPrefix . $prefix;
+                    $this->addArray($options);
+                    $this->groupPrefix = $previousGroupPrefix;
+                    continue;
+                }
+            }
+
+            $callback = null;
+            if (isset($options['callback'])) {
+                $callback = $options['callback'];
+                unset($options['callback']);
+            }
+
+            $this->add($pattern, $callback, $options);
+        }
+    }
+
+    /**
+     * Create a route group with a common prefix.
+     * All routes created in the passed callback will have the given group prefix prepended.
+     *
+     * @param string   $prefix
+     * @param callable $callback
+     */
+    public function addGroup(string $prefix, callable $callback)
+    {
+        $previousGroupPrefix = $this->groupPrefix;
+        $this->groupPrefix   = $previousGroupPrefix . $prefix;
+        $callback($this);
+        $this->groupPrefix = $previousGroupPrefix;
     }
 
     /**
@@ -76,15 +142,14 @@ class Router
      * @param string $pattern
      * @param        $callback
      * @param array  $options
-     * @param string $pluginForNamespace
      */
-    public function add(string $pattern, $callback, array $options = [], string $pluginForNamespace = null): void
+    public function add(string $pattern, $callback, array $options = []): void
     {
         $abstract = $options['abstract'] ?? false;
         $callback = $callback            ?? $options['callback'] ?? null;
         $weight   = $options['weight']   ?? 1;
         $path     = $options['path']     ?? ROOT;
-        $pattern  = trim($pattern, "/");
+        $plugin   = $options['plugin']   ?? null;
         if (isset($this->pluginManager) && isset($options['dependencies'])) {
             $error = [];
             foreach ($options['dependencies'] as $plugin) {
@@ -96,22 +161,21 @@ class Router
                 return;
             }
         }
+        /* Get method(s) from options or from pattern */
         $methods = $options['methods'] ?? null;
-
-        $parts = explode(' ', $pattern);
-        if (count($parts) === 2) {
-            $methods = $parts[0];
-            $pattern = $parts[1];
+        if (strpos($this->groupPrefix, ' ') !== false) {
+            [$methods, $this->groupPrefix] = explode(' ', $this->groupPrefix, 2);
         }
-
+        if (strpos($pattern, ' ') !== false) {
+            [$methods, $pattern] = explode(' ', $pattern, 2);
+        }
         if (is_string($methods)) {
-            $methodsString = $methods;
-            $methods       = [];
-            foreach (explode("|", $methodsString) as $method) {
-                $methods[] = trim(strtoupper($method));
-            }
+            $methods = explode('|', $methods);
         }
 
+        $pattern = trim($this->groupPrefix . $pattern);
+
+        /* Add route to route collection */
         $this->routeCollection[] = [
             'pattern'  => $pattern,
             'callback' => $callback,
@@ -119,7 +183,7 @@ class Router
             'weight'   => $weight,
             'abstract' => $abstract,
             'path'     => $path,
-            'plugin'   => $pluginForNamespace, // TODO: check if nessecary
+            'plugin'   => $plugin,
             'options'  => $options
         ];
     }
@@ -132,7 +196,7 @@ class Router
      *
      * @return \Leap\Core\Route
      */
-    public function matchUri(string $uri, string $method = 'GET'): Route
+    public function routeUri(string $uri, string $method = 'GET'): Route
     {
         $uri = trim($uri, "/");
 
@@ -142,24 +206,42 @@ class Router
 
         // Try to match url to one or multiple routes
         foreach ($this->routeCollection as $route) {
-            $pattern = $route['pattern'];
+            $regex = $this->getBetterRegex(trim($route['pattern'], '/'));
 
-            $wildcard_args = [];
-            // Search for wildcard arguments
-            if (strpos($pattern, "{") !== false) {
-                if (preg_match_all("/{(.*?)}/", $pattern, $matches)) {
+            // Search for named parameters
+            $paramNames = [];
+            if (strpos($regex, "{") !== false) {
+                if (preg_match_all("#{([a-zA-Z_]+[\w]*)(?::(.+))?}#", $regex, $matches)) {
                     foreach ($matches[0] as $key => $whole_match) {
-                        $wildcard_args['pattern'] = str_replace('\{' . $matches[1][$key] . '\}', "([^/]+)", '#^' . preg_quote(trim($pattern), '#') . '$#i');
-                        $pattern                  = str_replace($whole_match, "+", $pattern);
-                        $wildcard_args['args'][]  = $matches[1][$key];
+                        $param_name = $matches[1][$key];
+                        /* default regex for named paramters */
+                        $regexReplace = "([^/]+)";
+                        /* check for custom regex for named parameter */
+                        if (!empty($matches[2][$key])) {
+                            $regexReplace = "(" . $matches[2][$key] . ")";
+                        }
+                        /* replace named parameters with regex */
+                        $regex        = strReplaceFirst($whole_match, $regexReplace, $regex);
+                        $paramNames[] = $param_name;
                     }
                 }
             }
-            $pattern = $this->getPregPattern($pattern);
-            if (preg_match($pattern, $uri)) {
+            /* Check if uri matches the routes regex */
+            if (preg_match($regex, $uri, $paramValues)) {
                 if (!isset($route['methods']) || in_array($method, $route['methods'])) {
+                    /* resolve any named parameters */
+                    $parameters = [];
+                    if (!empty($paramNames)) {
+                        foreach ($paramNames as $k => $paramName) {
+                            $parameters['{' . $paramName . '}'] = $paramValues[$k + 1] ?? null;
+                        }
+                    }
                     /* We found at least one valid route */
-                    $this->parseRoute($route, $uri, $wildcard_args, $parsedRoute);
+                    $this->parseRoute($route, $parameters, $parsedRoute);
+                } else {
+                    if ($parsedRoute->status === Route::NOT_FOUND) {
+                        $parsedRoute->status = Route::METHOD_NOT_ALLOWED;
+                    }
                 }
             }
         }
@@ -174,9 +256,9 @@ class Router
      *
      * @return Route
      */
-    public function match(ServerRequestInterface $request): Route
+    public function route(ServerRequestInterface $request): Route
     {
-        return $this->matchUri($request->getUri()->getPath(), $request->getMethod());
+        return $this->routeUri($request->getUri()->getPath(), $request->getMethod());
     }
 
     /**
@@ -187,6 +269,11 @@ class Router
      * @return array
      */
     /* TODO: check overhead for sorting, maybe try to improve performance */
+    /**
+     * @param array $routeCollection
+     *
+     * @return array
+     */
     private function sortRouteCollection(array $routeCollection): array
     {
         $weight      = [];
@@ -198,6 +285,10 @@ class Router
             if (empty($pattern)) {
                 $pattern = '1';
             }
+<<<<<<< HEAD
+=======
+            /* remove regex and wildcards from route so it doesn't count for the length */
+>>>>>>> 0eee4f1aaa6f3d328d5fd85aa7aaa687dc47636b
             $wildcards     = ['?', '*', '+', ':'];
             $pattern       = str_replace($wildcards, '', $pattern);
             $pattern       = preg_replace("/\{(.*?)\}/", '', $pattern);
@@ -215,48 +306,33 @@ class Router
      *
      * @return string
      */
-    private function getPregPattern(string $pattern): string
+    private function getBetterRegex(string $pattern): string
     {
         $transforms = [
-            '\*'   => '[^/]*',
-            '\*\*' => '.*',
-            '\+'   => '[^/]+',
-            '\?'   => '.',
-            '\[\!' => '[^',
-            '\['   => '[',
-            '\]'   => ']'
+            '*' => '[^/]+',
+            '**' => '.+',
+            '?' => '.',
+            '[!' => '[^',
+            '('  => '(?:',
+            ')'  => ')?',
         ];
 
-        return '#^' . strtr(preg_quote(trim($pattern), '#'), $transforms) . '$#i';
+        return '#^' . strtr(trim($pattern), $transforms) . '$#i';
     }
 
     /**
      * Parse a route from a route file
      *
      * @param array            $route
-     * @param string           $url
-     * @param array            $wildcard_args
+     * @param array            $parameters
      * @param \Leap\Core\Route $parsedRoute
      */
-    private function parseRoute(array $route, string $url, array $wildcard_args, Route $parsedRoute): void
+    private function parseRoute(array $route, array $parameters, Route $parsedRoute): void
     {
-        $pattern                       = $route['pattern'];
-        $options                       = $route['options'];
-        $parsedRoute->mathedPatterns[] = $pattern;
-        $parsedRoute->base_path        = $route['path'];
-        if (!empty($wildcard_args)) {
-            if (preg_match_all($wildcard_args['pattern'], $url, $matches)) {
-                $this->replaceWildcardArgs = [];
-                global $wildcards_from_url;
-                foreach ($matches as $key => $arg) {
-                    if (!$key) {
-                        continue;
-                    }
-                    $this->replaceWildcardArgs["{" . $wildcard_args['args'][$key - 1] . "}"] = $arg[0];
-                    $wildcards_from_url[$wildcard_args['args'][$key - 1]]                    = $arg[0];
-                }
-            }
-        }
+        $pattern                        = $route['pattern'];
+        $options                        = $route['options'];
+        $parsedRoute->matchedPatterns[] = $pattern;
+        $parsedRoute->base_path         = $route['path'];
 
         if (isset($options['clear'])) {
             $parsedRoute->defaultRouteValues($options['clear']);
@@ -264,8 +340,8 @@ class Router
 
         /* Check for at least one Route that is NOT abstract */
         $abstractRoute = $route['abstract'] ?? false;
-        if (!$parsedRoute->routeFound) {
-            $parsedRoute->routeFound = !$abstractRoute;
+        if ($parsedRoute->status !== Route::FOUND && !$abstractRoute) {
+            $parsedRoute->status = Route::FOUND;
         }
 
         if (isset($route['callback'])) {
@@ -275,84 +351,52 @@ class Router
                 $parsedRoute->callback = [];
                 $parts                 = explode('@', $route['callback']);
 
-                $parsedRoute->callback['class'] = $this->replaceWildcardArgs($parts[0]);
+                $parsedRoute->callback['class'] = $this->replaceParams($parts[0], $parameters);
                 $action                         = null;
                 if (isset($parts[1])) {
-                    $action = $this->replaceWildcardArgs($parts[1]);
+                    $action = $this->replaceParams($parts[1], $parameters);
                 }
                 $parsedRoute->callback['action'] = $action;
             }
         }
+        /* retrieve parameters from named parameters */
+        foreach ($parameters as $paramName => $paramValue) {
+            $parsedRoute->parameters[substr($paramName, 1, -1)] = $paramValue;
+        }
+        /* retrieve parameters from options */
         if (isset($options['parameters']) && is_array($options['parameters'])) {
             foreach ($options['parameters'] as $param => $value) {
+                /* check all parameter values for special paths */
                 if (is_array($value)) {
                     array_walk_recursive($value, function (&$val) use ($route) {
                         if (is_string($val)) {
-                            $val = $this->parseParamValue($val, $route['path']);
+                            $val = parsePath($val, $route['path']);
                         }
                     });
                 } else if (is_string($value)) {
-                    $value = $this->parseParamValue($value, $route['path']);
+                    $value = parsePath($value, $route['path']);
                 }
 
                 if (substr($param, -2) === '[]') {
-                    $parsedRoute->parameters[substr($param, 0, -2)][] = $this->replaceWildcardArgs($value);
+                    $parsedRoute->parameters[substr($param, 0, -2)][] = $this->replaceParams($value, $parameters);
                 } else {
-                    $parsedRoute->parameters[$param] = $this->replaceWildcardArgs($value);
+                    $parsedRoute->parameters[$param] = $this->replaceParams($value, $parameters);
                 }
             }
         }
     }
 
     /**
-     * @param string $value
-     * @param string $path
-     *
-     * @return string
-     */
-    private function parseParamValue(string $value, string $path): string
-    {
-        if (strpos($value, ':')) {
-            $parts = explode(':', $value);
-            $type  = array_shift($parts);
-            $value = implode(':', $parts);
-
-            switch ($type) {
-                case 'url':
-                    /* add base url if file value is not an URL */
-                    if (!filter_var($value, FILTER_VALIDATE_URL)) {
-                        if ($value[0] === "/") {
-                            $value = BASE_URL . substr($value, 1);
-                        } else {
-                            $value = strReplaceFirst(ROOT, BASE_URL, $path) . $value;
-                        }
-                    }
-                    break;
-                case 'file':
-                    if ($value[0] === "/") {
-                        $value = ROOT . substr($value, 1);
-                    } else {
-                        $value = $path . $value;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
-        return $value;
-    }
-
-    /**
-     * @param $var
+     * @param mixed $var
+     * @param array $parameters
      *
      * @return mixed
      */
-    private function replaceWildcardArgs($var)
+    private function replaceParams($var, array $parameters)
     {
-        if (is_string($var) && !empty($this->replaceWildcardArgs)) {
-            return strtr($var, $this->replaceWildcardArgs);
-        } else {
-            return $var;
+        if (is_string($var) && !empty($parameters)) {
+            $var = strtr($var, $parameters);
         }
+        return $var;
     }
 }

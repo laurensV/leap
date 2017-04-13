@@ -10,4 +10,9 @@ return [
             return;
         },
     ],
+    'method-not-allowed' => [
+        'callback'   => function () {
+            return;
+        },
+    ],
 ];

@@ -1,6 +1,7 @@
 <?php
 namespace Leap\Test;
 
+use Leap\Core\Route;
 use Leap\Core\Router;
 
 /**
@@ -13,14 +14,20 @@ class RouterTest extends \PHPUnit_Framework_TestCase
      */
     private $router;
 
+    /**
+     *
+     */
     protected function setUp()
     {
-        if(!defined('ROOT')) {
-            require dirname(__FILE__).'/../core/include/helpers.php';
+        if (!defined('ROOT')) {
+            require dirname(__FILE__) . '/../core/include/helpers.php';
         }
         $this->router = new Router();
     }
 
+    /**
+     *
+     */
     protected function tearDown()
     {
         $this->router = NULL;
@@ -29,104 +36,494 @@ class RouterTest extends \PHPUnit_Framework_TestCase
     /**
      * @param $uri
      * @param $route
-     * @param $expectedValue
-     *
-     * @dataProvider providerTestRouteMatching
+     * @param $expectedValues
      */
-    public function testRouteMatching($uri, $route, $expectedRoute)
+    private function routeMatching($uri, $expectedValues, $method = 'GET')
+    {
+        $parsedRoute = $this->router->routeUri($uri, $method);
+
+        $this->expectedValuesAssertions($expectedValues, $parsedRoute);
+    }
+
+    private function addRoute($route)
     {
         $this->router->add($route['pattern'], null, $route['options']);
-        $parsedRoute = $this->router->matchUri($uri);
-
-        $this->assertSame($parsedRoute->routeFound, $expectedRoute['routeFound']);
-        $this->assertSame($parsedRoute->mathedPatterns[0], $expectedRoute['pattern']);
-        $this->assertTrue(is_callable($parsedRoute->callback));
     }
 
-//    /**
-//     * @param       $uri
-//     * @param       $route
-//     * @param       $expectedPattern
-//     *
-//     * @dataProvider providerTestRoutePattern
-//     */
-//    public function testRoutePattern($uri, $route, $expectedPattern)
-//    {
-//        $this->router->addRoute($route['route'], $route['options']);
-//        $parsedRoute = $this->router->routeUrl($uri);
-//        $pattern     = null;
-//        if (isset($parsedRoute['title'])) {
-//            $pattern = $parsedRoute['title'];
-//        }
-//        $this->assertSame($expectedPattern, $pattern);
-//    }
-
-    /**
-     * @return array
-     */
-    public function providerTestRouteMatching()
+    private function addGroup($prefix, $route)
     {
-        return [
-            /* path overwriten by leading slash */
-            ['path', ["pattern" => "path", "options" => ["callback" => function(){return 'test';}]], ["routeFound" => true, "pattern" => "path"]],
-        ];
+        $this->router->addGroup($prefix, function ($r) use ($route) {
+            $r->add($route['pattern'], null, $route['options']);
+        });
+    }
+
+    private function addTwoGroups($prefix1, $prefix2, $route)
+    {
+        $this->router->addGroup($prefix1, function ($r) use ($route, $prefix2) {
+            $r->addGroup($prefix2, function ($r) use ($route) {
+                $r->add($route['pattern'], null, $route['options']);
+            });
+        });
     }
 
     /**
-     * @return array
+     * @param $expectedValues
+     * @param $parsedRoute
      */
-    public function providerTestRoutePattern()
+    private function expectedValuesAssertions($expectedValues, $parsedRoute)
     {
-        if(!defined('ROOT')) {
-            define('ROOT', call_user_func(function () {
-                $root = str_replace("\\", "/", dirname(dirname(__FILE__)));
-                $root .= (substr($root, -1) == '/' ? '' : '/');
-                return $root;
-            }));
+        foreach ($expectedValues as $type => $expectedValue) {
+            switch ($type) {
+                case 'status':
+                case 'matchedPatterns':
+                    $this->assertSame($expectedValue, $parsedRoute->$type);
+                    break;
+                case 'body':
+                    $body = call_user_func($parsedRoute->callback, $parsedRoute->parameters);
+                    $this->assertSame($expectedValue, $body);
+                    break;
+            }
         }
-
-        return [
-            /* match single route */
-            ['test', ["route" => "test", "options" => ["title" => "test"]], "test"],
-            /* starting and trailing slash for uri  */
-            ['/test/', ["route" => "test", "options" => ["title" => "test"]], "test"],
-            /* starting and trailing slash for route */
-            ['test', ["route" => "/test/", "options" => ["title" => "/test/"]], "/test/"],
-            /* any wildcard */
-            ['test', ["route" => "*", "options" => ["title" => "*"]], "*"],
-            /* any wildcard, empty uri */
-            ['', ["route" => "*", "options" => ["title" => "*"]], "*"],
-            /* any wildcard (no match) */
-            ['test/test', ["route" => "*", "options" => ["title" => "*"]], null],
-            /* any wildcard  + include slashes option */
-            ['test/test', ["route" => "*", "options" => ["title" => "*", "include_slash" => true]], "*"],
-            /* single character */
-            ['t', ["route" => "?", "options" => ["title" => "?"]], "?"],
-            /* single character (no match) */
-            ['te', ["route" => "?", "options" => ["title" => "?"]], null],
-            /* single character, empty uri (no match) */
-            ['', ["route" => "?", "options" => ["title" => "?"]], null],
-            /* single character with constraint */
-            ['a', ["route" => "[ab]", "options" => ["title" => "[ab]"]], "[ab]"],
-            /* single character with constraint (no match)*/
-            ['c', ["route" => "[ab]", "options" => ["title" => "[ab]"]], null],
-            /* single character with constraint, empty uri (no match)*/
-            ['', ["route" => "[ab]", "options" => ["title" => "[ab]"]], null],
-            /* parameter wildcard */
-            ['test', ["route" => ":param", "options" => ["title" => ":param"]], "test"],
-            /* parameter wildcard, empty uri (no match) */
-            ['', ["route" => ":param", "options" => ["title" => ":param"]], null],
-            /* parameter wildcard (no match) */
-            ['test/test', ["route" => ":param", "options" => ["title" => ":param"]], null],
-            /* parameter wildcard  + include slashes option (no match) */
-            ['test/test', ["route" => ":param", "options" => ["title" => ":param", "include_slash" => true]], null],
-            /* combined (no match) */
-            ['t/t/test/param', ["route" => "[te]/?/test/:test/*", "options" => ["title" => "[t]/?/test/:test"]], null],
-            /* combined */
-            ['t/t/test/param/test', ["route" => "[te]/?/test/:test/*", "options" => ["title" => "[t]/?/test/:test/*"]], "[t]/?/test/param/*"],
-            /* combined (no match) */
-            ['t/t/test/param/test/test', ["route" => "[te]/?/test/:test/*", "options" => ["title" => "[t]/?/test/:test/*"]], null],
-        ];
     }
 
+    /* Default route */
+    public function testDefaultRoute()
+    {
+        $route = [
+            "pattern" => "/",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/path', $expectedValues);
+    }
+
+    /* Simple path */
+    public function testSimplePath()
+    {
+        $route = [
+            "pattern" => "/path",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/path', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/path2', $expectedValues);
+    }
+
+    /* GET method */
+    public function testMethod()
+    {
+        $route = [
+            "pattern" => "GET /path",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ["/path"],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/path', $expectedValues, 'GET');
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::METHOD_NOT_ALLOWED
+        ];
+        $this->routeMatching('/path', $expectedValues, 'POST');
+    }
+
+    /* GET or POST method */
+    public function testMultipleMethods()
+    {
+        $route = [
+            "pattern" => "GET|POST /path",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ['/path'],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/path', $expectedValues, 'POST');
+        $this->routeMatching('/path', $expectedValues, 'GET');
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::METHOD_NOT_ALLOWED
+        ];
+        $this->routeMatching('/path', $expectedValues, 'PUT');
+    }
+
+    /* Simple Regex matching */
+    public function testSimpleRegex()
+    {
+        $route = [
+            "pattern" => "/id/[0-9]+",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/id/123', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/id/123w', $expectedValues);
+    }
+
+    /* Complex Regex matching */
+    public function testComplexRegex()
+    {
+        $route = [
+            "pattern" => "/i[cd]{1}(s)a+/\w/[1-5]{3}/a(b+)c?d+/",
+            "options" => [
+                "callback" => function () {
+                    return 'OK';
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/idsaaaa/u/123/acxd', $expectedValues);
+        $this->routeMatching('/ica/a/345/acxddd', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/idsaaaa/u/123/a', $expectedValues);
+        $this->routeMatching('/idsaaaa/u/123/acd', $expectedValues);
+        $this->routeMatching('/idsaaaa/u/12/acd', $expectedValues);
+        $this->routeMatching('/idsaaaa/#/123/acxd', $expectedValues);
+        $this->routeMatching('/iesaaaa/u/123/acxd', $expectedValues);
+        $this->routeMatching('/ids/u/123/acxd', $expectedValues);
+
+    }
+
+    /* Named Parameter */
+    public function testNamedParameter()
+    {
+        $route = [
+            "pattern" => "/{ok}",
+            "options" => [
+                "callback" => function ($parameters) {
+                    return $parameters['ok'];
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'ok'
+        ];
+        $this->routeMatching('/ok', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/', $expectedValues);
+    }
+
+    /* Parameter with Regex */
+    public function testRegexParameter()
+    {
+        $route = [
+            "pattern" => "/{ok:[0-9]{3}}",
+            "options" => [
+                "callback" => function ($parameters) {
+                    return $parameters['ok'];
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => '123'
+        ];
+        $this->routeMatching('/123', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/1234', $expectedValues);
+    }
+
+    /* Optional Parameters */
+    public function testOptionalParameters()
+    {
+        $route = [
+            "pattern" => "/date/{year}(/{month}(/{day}))",
+            "options" => [
+                "callback" => function ($parameters) {
+                    return "{$parameters['year']},{$parameters['month']},{$parameters['day']}";
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => '1993,10,'
+        ];
+        $this->routeMatching('/date/1993/10', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/date/', $expectedValues);
+    }
+
+    /* Optional Parameters with Regex */
+    public function testRegexOptionalParameters()
+    {
+        $route = [
+            "pattern" => "/date(/{year}(/{month}(/{day:[0-9]{2}})))",
+            "options" => [
+                "callback" => function ($parameters) {
+                    return "{$parameters['year']},{$parameters['month']},{$parameters['day']}";
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => '1993,10,07'
+        ];
+        $this->routeMatching('/date/1993/10/07', $expectedValues);
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => '1993,10,'
+        ];
+        $this->routeMatching('/date/1993/10/', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/date/1993/10/7', $expectedValues);
+    }
+
+    /* Wildcards */
+    public function testWildcards()
+    {
+        $route = [
+            "pattern" => "/wildcard/*/one/?/any(**)",
+            "options" => [
+                "callback" => function () {
+                    return "OK";
+                }
+            ]
+        ];
+        $this->addRoute($route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => [$route['pattern']],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/wildcard/test1#/one/1/anythingincluding/slashes', $expectedValues);
+        $this->routeMatching('/wildcard/test2#/one/2/any', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/wildcard/test1#/one/12/anythingincluding/slashes', $expectedValues);
+        $this->routeMatching('/wildcard/test2#/noslashesinstar/one/12/anythingincluding/slashes', $expectedValues);
+        $this->routeMatching('/wildcard/one/2/any', $expectedValues);
+    }
+
+    /* Group prefix */
+    public function testGroup()
+    {
+        $route = [
+            "pattern" => "/path",
+            "options" => [
+                "callback" => function () {
+                    return "OK";
+                }
+            ]
+        ];
+        $this->addGroup('/group', $route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ['/group/path'],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/group/path', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/group', $expectedValues);
+        $this->routeMatching('/path', $expectedValues);
+    }
+
+    /* Group with Method */
+    public function testGroupMethod()
+    {
+        $route = [
+            "pattern" => "/path",
+            "options" => [
+                "callback" => function () {
+                    return "OK";
+                }
+            ]
+        ];
+        $this->addGroup('POST /group', $route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ['/group/path'],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/group/path', $expectedValues, 'POST');
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::METHOD_NOT_ALLOWED
+        ];
+        $this->routeMatching('/group/path', $expectedValues, 'GET');
+    }
+
+    /* Group with Method Overriden */
+    public function testGroupMethodOverriden()
+    {
+        $route = [
+            "pattern" => "GET /path",
+            "options" => [
+                "callback" => function () {
+                    return "OK";
+                }
+            ]
+        ];
+        $this->addGroup('POST /group', $route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ['/group/path'],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/group/path', $expectedValues, 'GET');
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::METHOD_NOT_ALLOWED
+        ];
+        $this->routeMatching('/group/path', $expectedValues, 'POST');
+    }
+
+    /* Nested Group */
+    public function testNestedGroups()
+    {
+        $route = [
+            "pattern" => "/path",
+            "options" => [
+                "callback" => function () {
+                    return "OK";
+                }
+            ]
+        ];
+        $this->addTwoGroups('/group1', '/group2', $route);
+
+        /* Matching tests */
+        $expectedValues = [
+            "status"          => Route::FOUND,
+            "matchedPatterns" => ['/group1/group2/path'],
+            'body'            => 'OK'
+        ];
+        $this->routeMatching('/group1/group2/path', $expectedValues);
+
+        /* Non-matching tests */
+        $expectedValues = [
+            "status" => Route::NOT_FOUND
+        ];
+        $this->routeMatching('/group1/group2', $expectedValues);
+        $this->routeMatching('/group1', $expectedValues);
+        $this->routeMatching('/group1/path', $expectedValues);
+        $this->routeMatching('/group2/path', $expectedValues);
+    }
 }
