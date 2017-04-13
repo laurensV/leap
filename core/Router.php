@@ -54,16 +54,6 @@ class Router
         if (file_exists($file)) {
             $routes = require $file;
             $path   = str_replace("\\", "/", dirname($file)) . "/";
-<<<<<<< HEAD
-            foreach ($routes as $route => $options) {
-                // Multi-value keys seperation
-                $multi_regex = explode(",", $route);
-                foreach ($multi_regex as $sep_route) {
-                    $options['path'] = $path;
-                    $callback        = $options['callback'] ?? null;
-                    unset($options['callback']);
-                    $this->add($sep_route, $callback, $options, $pluginForNamespace);
-=======
             $routes = $this->addFileOptions($routes, $path, $pluginForNamespace);
             $this->addArray($routes);
         }
@@ -87,7 +77,6 @@ class Router
                 /* If we have support for Leap plugins, set the plugin for the namespace */
                 if (isset($this->pluginManager)) {
                     $options['plugin'] = $options['plugin'] ?? $pluginForNamespace;
->>>>>>> 0eee4f1aaa6f3d328d5fd85aa7aaa687dc47636b
                 }
             }
         }
@@ -285,10 +274,8 @@ class Router
             if (empty($pattern)) {
                 $pattern = '1';
             }
-<<<<<<< HEAD
-=======
+
             /* remove regex and wildcards from route so it doesn't count for the length */
->>>>>>> 0eee4f1aaa6f3d328d5fd85aa7aaa687dc47636b
             $wildcards     = ['?', '*', '+', ':'];
             $pattern       = str_replace($wildcards, '', $pattern);
             $pattern       = preg_replace("/\{(.*?)\}/", '', $pattern);
