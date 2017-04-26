@@ -12,6 +12,7 @@ define('BASE_URL', call_user_func(function () {
     return $sub_dir;
 }));
 
+
 define('URL', call_user_func(function () {
     if(!isset($_SERVER['HTTP_HOST'])){
         return "";

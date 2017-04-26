@@ -247,7 +247,10 @@ class Router
      */
     public function route(ServerRequestInterface $request): Route
     {
-        return $this->routeUri($request->getUri()->getPath(), $request->getMethod());
+        $uri = $request->getUri()->getPath();
+        $uri = strReplaceFirst(BASE_URL, '/', $uri);
+        $method = $request->getMethod();
+        return $this->routeUri($uri, $method);
     }
 
     /**
