@@ -8,6 +8,4 @@
             ?>
         </div>
     </div>
-    <div id="particles-js" style="background-color:#000816; width: 100%;height: 250px;position: fixed; bottom:0;"></div>
-
 </div>

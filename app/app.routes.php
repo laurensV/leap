@@ -7,13 +7,12 @@ return [
         'abstract'   => true,
         'parameters' => [
             'stylesheets[]' => [
-                'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
+                '//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css',
                 'file:stylesheets/always.less'
             ],
             'scripts[]'     => [
                 '//code.jquery.com/jquery-1.12.0.min.js',
-                'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js',
-                'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js',
+                '//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js',
                 'url:js/always.js'
             ]
         ]
