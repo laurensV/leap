@@ -4,14 +4,14 @@ return [
     'environment' => 'development',
 
     // location of file where all dependencies between classes are defined and DI Container is created
-    'dic'         => 'core/dependencies.php',
+    'dic'         => 'Core/dependencies.php',
 
     // location of file where array with middleware is defined
-    'middleware'  => 'app/middleware/middlewares.php',
+    'middleware'  => 'App/Middleware/middlewares.php',
 
     // location of route files
     'routes'      => [
-        'app/app.routes.php'
+        'App/app.routes.php'
     ],
 
     // Some paths used for global helpers

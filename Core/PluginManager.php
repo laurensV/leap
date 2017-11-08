@@ -14,7 +14,7 @@ class PluginManager
 
     public function getAllPlugins()
     {
-        $directory = new \RecursiveDirectoryIterator(ROOT . 'plugins');
+        $directory = new \RecursiveDirectoryIterator(ROOT . 'Plugins');
         $all_files = new \RecursiveIteratorIterator($directory);
 
         if (is_object($this->pdo)) {

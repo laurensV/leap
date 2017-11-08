@@ -144,7 +144,7 @@ class Template
         }
         ob_start();
         /* include the start of the html page */
-        require_once ROOT . "core/include/start_page.php";
+        require_once ROOT . "Core/include/start_page.php";
 
         ob_start();
         call_user_func(function () use ($page) {
@@ -156,7 +156,7 @@ class Template
         $page = ob_get_contents();
         ob_end_clean();
         $this->set('page', $page);
-        $this->template = ['path' => ROOT . 'app/templates/', 'value' => "default_template.php"];
+        $this->template = ['path' => ROOT . 'App/templates/', 'value' => "default_template.php"];
 
         chdir($this->template['path']);
         if (file_exists($this->template['value'])) {
@@ -169,7 +169,7 @@ class Template
             echo $page;
         }
         /* include the end of the html page */
-        require_once ROOT . "core/include/end_page.php";
+        require_once ROOT . "Core/include/end_page.php";
         $html = ob_get_contents();
         ob_end_clean();
         return $html;
