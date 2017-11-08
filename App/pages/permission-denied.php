@@ -1,1 +1,0 @@
-You do not have the right permissions to see this page.
