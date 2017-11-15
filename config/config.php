@@ -4,7 +4,7 @@ return [
     'environment' => 'development',
 
     // location of file where all dependencies between classes are defined and DI Container is created
-    'dic'         => 'Core/dependencies.php',
+    'dic'         => 'dependencies.php',
 
     // location of file where array with middleware is defined
     'middleware'  => 'App/Middleware/middlewares.php',

@@ -10,5 +10,5 @@ return [
         //$response->getBody()->write("this is test middleware");
         return $response;
     },
-    new TestMiddleware()
-];
+//    new TestMiddleware()
+    ];
