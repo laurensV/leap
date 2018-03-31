@@ -1,5 +1,5 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
 use PDO;
 use PDOStatement;

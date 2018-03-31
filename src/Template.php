@@ -1,5 +1,5 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
 use Zend\Diactoros\Response;
 

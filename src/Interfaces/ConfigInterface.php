@@ -1,6 +1,11 @@
 <?php
-namespace Leap\Core\Interfaces;
+namespace Leap\Interfaces;
 
+/**
+ * Interface ConfigInterface
+ *
+ * @package Leap\Interfaces
+ */
 interface ConfigInterface
 {
     /**

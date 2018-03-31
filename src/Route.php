@@ -1,10 +1,10 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
 /**
  * Class Route
  *
- * @package Leap\Core
+ * @package Leap
  */
 class Route
 {

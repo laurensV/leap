@@ -7,7 +7,7 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "Leap\\Core\\":"src/"
+            "Leap\\":"src/"
         }
     },
     "require": {
@@ -20,7 +20,9 @@
         "mindplay/middleman": "^2.0",
         "league/container": "^2.2",
         "oscarotero/psr7-middlewares": "^3.17",
-        "aura/di": "^3.2"
+        "pimple/pimple": "^3.0",
+        "container-interop/container-interop": "^1.2",
+        "psr/container": "^1.0"
     },
     "extra": {
         "custom-installer": {

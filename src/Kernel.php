@@ -1,5 +1,5 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
 use Interop\Http\Middleware\MiddlewareInterface;
 use mindplay\middleman\Dispatcher;
@@ -13,7 +13,7 @@ use Zend\Diactoros\{
 /**
  * Leap Kernel
  *
- * @package Leap\Core
+ * @package Leap
  */
 class Kernel
 {

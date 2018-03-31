@@ -1,12 +1,12 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
-use Leap\Core\Interfaces\ConfigInterface;
+use Leap\Interfaces\ConfigInterface;
 
 /**
  * Class Config
  *
- * @package Leap\Core
+ * @package Leap
  */
 class Config implements ConfigInterface
 {
@@ -19,38 +19,43 @@ class Config implements ConfigInterface
     /**
      * @param string|array $config
      */
-    public function __construct($config)
-    {
-        $this->load($config);
-    }
-
-    /**
-     * Loads a supported configuration file format.
-     *
-     * @param string|array $config
-     */
-    public function load($config)
+    public function __construct($config = [])
     {
         if (is_string($config)) {
-            $configFile = $config;
-            $config     = require(ROOT . $configFile);
-            $this->addConfigArray($config);
-
-            /* check for local config file with same name as main config file */
-            $parts           = explode('.', $configFile);
-            $extension       = array_pop($parts);
-            $localConfigFile = implode(".", $parts) . '.local.' . $extension;
-            $localConfigFile = ROOT . $localConfigFile;
-            if (file_exists($localConfigFile)) {
-                $localConfig = require $localConfigFile;
-                $this->addConfigArray($localConfig);
-            }
+            $this->loadFromFile($config);
         } else if (is_array($config)) {
-            $this->addConfigArray($config);
+            $this->addFromArray($config);
         }
     }
 
-    private function addConfigArray(array $config): void
+    /**
+     * Adds config from a supported configuration file format.
+     *
+     * @param string|array $config
+     */
+    public function loadFromFile($config)
+    {
+        $configFile = $config;
+        $config     = require(ROOT . $configFile);
+        $this->addFromArray($config);
+
+        /* check for local config file with same name as main config file */
+        $parts           = explode('.', $configFile);
+        $extension       = array_pop($parts);
+        $localConfigFile = implode(".", $parts) . '.local.' . $extension;
+        $localConfigFile = ROOT . $localConfigFile;
+        if (file_exists($localConfigFile)) {
+            $localConfig = require $localConfigFile;
+            $this->addFromArray($localConfig);
+        }
+    }
+
+    /**
+     * Add configuration from an array
+     *
+     * @param array $config
+     */
+    private function addFromArray(array $config): void
     {
         $this->config = array_replace_recursive($this->config, $config);
     }

@@ -34,7 +34,7 @@ $autoloader = require 'vendor/autoload.php';
 |   4.  resolve kernel from DIC
 |   5.  run kernel
 */
-$app = new Leap\Core\Application();
+$app = new Leap\Application();
 
 /*
 |--------------------------------------------------------------------------

@@ -1,17 +1,16 @@
 <?php
-namespace Leap\Core;
 
-use Psr\Http\Message\ServerRequestInterface;
+namespace Leap;
+
+use Aura\Di\ContainerBuilder;
+
+use Leap\Interfaces\ConfigInterface;
+use Psr\Http\Message\ServerRequestInterface as Request;
 
 /**
- * (optional) Wrapper to start the Leap Framework:
- *   1.  include helpers
- *   2.  specify config
- *   3.  setup dependencies
- *   4.  resolve kernel from DIC
- *   5.  run kernel
+ * Wrapper to start the Leap Framework
  *
- * @package Leap\Core
+ * @package Leap
  */
 class Application
 {
@@ -21,11 +20,16 @@ class Application
     private $kernel;
 
     /**
+     * Container
+     */
+    private $container;
+
+    /**
      * Application constructor.
      *
      * @param string $configuration
      */
-    function __construct($configuration = 'config/config.php')
+    function __construct($configuration = [])
     {
         /*
         |--------------------------------------------------------------------------
@@ -40,29 +44,59 @@ class Application
         /*****************************
          *       Configuration       *
          *****************************/
-        $configuration = $configuration ?? 'config/config.php';
-        $config        = new Config($configuration);
-
+        // Check if we already have a Config object. If not, create one
+        if (!$configuration instanceof ConfigInterface) {
+            $configuration = new Config($configuration);
+        }
         /*
         |--------------------------------------------------------------------------
-        | Setup the Leap Kernel
+        | Create Container
         |--------------------------------------------------------------------------
         |
-        | Create the Dependency Injection Container and resolve the
-        | kernel (core/Kernel.php) of the Leap framework from the DIC.
+        | Create the Dependency Injection Container
         */
-        $di = require ROOT . $config->get('dic');
+        $custom_container = $configuration->get('container');
+        if ($custom_container) {
+            $this->container = new $custom_container();
+        } else {
+            $this->container = new Container();
+        }
+        $this->container['config'] = $configuration;
+        $this->container['kernel'] = function($container){return 'test';};
+//        $di->set('kernel', $di->lazyNew(Kernel::class));
+//        $di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
+//        $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
+//        $di->params[Kernel::class]['router']            = $di->lazyGet('router');
+//        $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
+//        $di->params[Kernel::class]['config']            = $config;
+    }
 
-        $this->kernel = $di->get('kernel');
+    /**
+     * Enable access to the DI container by consumers of $app
+     *
+     * @return ContainerInterface
+     */
+    public function getContainer()
+    {
+        return $this->container;
     }
 
     /**
      * Run the Leap Application
      *
-     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param Request $request
      */
-    public function run(ServerRequestInterface $request = null): void
+    public function run(Request $request = null): void
     {
+        /*
+        |--------------------------------------------------------------------------
+        | Run the Leap Kernel
+        |--------------------------------------------------------------------------
+        |
+        | Resolve the kernel (core/Kernel.php) of the Leap framework from the DIC
+        | and run the kernel.
+        */
+        $this->kernel = $this->container->get('kernel');
         $this->kernel->run($request);
     }
 }
