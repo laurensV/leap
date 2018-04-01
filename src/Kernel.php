@@ -288,6 +288,6 @@ class Kernel
         /* Always log the errors */
         ini_set('log_errors', 1);
         /* TODO: create variable for custom log file */
-        ini_set('error_log', ROOT . 'core/logs/error.log');
+        ini_set('error_log', ROOT . 'logs/error.log');
     }
 }
