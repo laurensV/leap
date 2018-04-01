@@ -24,17 +24,16 @@ $autoloader = require 'vendor/autoload.php';
 
 /*
 |--------------------------------------------------------------------------
-| Setup the Leap application
+| Create the Leap Application
 |--------------------------------------------------------------------------
 |
-| (optional) Wrapper for the Leap Framework that executes the following:
-|   1.  include helpers (constants and functions)
-|   2.  specify config (file)
-|   3.  setup dependencies (in DIC)
-|   4.  resolve kernel from DIC
-|   5.  run kernel
+| Wrapper for the Leap Framework. It can take two arguments:
+| 1. Configuration (optional) - Can be an array, filename or a Config Object
+|    that implements ConfigInterface
+| 2. Container (optional) - Custom PSR-11 Container. If you use this you
+|    you have to register default services yourself
 */
-$app = new Leap\Application();
+$app = new Leap\Application(['routes' => ['app.routes.php']]);
 
 /*
 |--------------------------------------------------------------------------

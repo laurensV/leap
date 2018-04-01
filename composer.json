@@ -21,7 +21,6 @@
         "league/container": "^2.2",
         "oscarotero/psr7-middlewares": "^3.17",
         "pimple/pimple": "^3.0",
-        "container-interop/container-interop": "^1.2",
         "psr/container": "^1.0"
     },
     "extra": {

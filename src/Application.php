@@ -2,9 +2,9 @@
 
 namespace Leap;
 
-
 use Leap\Interfaces\ConfigInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Container\ContainerInterface;
 
 /**
  * Wrapper to start the Leap Framework
@@ -14,6 +14,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 class Application
 {
     /**
+     * Leap Kernel
+     *
      * @var Kernel
      */
     private $kernel;
@@ -21,16 +23,23 @@ class Application
     /**
      * Container
      *
-     * @var \Psr\Container\ContainerInterface
+     * @var ContainerInterface
      */
     private $container;
+
+    /**
+     * Configuration
+     *
+     * @var ConfigInterface
+     */
+    private $configuration;
 
     /**
      * Application constructor.
      *
      * @param string $configuration
      */
-    function __construct($configuration = [])
+    function __construct($configuration = [], $custom_container = null)
     {
         /*
         |--------------------------------------------------------------------------
@@ -42,12 +51,18 @@ class Application
         */
         require 'include/helpers.php';
 
-        /*****************************
-         *       Configuration       *
-         *****************************/
+        /*
+        |--------------------------------------------------------------------------
+        | Create Configuration
+        |--------------------------------------------------------------------------
+        |
+        | Create the Configuration object
+        */
         // Check if we already have a Config object. If not, create one
         if (!$configuration instanceof ConfigInterface) {
-            $configuration = new Config($configuration);
+            $this->configuration = new Config($configuration);
+        } else {
+            $this->configuration = $configuration;
         }
         /*
         |--------------------------------------------------------------------------
@@ -56,37 +71,37 @@ class Application
         |
         | Create the Dependency Injection Container
         */
-        $custom_container = $configuration->get('container');
         if ($custom_container) {
-            $this->container = new $custom_container();
+            // Use a custom container. When you do this you have to register the default services yourself
+            $this->container = $custom_container;
         } else {
             $this->container = new Container();
+            $this->registerDefaultServices();
         }
-        $this->registerDefaultServices($configuration);
     }
 
     /**
      * Register default services needed to run Leap
      *
-     * @param ConfigInterface $configuration
      */
-    private function registerDefaultServices($configuration) {
+    private function registerDefaultServices()
+    {
         /*****************************
          *       Configuration       *
          *****************************/
-        $this->container['config'] = $configuration;
+        $this->container['config'] = $this->configuration;
 
         /*****************************
          *       Hook System         *
          *****************************/
-        $this->container['hooks'] = function($container) {
+        $this->container['hooks'] = function ($container) {
             return new Hooks();
         };
 
         /*****************************
          *          Router           *
          *****************************/
-        $this->container['router'] = function($container) {
+        $this->container['router'] = function ($container) {
             $router = new Router();
             /* Set plugin manager in router to support making routes dependent on plugins (optional) */
             $router->setPluginManager($container->get('pluginManager'));
@@ -96,14 +111,14 @@ class Application
         /*****************************
          *       Plugin Manager      *
          *****************************/
-        $this->container['pluginManager'] =  function($container) {
+        $this->container['pluginManager'] = function ($container) {
             return new PluginManager();
         };
 
         /*****************************
          *   Controller (Factory)    *
          *****************************/
-        $this->container['controllerFactory'] = function($container) {
+        $this->container['controllerFactory'] = function ($container) {
             /* Normally it would be bad practice to inject DI Container into a class,
              * because it can be misused as a service locator. However, for this
              * purpose it is OK, as this is a special case, because the Controller
@@ -114,23 +129,33 @@ class Application
         };
 
         $this->container['kernel'] = function ($container) {
-            $hooks = $container->get('hooks');
-            $router = $container->get('router');
-            $pluginManager = $container->get('pluginManager');
+            $hooks             = $container->get('hooks');
+            $router            = $container->get('router');
+            $pluginManager     = $container->get('pluginManager');
             $controllerFactory = $container->get('controllerFactory');
-            $config = $container->get('config');
+            $config            = $container->get('config');
             return new Kernel($hooks, $router, $pluginManager, $controllerFactory, $config);
         };
     }
 
     /**
-     * Enable access to the DI container by consumers of $app
+     * Enable access to the DI container from the Application
      *
      * @return \Psr\Container\ContainerInterface
      */
     public function getContainer()
     {
         return $this->container;
+    }
+
+    /**
+     * Enable access to the configuration from the Application
+     *
+     * @return ConfigInterface
+     */
+    public function getConfiguration()
+    {
+        return $this->configuration;
     }
 
     /**

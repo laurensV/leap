@@ -11,23 +11,23 @@ use Psr\Http\Message\ServerRequestInterface;
 class Controller
 {
     /**
-     * @var \Leap\Core\Hooks
+     * @var \Leap\Hooks
      */
     protected $hooks;
     /**
-     * @var \Leap\Core\Route
+     * @var \Leap\Route
      */
     protected $route;
     /**
-     * @var \Leap\Core\PluginManager
+     * @var \Leap\PluginManager
      */
     protected $plugin_manager;
     /**
-     * @var \Leap\Core\PdoPlus|null
+     * @var \Leap\PdoPlus|null
      */
     protected $pdo;
     /**
-     * @var \Leap\Core\Config
+     * @var \Leap\Config
      */
     protected $config;
     /**
@@ -37,11 +37,11 @@ class Controller
 
     /**
      *
-     * @param \Leap\Core\Route         $route
-     * @param \Leap\Core\Hooks         $hooks
-     * @param \Leap\Core\PluginManager $plugin_manager
-     * @param \Leap\Core\Config        $config
-     * @param \Leap\Core\PdoPlus|null  $pdo
+     * @param \Leap\Route         $route
+     * @param \Leap\Hooks         $hooks
+     * @param \Leap\PluginManager $plugin_manager
+     * @param \Leap\Config        $config
+     * @param \Leap\PdoPlus|null  $pdo
      */
     public function __construct(Route $route, Hooks $hooks, PluginManager $plugin_manager, Config $config, ?PdoPlus $pdo)
     {

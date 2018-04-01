@@ -15,7 +15,7 @@ class Router
      */
     public $routeCollection;
     /**
-     * @var \Leap\Core\PluginManager
+     * @var \Leap\PluginManager
      */
     private $pluginManager;
 
@@ -36,7 +36,7 @@ class Router
     /**
      * Setter injection for a Leap plugin manager instance
      *
-     * @param \Leap\Core\PluginManager $pluginManager
+     * @param \Leap\PluginManager $pluginManager
      */
     public function setPluginManager(PluginManager $pluginManager): void
     {
@@ -183,7 +183,7 @@ class Router
      * @param string $uri
      * @param string $method
      *
-     * @return \Leap\Core\Route
+     * @return \Leap\Route
      */
     public function routeUri(string $uri, string $method = 'GET'): Route
     {
@@ -315,7 +315,7 @@ class Router
      *
      * @param array            $route
      * @param array            $parameters
-     * @param \Leap\Core\Route $parsedRoute
+     * @param \Leap\Route $parsedRoute
      */
     private function parseRoute(array $route, array $parameters, Route $parsedRoute): void
     {

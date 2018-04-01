@@ -1,8 +1,8 @@
 <?php
 namespace Leap\Test;
 
-use Leap\Core\Route;
-use Leap\Core\Router;
+use Leap\Route;
+use Leap\Router;
 
 /**
  * Class RouterTest
@@ -10,7 +10,7 @@ use Leap\Core\Router;
 class RouterTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var \Leap\Core\Router
+     * @var \Leap\Router
      */
     private $router;
 
