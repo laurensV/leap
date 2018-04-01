@@ -31,33 +31,9 @@ use Slim\Exception\ContainerException as SlimContainerException;
  *  - notAllowedHandler: a callable with the signature: function($request, $response, $allowedHttpMethods)
  *  - callableResolver: an instance of \Slim\Interfaces\CallableResolverInterface
  *
- * @property-read array settings
- * @property-read \Slim\Interfaces\Http\EnvironmentInterface environment
- * @property-read \Psr\Http\Message\ServerRequestInterface request
- * @property-read \Psr\Http\Message\ResponseInterface response
- * @property-read \Slim\Interfaces\RouterInterface router
- * @property-read \Slim\Interfaces\InvocationStrategyInterface foundHandler
- * @property-read callable errorHandler
- * @property-read callable notFoundHandler
- * @property-read callable notAllowedHandler
- * @property-read \Slim\Interfaces\CallableResolverInterface callableResolver
  */
 class Container extends PimpleContainer implements ContainerInterface
 {
-    /**
-     * Default settings
-     *
-     * @var array
-     */
-    private $defaultSettings = [
-        'httpVersion' => '1.1',
-        'responseChunkSize' => 4096,
-        'outputBuffering' => 'append',
-        'determineRouteBeforeAppMiddleware' => false,
-        'displayErrorDetails' => false,
-        'addContentLengthHeader' => true,
-        'routerCacheFile' => false,
-    ];
 
     /**
      * Create new container

@@ -1,7 +1,6 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
-use Aura\Di\Container;
 
 class ControllerFactory
 {
@@ -29,15 +28,18 @@ class ControllerFactory
         $controller = null;
 
         /* Check if controller class extends the core controller */
-        if ($controllerClass == 'Leap\Core\Controller' || is_subclass_of($controllerClass, "Leap\\Core\\Controller")) {
+        if ($controllerClass == 'Leap\Controller' || is_subclass_of($controllerClass, "Leap\\Core\\Controller")) {
             /* Create the controller instance */
-            $controller = $this->di->newInstance($controllerClass, ['route' => $route]);
+            $hooks = $this->di->get('hooks');
+            $pluginManager = $this->di->get('pluginManager');
+            $config = $this->di->get('config');
+            $controller = new Controller($route, $hooks, $pluginManager, $config, null);
         } else if (class_exists($controllerClass)) {
             /* TODO: error handling */
-            printr("Controller class '" . $controllerClass . "' does not extend the base 'Leap\\Core\\Controller' class", true);
+            pre("Controller class '" . $controllerClass . "' does not extend the base 'Leap\\Core\\Controller' class", true);
         } else {
             /* TODO: error handling */
-            printr("Controller class '" . $controllerClass . "' not found", true);
+            pre("Controller class '" . $controllerClass . "' not found", true);
         }
 
         return $controller;

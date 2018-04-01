@@ -2,7 +2,6 @@
 
 namespace Leap;
 
-use Aura\Di\ContainerBuilder;
 
 use Leap\Interfaces\ConfigInterface;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -21,6 +20,8 @@ class Application
 
     /**
      * Container
+     *
+     * @var \Psr\Container\ContainerInterface
      */
     private $container;
 
@@ -61,20 +62,71 @@ class Application
         } else {
             $this->container = new Container();
         }
+        $this->registerDefaultServices($configuration);
+    }
+
+    /**
+     * Register default services needed to run Leap
+     *
+     * @param ConfigInterface $configuration
+     */
+    private function registerDefaultServices($configuration) {
+        /*****************************
+         *       Configuration       *
+         *****************************/
         $this->container['config'] = $configuration;
-        $this->container['kernel'] = function($container){return 'test';};
-//        $di->set('kernel', $di->lazyNew(Kernel::class));
-//        $di->params[Kernel::class]['hooks']             = $di->lazyGet('hooks');
-//        $di->params[Kernel::class]['pluginManager']     = $di->lazyGet('pluginManager');
-//        $di->params[Kernel::class]['router']            = $di->lazyGet('router');
-//        $di->params[Kernel::class]['controllerFactory'] = $di->lazyGet('controllerFactory');
-//        $di->params[Kernel::class]['config']            = $config;
+
+        /*****************************
+         *       Hook System         *
+         *****************************/
+        $this->container['hooks'] = function($container) {
+            return new Hooks();
+        };
+
+        /*****************************
+         *          Router           *
+         *****************************/
+        $this->container['router'] = function($container) {
+            $router = new Router();
+            /* Set plugin manager in router to support making routes dependent on plugins (optional) */
+            $router->setPluginManager($container->get('pluginManager'));
+            return $router;
+        };
+
+        /*****************************
+         *       Plugin Manager      *
+         *****************************/
+        $this->container['pluginManager'] =  function($container) {
+            return new PluginManager();
+        };
+
+        /*****************************
+         *   Controller (Factory)    *
+         *****************************/
+        $this->container['controllerFactory'] = function($container) {
+            /* Normally it would be bad practice to inject DI Container into a class,
+             * because it can be misused as a service locator. However, for this
+             * purpose it is OK, as this is a special case, because the Controller
+             * class can be anything and the DIC is only used to resolve the Controller,
+             * not to retrieve other services.
+             */
+            return new ControllerFactory($container);
+        };
+
+        $this->container['kernel'] = function ($container) {
+            $hooks = $container->get('hooks');
+            $router = $container->get('router');
+            $pluginManager = $container->get('pluginManager');
+            $controllerFactory = $container->get('controllerFactory');
+            $config = $container->get('config');
+            return new Kernel($hooks, $router, $pluginManager, $controllerFactory, $config);
+        };
     }
 
     /**
      * Enable access to the DI container by consumers of $app
      *
-     * @return ContainerInterface
+     * @return \Psr\Container\ContainerInterface
      */
     public function getContainer()
     {

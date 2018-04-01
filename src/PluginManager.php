@@ -7,7 +7,7 @@ class PluginManager
     public  $enabled_plugins;
     private $pdo;
 
-    public function __construct(?PdoPlus $pdo)
+    public function __construct(?PdoPlus $pdo = null)
     {
         $this->pdo = $pdo;
     }

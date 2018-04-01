@@ -174,10 +174,11 @@ class Kernel
      * Run the Leap Application
      *
      * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Leap\Core\Route                         $route
+     * @param \Leap\Route                         $route
      */
     public function run(ServerRequestInterface $request = null, Route $route = null): void
     {
+
         /* Get PSR-7 Request */
         $request = $request ?? ServerRequestFactory::fromGlobals();
 
@@ -186,8 +187,10 @@ class Kernel
         $this->routeForRunFunction = $route;
 
         $this->middlewares[] = $this->getRunFunction();
+
         /* PSR-7 / PSR-15 middleware dispatcher */
         $dispatcher = new Dispatcher($this->middlewares);
+
         $response   = $dispatcher->dispatch($request);
 
         /* Output the PSR-7 Response object */

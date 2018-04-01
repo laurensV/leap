@@ -1,12 +1,12 @@
 <?php
-namespace Leap\Core;
+namespace Leap;
 
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Class Controller
  *
- * @package Leap\Core
+ * @package Leap
  */
 class Controller
 {
