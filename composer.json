@@ -12,17 +12,23 @@
     },
     "require": {
         "davidbarratt/custom-installer": "1.0.*@dev",
-        "composer/composer" : "dev-master",
-        "twig/twig": "^1.24",
         "wikimedia/composer-merge-plugin": "dev-master",
-        "psr/http-message": "~1.0",
-        "zendframework/zend-diactoros": "^1.3",
-        "mindplay/middleman": "^2.0",
-        "league/container": "^2.2",
-        "oscarotero/psr7-middlewares": "^3.17",
-        "pimple/pimple": "^3.0",
-        "psr/container": "^1.0"
+        "variable/leap-core": "*"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../leap-core"
+        },
+        {
+            "type": "path",
+            "url": "../leap-container"
+        }
+//        {
+//            "type": "path",
+//            "url": "../leap-router"
+//        }
+    ],
     "extra": {
         "custom-installer": {
             "core/": ["type:leap-core"],

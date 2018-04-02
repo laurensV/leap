@@ -33,7 +33,7 @@ $autoloader = require 'vendor/autoload.php';
 | 2. Container (optional) - Custom PSR-11 Container. If you use this you
 |    you have to register default services yourself
 */
-$app = new Leap\Application(['routes' => ['app.routes.php']]);
+$app = new Leap\Application(['routes' => ['app.routes.php'], 'environment' => 'dev']);
 
 /*
 |--------------------------------------------------------------------------
