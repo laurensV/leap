@@ -23,11 +23,11 @@
         {
             "type": "path",
             "url": "../leap-container"
+        },
+        {
+            "type": "path",
+            "url": "../leap-router"
         }
-//        {
-//            "type": "path",
-//            "url": "../leap-router"
-//        }
     ],
     "extra": {
         "custom-installer": {
